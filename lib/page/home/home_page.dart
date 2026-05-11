@@ -195,7 +195,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   },
                   onScan: () {
                     AppLog.track('scan_main', screen: 'Home');
-                    _snack('Scan QR — coming soon');
+                    context.push(AppRoute.scanQr.path);
                   },
                 ),
               ),

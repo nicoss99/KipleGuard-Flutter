@@ -140,6 +140,8 @@ abstract final class DashboardPrefs {
       officeEnable: g(officeEnableKey),
       callOption: g(userResidenceCallKey),
       buildingResidencesJson: g(buildingResidencesKey),
+      hdfEnabled: g(hdfEnabledKey),
+      healthCodeEnabled: g(healthCodeEnabledKey),
     );
   }
 
@@ -175,6 +177,8 @@ class DashboardSnapshot {
     this.officeEnable = '',
     this.callOption = '',
     this.buildingResidencesJson = '',
+    this.hdfEnabled = '',
+    this.healthCodeEnabled = '',
   });
 
   final String residenceName;
@@ -192,6 +196,10 @@ class DashboardSnapshot {
   final String officeEnable;
   final String callOption;
   final String buildingResidencesJson;
+  /// Android `DBOthers.hdfEnabled` (`'true'` / `'false'`).
+  final String hdfEnabled;
+  /// Android `DBOthers.healthCodeEnabled`.
+  final String healthCodeEnabled;
 
   bool get hasResidence => residenceName.isNotEmpty;
 

@@ -17,6 +17,9 @@ import '../page/visitor/visitor_page.dart';
 import '../page/reporting/reporting_form_page.dart';
 import '../page/reporting/reporting_gate_page.dart';
 import '../page/reporting/reporting_models.dart';
+import '../page/scan/scan_form_stub_page.dart';
+import '../page/scan/scan_health_result_page.dart';
+import '../page/scan/scan_qr_page.dart';
 import 'app_route.dart';
 
 List<RouteBase> buildHomeRoutes() => [
@@ -116,6 +119,32 @@ List<RouteBase> buildHomeRoutes() => [
       final args = state.extra as ReportingFormArgs?;
       if (args == null) return const ReportingGatePage();
       return ReportingFormPage(args: args);
+    },
+  ),
+  GoRoute(
+    path: AppRoute.scanQr.path,
+    name: AppRoute.scanQr.name,
+    builder: (context, state) => const ScanQrPage(),
+  ),
+  GoRoute(
+    path: AppRoute.scanHealth.path,
+    name: AppRoute.scanHealth.name,
+    builder: (context, state) {
+      final extra = state.extra;
+      final map = extra is Map<String, dynamic>
+          ? extra
+          : extra is Map
+              ? Map<String, dynamic>.from(extra)
+              : <String, dynamic>{};
+      return ScanHealthResultPage(payload: map);
+    },
+  ),
+  GoRoute(
+    path: AppRoute.scanForm.path,
+    name: AppRoute.scanForm.name,
+    builder: (context, state) {
+      final id = state.pathParameters['formUuid'] ?? '';
+      return ScanFormStubPage(applicationUuid: id);
     },
   ),
 ];

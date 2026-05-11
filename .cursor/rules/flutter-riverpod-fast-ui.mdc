@@ -182,7 +182,7 @@ Enable **flutter_lints**. Avoid `dynamic`, unnecessary `late`, and needless null
 
 ## Fonts & typography
 
-- Use **Poppins** via centralized text styles (see `lib/theme/` typography).
+- Use **Manrope** via centralized text styles (see `lib/theme/` typography).
 - **Do not** hardcode `fontSize` or `fontFamily` in random widgets — use **`app_text_style.dart`** (and related typography files) with `.sp` where applicable.
 - Standard scale (reference): title **18.sp**, subtitle **16.sp**, body **14.sp** — apply through theme APIs, not literals in widgets.
 

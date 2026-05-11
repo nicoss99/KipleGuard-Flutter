@@ -18,7 +18,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColor.white,
     );
     return base.copyWith(
-      textTheme: GoogleFonts.poppinsTextTheme(base.textTheme).apply(
+      textTheme: GoogleFonts.manropeTextTheme(base.textTheme).apply(
         bodyColor: AppColor.textPrimary,
         displayColor: AppColor.textPrimary,
       ),

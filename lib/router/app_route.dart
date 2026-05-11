@@ -15,6 +15,9 @@ enum AppRoute {
   bookingDetail('/booking/:bookingUuid', 'bookingDetail'),
   reporting('/reporting', 'reporting'),
   reportingForm('/reporting/form', 'reportingForm'),
+  scanQr('/scan', 'scanQr'),
+  scanHealth('/scan/health', 'scanHealth'),
+  scanForm('/scan/form/:formUuid', 'scanForm'),
   login('/login', 'login'),
   onboardingIntro('/onboarding-intro', 'onboardingIntro'),
   onboarding('/onboarding', 'onboarding');
@@ -32,4 +35,6 @@ abstract final class AppPaths {
   static String visitorDetails(String visitorUuid) => '/visitor/$visitorUuid';
 
   static String bookingDetail(String bookingUuid) => '/booking/$bookingUuid';
+
+  static String scanForm(String formUuid) => '/scan/form/$formUuid';
 }
