@@ -1,3 +1,5 @@
+import '../register/register_ic_encrypt.dart';
+
 /// Normalized visitor detail row (Android `VisitorDetailsActivity` subset).
 class VisitorDetailFields {
   VisitorDetailFields({
@@ -98,9 +100,20 @@ class VisitorDetailFields {
       endTime: r['end_time']?.toString() ?? '',
       actualArrivalTime: r['actual_arrival_time']?.toString() ?? '',
       actualExitTime: r['actual_exit_time']?.toString() ?? '',
-      icPassport: r['ic_passport']?.toString() ?? '',
+      icPassport: _icPassportPlainForDisplay(r),
       isLprEnabled: lpr,
     );
+  }
+
+  /// API stores `ic_passport` encrypted (same as register/patch). Decrypt for UI
+  /// masking; keep raw if decrypt fails (legacy plaintext).
+  static String _icPassportPlainForDisplay(Map<String, dynamic> r) {
+    final cipher = r['ic_passport']?.toString() ?? '';
+    if (cipher.isEmpty) return '';
+    final resUuid = r['residence_uuid']?.toString() ?? '';
+    if (resUuid.isEmpty) return cipher;
+    final plain = decryptIcForResidence(cipher, resUuid);
+    return plain.isNotEmpty ? plain : cipher;
   }
 
   final String uuid;
