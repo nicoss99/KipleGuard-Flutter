@@ -23,7 +23,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final loggedIn = AuthPrefs.isLoggedInSync;
 
       if (!onboardingDone) {
-        if (path == AppRoute.onboardingIntro.path || path == AppRoute.onboarding.path) {
+        if (path == AppRoute.onboardingIntro.path ||
+            path == AppRoute.onboarding.path) {
           return null;
         }
         return AppRoute.onboardingIntro.path;
@@ -31,7 +32,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (onboardingDone && !loggedIn) {
         if (path == AppRoute.login.path) return null;
-        if (path == AppRoute.onboardingIntro.path || path == AppRoute.onboarding.path) {
+        if (path == AppRoute.onboardingIntro.path ||
+            path == AppRoute.onboarding.path) {
           return AppRoute.login.path;
         }
         if (path == AppRoute.home.path ||
@@ -42,7 +44,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path.startsWith('${AppRoute.register.path}/') ||
             path == AppRoute.visitor.path ||
             path.startsWith('${AppRoute.visitor.path}/') ||
-            path == AppRoute.attendance.path) {
+            path == AppRoute.attendance.path ||
+            path == AppRoute.booking.path ||
+            path.startsWith('${AppRoute.booking.path}/') ||
+            path == AppRoute.reporting.path ||
+            path == AppRoute.reportingForm.path) {
           return AppRoute.login.path;
         }
         return AppRoute.login.path;

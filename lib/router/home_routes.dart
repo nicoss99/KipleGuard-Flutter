@@ -10,8 +10,13 @@ import '../page/select_site/select_site_page.dart';
 import '../page/unit_call/recent/call_recent_page.dart';
 import '../page/unit_call/unit_call_page.dart';
 import '../page/attendance/attendance_page.dart';
+import '../page/booking/booking_detail_page.dart';
+import '../page/booking/booking_page.dart';
 import '../page/visitor/visitor_details_page.dart';
 import '../page/visitor/visitor_page.dart';
+import '../page/reporting/reporting_form_page.dart';
+import '../page/reporting/reporting_gate_page.dart';
+import '../page/reporting/reporting_models.dart';
 import 'app_route.dart';
 
 List<RouteBase> buildHomeRoutes() => [
@@ -54,7 +59,12 @@ List<RouteBase> buildHomeRoutes() => [
     builder: (context, state) {
       final args = state.extra as RegisterVisitorDetailsArgs?;
       return RegisterVisitorDetailsPage(
-        args: args ?? const RegisterVisitorDetailsArgs(lprRequired: false, officeEnvironment: false),
+        args:
+            args ??
+            const RegisterVisitorDetailsArgs(
+              lprRequired: false,
+              officeEnvironment: false,
+            ),
       );
     },
   ),
@@ -69,6 +79,19 @@ List<RouteBase> buildHomeRoutes() => [
     builder: (context, state) => const AttendancePage(),
   ),
   GoRoute(
+    path: AppRoute.booking.path,
+    name: AppRoute.booking.name,
+    builder: (context, state) => const BookingPage(),
+  ),
+  GoRoute(
+    path: AppRoute.bookingDetail.path,
+    name: AppRoute.bookingDetail.name,
+    builder: (context, state) {
+      final id = state.pathParameters['bookingUuid'] ?? '';
+      return BookingDetailPage(bookingUuid: id);
+    },
+  ),
+  GoRoute(
     path: AppRoute.visitor.path,
     name: AppRoute.visitor.name,
     builder: (context, state) => const VisitorPage(),
@@ -79,6 +102,20 @@ List<RouteBase> buildHomeRoutes() => [
     builder: (context, state) {
       final id = state.pathParameters['visitorUuid'] ?? '';
       return VisitorDetailsPage(visitorUuid: id);
+    },
+  ),
+  GoRoute(
+    path: AppRoute.reporting.path,
+    name: AppRoute.reporting.name,
+    builder: (context, state) => const ReportingGatePage(),
+  ),
+  GoRoute(
+    path: AppRoute.reportingForm.path,
+    name: AppRoute.reportingForm.name,
+    builder: (context, state) {
+      final args = state.extra as ReportingFormArgs?;
+      if (args == null) return const ReportingGatePage();
+      return ReportingFormPage(args: args);
     },
   ),
 ];

@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../core/profile_initials.dart';
+import '../reporting/reporting_sync_service.dart';
 import 'home_repository.dart';
 import 'home_residence_sync.dart';
 import 'home_state.dart';
@@ -17,6 +20,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
   Future<void> onAppear() async {
     await _hydrateFromPrefs();
+    unawaited(ref.read(reportingSyncServiceProvider).processQueue());
     await refreshFromRemote();
   }
 
@@ -48,6 +52,7 @@ class HomeNotifier extends Notifier<HomeState> {
         await DashboardPrefs.setVisitorTypesJson(typesJson);
       }
       await _hydrateFromPrefs();
+      unawaited(ref.read(reportingSyncServiceProvider).processQueue());
       state = state.copyWith(refreshing: false);
     } on DioException catch (e, st) {
       AppLog.error('Dashboard refresh failed', tag: 'Home', error: e, stackTrace: st);

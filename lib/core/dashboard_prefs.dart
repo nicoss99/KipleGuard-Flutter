@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../page/reporting/reporting_prefs.dart';
 import 'unit_call_session_prefs.dart';
 
 /// Mirrors Android `DBOthers` keys written from [DashboardActivity] / residence sync.
@@ -59,6 +60,7 @@ abstract final class DashboardPrefs {
       await prefs.remove(k);
     }
     await UnitCallSessionPrefs.clear();
+    await ReportingPrefs.clearAll();
   }
 
   static Future<void> writeResidenceSelection({

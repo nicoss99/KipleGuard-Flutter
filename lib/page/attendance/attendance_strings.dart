@@ -7,9 +7,6 @@ abstract final class AttendanceStrings {
   static const startShiftSubtitle = 'Mula';
   static const endShiftTitle = 'End Shift';
   static const endShiftSubtitle = 'Tamat';
-  static const enterPin = 'Enter your member PIN';
-  static const cancel = 'Cancel';
-  static const submit = 'Submit';
   static const shiftStarted = 'Shift started';
   static const shiftEnded = 'Shift ended';
   static const invalidPin = 'That PIN is not valid for this site.';

@@ -16,6 +16,8 @@ class DashboardModuleGrid extends StatelessWidget {
     required this.onDisabledFeature,
     required this.onVisitorEnabledTap,
     required this.onAttendanceEnabledTap,
+    required this.onBookingEnabledTap,
+    required this.onReportingEnabledTap,
   });
 
   final bool attendanceEnabled;
@@ -25,6 +27,8 @@ class DashboardModuleGrid extends StatelessWidget {
   final void Function(String message) onDisabledFeature;
   final VoidCallback onVisitorEnabledTap;
   final VoidCallback onAttendanceEnabledTap;
+  final VoidCallback onBookingEnabledTap;
+  final VoidCallback onReportingEnabledTap;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +76,7 @@ class DashboardModuleGrid extends StatelessWidget {
                 onDisabledFeature(DashboardStrings.featureBooking);
                 return;
               }
+              onBookingEnabledTap();
             },
           ),
           DashboardModuleCard(
@@ -84,6 +89,7 @@ class DashboardModuleGrid extends StatelessWidget {
                 onDisabledFeature(DashboardStrings.featureReport);
                 return;
               }
+              onReportingEnabledTap();
             },
           ),
         ],

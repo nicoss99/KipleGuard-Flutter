@@ -11,6 +11,10 @@ enum AppRoute {
   visitor('/visitor', 'visitor'),
   visitorDetails('/visitor/:visitorUuid', 'visitorDetails'),
   attendance('/attendance', 'attendance'),
+  booking('/booking', 'booking'),
+  bookingDetail('/booking/:bookingUuid', 'bookingDetail'),
+  reporting('/reporting', 'reporting'),
+  reportingForm('/reporting/form', 'reportingForm'),
   login('/login', 'login'),
   onboardingIntro('/onboarding-intro', 'onboardingIntro'),
   onboarding('/onboarding', 'onboarding');
@@ -22,7 +26,10 @@ enum AppRoute {
 
 /// Full paths with segments (not covered by [AppRoute.path] templates).
 abstract final class AppPaths {
-  static String registerVisit(String residenceUuid) => '/register/visit/$residenceUuid';
+  static String registerVisit(String residenceUuid) =>
+      '/register/visit/$residenceUuid';
 
   static String visitorDetails(String visitorUuid) => '/visitor/$visitorUuid';
+
+  static String bookingDetail(String bookingUuid) => '/booking/$bookingUuid';
 }

@@ -15,6 +15,7 @@ abstract final class AppColor {
   static const Color white = Color(0xFFFFFFFF);
 
   static const Color textPrimary = Color(0xFF414042);
+  static const Color black = Color(0xFF000000);
   static const Color textSecondary = Color(0xFF9B9B9B);
   static const Color textMuted = Color(0xFF4A4A4A);
 
