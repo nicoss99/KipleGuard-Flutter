@@ -10,6 +10,7 @@ enum AppRoute {
   registerIdScan('/register/id-scan', 'registerIdScan'),
   visitor('/visitor', 'visitor'),
   visitorDetails('/visitor/:visitorUuid', 'visitorDetails'),
+  attendance('/attendance', 'attendance'),
   login('/login', 'login'),
   onboardingIntro('/onboarding-intro', 'onboardingIntro'),
   onboarding('/onboarding', 'onboarding');

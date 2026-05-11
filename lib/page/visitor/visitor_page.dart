@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -11,6 +12,7 @@ import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../widget/standard_primary_header.dart';
 import 'visitor_provider.dart';
 import 'visitor_search_delegate.dart';
 import 'visitor_state.dart';
@@ -42,7 +44,9 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
     final dayLabel = DateFormat('dd MMM yyyy').format(s.selectedDay);
     final dateHeaderRowHeight = 64.h;
 
-    return PopScope(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: standardPrimaryOverlayStyle(),
+      child: PopScope(
       canPop: !s.allOvertimeSection,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
@@ -52,40 +56,31 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
         inAsyncCall: s.loading,
         child: Scaffold(
         backgroundColor: AppColor.white,
-        appBar: AppBar(
-          backgroundColor: AppColor.white,
-          elevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-            onPressed: () => _handleBack(s),
-            icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: AppColor.primary),
-          ),
-          title: Text(
-            s.allOvertimeSection ? 'All Overtime' : VisitorStrings.title,
-            style: AppTextStyle.title,
-          ),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                final result = await showSearch<String?>(
-                  context: context,
-                  delegate: VisitorSearchDelegate(initialQuery: s.searchQuery),
-                );
-                if (!mounted || result == null) return;
-                final q = result.trim();
-                if (q.isEmpty) {
-                  await ref.read(visitorProvider.notifier).clearSearch();
-                } else {
-                  await ref.read(visitorProvider.notifier).runSearch(q);
-                }
-              },
-              icon: Icon(Icons.search, size: 24.sp, color: AppColor.textPrimary),
-            ),
-          ],
-        ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            StandardPrimaryHeader(
+              title: s.allOvertimeSection ? 'All Overtime' : VisitorStrings.title,
+              onBack: () => _handleBack(s),
+              actions: [
+                IconButton(
+                  onPressed: () async {
+                    final result = await showSearch<String?>(
+                      context: context,
+                      delegate: VisitorSearchDelegate(initialQuery: s.searchQuery),
+                    );
+                    if (!mounted || result == null) return;
+                    final q = result.trim();
+                    if (q.isEmpty) {
+                      await ref.read(visitorProvider.notifier).clearSearch();
+                    } else {
+                      await ref.read(visitorProvider.notifier).runSearch(q);
+                    }
+                  },
+                  icon: Icon(Icons.search, size: 24.sp, color: AppColor.textPrimary),
+                ),
+              ],
+            ),
             if (s.error != null)
               Material(
                 color: AppColor.orange.withValues(alpha: 0.12),
@@ -246,6 +241,7 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
           ],
         ),
         ),
+      ),
       ),
     );
   }

@@ -7,11 +7,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
+import '../../widget/standard_primary_header.dart';
 import '../home/home_repository.dart';
 import 'residence_choice.dart';
 import 'residence_choices.dart';
 import 'select_site_strings.dart';
-import 'select_site_text_style.dart';
 import 'widget/select_site_residence_tile.dart';
 
 /// Android `ResidenceActivity` / `activity_selectresidence` — list from `GET data/residences` + roles.
@@ -106,47 +106,18 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColor.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: standardPrimaryOverlayStyle(),
       child: Scaffold(
         backgroundColor: AppColor.white,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ColoredBox(
-              color: AppColor.primary,
-              child: SizedBox(height: top, width: double.infinity),
-            ),
-            Material(
-              color: AppColor.white,
-              elevation: 1,
-              child: SizedBox(
-                height: 50.h,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(false),
-                      icon: Icon(Icons.arrow_back_ios_new, color: AppColor.primary, size: 20.sp),
-                    ),
-                    Expanded(
-                      child: Text(
-                        SelectSiteStrings.pageTitle,
-                        textAlign: TextAlign.center,
-                        style: SelectSiteTextStyle.appBarTitle(),
-                      ),
-                    ),
-                    SizedBox(width: 48.w),
-                  ],
-                ),
-              ),
+            StandardPrimaryHeader(
+              title: SelectSiteStrings.pageTitle,
+              onBack: () => context.pop(false),
             ),
             Expanded(
               child: _loading

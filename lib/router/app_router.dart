@@ -41,7 +41,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path == AppRoute.register.path ||
             path.startsWith('${AppRoute.register.path}/') ||
             path == AppRoute.visitor.path ||
-            path.startsWith('${AppRoute.visitor.path}/')) {
+            path.startsWith('${AppRoute.visitor.path}/') ||
+            path == AppRoute.attendance.path) {
           return AppRoute.login.path;
         }
         return AppRoute.login.path;

@@ -154,6 +154,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                             AppLog.track('visitor_grid', screen: 'Home');
                             context.push(AppRoute.visitor.path);
                           },
+                          onAttendanceEnabledTap: () {
+                            AppLog.track('attendance_grid', screen: 'Home');
+                            context.push(AppRoute.attendance.path);
+                          },
                         ),
                       ],
                     ),

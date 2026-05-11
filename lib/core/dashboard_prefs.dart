@@ -134,6 +134,7 @@ abstract final class DashboardPrefs {
       qr: g(qrEnableKey) == 'true',
       lprEnabled: g(lprEnabledKey) == 'true',
       securityUuid: g(securityUuidKey),
+      securityJson: g(securityJsonKey),
       officeEnable: g(officeEnableKey),
       callOption: g(userResidenceCallKey),
       buildingResidencesJson: g(buildingResidencesKey),
@@ -168,6 +169,7 @@ class DashboardSnapshot {
     required this.qr,
     required this.lprEnabled,
     required this.securityUuid,
+    this.securityJson = '',
     this.officeEnable = '',
     this.callOption = '',
     this.buildingResidencesJson = '',
@@ -183,6 +185,8 @@ class DashboardSnapshot {
   final bool qr;
   final bool lprEnabled;
   final String securityUuid;
+  /// Trimmed guard list JSON (Android `DBOthers.securityJson`).
+  final String securityJson;
   final String officeEnable;
   final String callOption;
   final String buildingResidencesJson;

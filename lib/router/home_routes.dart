@@ -9,6 +9,7 @@ import '../page/register/register_visitor_draft.dart';
 import '../page/select_site/select_site_page.dart';
 import '../page/unit_call/recent/call_recent_page.dart';
 import '../page/unit_call/unit_call_page.dart';
+import '../page/attendance/attendance_page.dart';
 import '../page/visitor/visitor_details_page.dart';
 import '../page/visitor/visitor_page.dart';
 import 'app_route.dart';
@@ -61,6 +62,11 @@ List<RouteBase> buildHomeRoutes() => [
     path: AppRoute.registerIdScan.path,
     name: AppRoute.registerIdScan.name,
     builder: (context, state) => const RegisterIdScanPage(),
+  ),
+  GoRoute(
+    path: AppRoute.attendance.path,
+    name: AppRoute.attendance.name,
+    builder: (context, state) => const AttendancePage(),
   ),
   GoRoute(
     path: AppRoute.visitor.path,

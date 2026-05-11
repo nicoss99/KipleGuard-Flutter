@@ -58,7 +58,7 @@ class RegisterStyledHeader extends StatelessWidget {
                       title,
                       key: ValueKey<String>(title),
                       textAlign: TextAlign.center,
-                      style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
+                      style: AppTextStyle.title,
                     ),
                   ),
                 ),
