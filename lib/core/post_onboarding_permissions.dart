@@ -1,6 +1,6 @@
-import 'dart:developer' show log;
-
 import 'package:permission_handler/permission_handler.dart';
+
+import 'app_logger.dart';
 
 /// Runtime prompts aligned with Android `AndroidManifest` guard / VoIP / camera flows.
 /// Called once after the onboarding carousel completes (before login).
@@ -11,11 +11,11 @@ Future<void> requestPostOnboardingPermissions() async {
       Permission.microphone,
       Permission.phone,
     ].request();
-    log('post-onboarding permissions: $results', name: 'PostOnboardingPermissions');
+    AppLog.info('post-onboarding permissions: $results', tag: 'PostOnboardingPermissions');
   } catch (e, st) {
-    log(
+    AppLog.error(
       'permission request failed',
-      name: 'PostOnboardingPermissions',
+      tag: 'PostOnboardingPermissions',
       error: e,
       stackTrace: st,
     );

@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/app_assets.dart';
 import '../../../theme/app_color.dart';
-import '../../../theme/app_text_style.dart';
 import '../dashboard_strings.dart';
+import '../dashboard_text_style.dart';
+import 'dashboard_bottom_item.dart';
+import 'dashboard_svg_icon.dart';
 
-/// Bottom strip + elevated register control from `activity_dashboard.xml` footer.
+/// Footer row + rounded-square register button (Android `ic_dashboard_*`).
 class DashboardBottomBar extends StatelessWidget {
-  const DashboardBottomBar({super.key});
+  const DashboardBottomBar({
+    super.key,
+    required this.intercomEnabled,
+    required this.visitorEnabled,
+    this.onCall,
+    this.onRegister,
+    this.onScan,
+  });
+
+  final bool intercomEnabled;
+  final bool visitorEnabled;
+  final VoidCallback? onCall;
+  final VoidCallback? onRegister;
+  final VoidCallback? onScan;
+
+  static double get _iconSz => 24.sp;
 
   @override
   Widget build(BuildContext context) {
-    final barHeight = 72.h;
-    final stackHeight = barHeight + 24.h;
+    final barHeight = 68.h;
+    final stackHeight = barHeight + 22.h;
+    final callAsset = intercomEnabled ? AppAssets.icDashboardCallBlue : AppAssets.icDashboardCall;
+    final callLabelColor = intercomEnabled ? AppColor.primary : AppColor.textPrimary;
+    final registerLabelColor = visitorEnabled ? AppColor.primary : AppColor.textPrimary;
 
     return SizedBox(
       height: stackHeight,
@@ -24,37 +45,40 @@ class DashboardBottomBar extends StatelessWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: Material(
-              color: AppColor.lightGreyBar,
-              elevation: 0,
+            child: ColoredBox(
+              color: AppColor.white,
               child: SizedBox(
                 height: barHeight,
                 child: Row(
                   children: [
                     Expanded(
-                      child: _BottomItem(
-                        icon: Icons.call,
+                      child: DashboardBottomItem(
+                        icon: DashboardSvgIcon(asset: callAsset, size: _iconSz),
                         label: DashboardStrings.call,
-                        color: AppColor.textPrimary,
+                        labelColor: callLabelColor,
+                        onTap: onCall,
                       ),
                     ),
                     Expanded(
-                      child: Center(
-                        child: Text(
-                          DashboardStrings.register,
-                          style: AppTextStyle.body.copyWith(
-                            color: AppColor.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onRegister,
+                          child: Center(
+                            child: Text(
+                              DashboardStrings.register,
+                              style: DashboardTextStyle.bottomLabel(registerLabelColor),
+                            ),
                           ),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: _BottomItem(
-                        icon: Icons.qr_code_scanner,
+                      child: DashboardBottomItem(
+                        icon: DashboardSvgIcon(asset: AppAssets.icDashboardQrBlue, size: _iconSz),
                         label: DashboardStrings.scanQr,
-                        color: AppColor.primary,
+                        labelColor: AppColor.primary,
+                        onTap: onScan,
                       ),
                     ),
                   ],
@@ -65,72 +89,34 @@ class DashboardBottomBar extends StatelessWidget {
           Positioned(
             top: 0,
             child: Material(
-              elevation: 2,
-              shape: const CircleBorder(),
+              elevation: 4,
+              shadowColor: AppColor.primary.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(12.r),
               child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {},
+                onTap: onRegister,
+                borderRadius: BorderRadius.circular(12.r),
                 child: Ink(
-                  width: 52.w,
-                  height: 52.w,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
+                  width: 48.w,
+                  height: 48.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.r),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                       colors: [AppColor.primary, AppColor.primaryDark],
                     ),
                   ),
-                  child: Icon(Icons.person_add_alt_1, color: AppColor.white, size: 24.sp),
+                  child: Center(
+                    child: DashboardSvgIcon(
+                      asset: AppAssets.icDashboardAddUser,
+                      size: 22.sp,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomItem extends StatelessWidget {
-  const _BottomItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.center,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 24.sp, color: color),
-                    SizedBox(height: 4.h),
-                    Text(
-                      label,
-                      style: AppTextStyle.body.copyWith(color: color, fontSize: 11.sp),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
       ),
     );
   }

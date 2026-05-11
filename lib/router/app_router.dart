@@ -34,7 +34,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (path == AppRoute.onboardingIntro.path || path == AppRoute.onboarding.path) {
           return AppRoute.login.path;
         }
-        if (path == AppRoute.home.path) return AppRoute.login.path;
+        if (path == AppRoute.home.path ||
+            path == AppRoute.selectSite.path ||
+            path == AppRoute.callUnits.path ||
+            path == AppRoute.callRecent.path ||
+            path == AppRoute.register.path ||
+            path.startsWith('${AppRoute.register.path}/') ||
+            path == AppRoute.visitor.path ||
+            path.startsWith('${AppRoute.visitor.path}/')) {
+          return AppRoute.login.path;
+        }
         return AppRoute.login.path;
       }
 

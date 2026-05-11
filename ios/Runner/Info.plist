@@ -68,6 +68,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is used to take photos, record video, and for guard features such as attendance and visitors.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access lets you attach a visitor photo during registration.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is used to record audio and for in-app communication features.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

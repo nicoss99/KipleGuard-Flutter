@@ -15,7 +15,6 @@ class LoginScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pad = MediaQuery.paddingOf(context);
     return ColoredBox(
       color: AppColor.loginScreenBlue,
       child: DecoratedBox(
@@ -26,44 +25,41 @@ class LoginScaffold extends StatelessWidget {
             colors: [AppColor.loginScreenBlue, AppColor.loginScreenBlueDeep],
           ),
         ),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            50.w,
-            pad.top + 24.h,
-            50.w,
-            pad.bottom + 24.h,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 12.h),
-              Image.asset(
-                AppAssets.kipleGuardIcon,
-                height: 150.h,
-                fit: BoxFit.contain,
-                color: AppColor.white,
-                colorBlendMode: BlendMode.srcATop,
-              ),
-              SizedBox(height: 20.h),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: child,
-                        ),
-                      ),
-                    );
-                  },
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(50.w, 24.h, 50.w, 24.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 12.h),
+                Image.asset(
+                  AppAssets.kipleGuardIcon,
+                  height: 150.h,
+                  fit: BoxFit.contain,
+                  color: AppColor.white,
+                  colorBlendMode: BlendMode.srcATop,
                 ),
-              ),
-            ],
+                SizedBox(height: 20.h),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

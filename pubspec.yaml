@@ -49,6 +49,16 @@ dependencies:
   url_launcher: ^6.3.2
   uuid: ^4.5.3
   permission_handler: ^12.0.1
+  flutter_svg: ^2.2.3
+  cached_network_image: ^3.4.1
+  encrypt: ^5.0.3
+  camera: ^0.12.0+1
+  google_mlkit_text_recognition: ^0.15.1
+  image_picker: ^1.2.2
+  flutter_lucide: ^1.11.0
+  calendar_date_picker2: ^2.0.1
+  qr_flutter: ^4.1.0
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +86,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/home_vectors/
     - assets/lottie/
     - assets/images/
     - assets/android/drawable/

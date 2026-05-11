@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, SystemUiOverlayStyle;
@@ -9,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_config.dart';
+import '../../core/app_logger.dart';
 import '../../core/app_flavor.dart';
 import '../../core/auth_prefs.dart';
 import '../../core/region_location_permission.dart';
@@ -55,10 +55,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         mode: LaunchMode.externalApplication,
       );
       if (!launched && mounted) {
-        log('Forgot password: no handler for $uri');
+        AppLog.info('Forgot password: no handler for $uri', tag: 'Login');
       }
     } on PlatformException catch (e, st) {
-      log('Forgot password launch failed', error: e, stackTrace: st);
+      AppLog.error(
+        'Forgot password launch failed',
+        tag: 'Login',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

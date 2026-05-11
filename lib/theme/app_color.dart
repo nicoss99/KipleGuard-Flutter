@@ -24,4 +24,7 @@ abstract final class AppColor {
   static const Color grey = Color(0xFFF2F2F2);
   static const Color greyBorder = Color(0xFFCBCBCB);
   static const Color lightGreyBar = Color(0xFFF7F7F7);
+
+  /// Android residence picker rows (`adapter_residence` grey bars).
+  static const Color siteListRowGrey = Color(0xFFC4C4C4);
 }

@@ -1,14 +1,18 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/app_config.dart';
+import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
 
-/// Mirrors Android `RetrofitListAPI.sessionAPI` + Firebase token registration.
+/// Mirrors `RetrofitListAPI.sessionAPI` + `POST data/user_firebase_tokens` ([LoginActivity]).
 class LoginRepository {
   LoginRepository(this._dio);
 
   final Dio _dio;
-  static const _uuid = Uuid();
+  static final _uuid = Uuid();
 
   Future<void> signIn({
     required String identifier,
@@ -18,8 +22,9 @@ class LoginRepository {
   }) async {
     await AuthPrefs.setRegionCode(regionCode);
     try {
+      AppLog.info('Sign-in API request', tag: 'LoginApi');
       final res = await _dio.post<Map<String, dynamic>>(
-        'admin/session',
+        AppConfig.sessionApiPath,
         data: <String, dynamic>{
           'identifier': identifier,
           'challenge': challenge,
@@ -33,24 +38,48 @@ class LoginRepository {
       if (token == null || profile == null) {
         throw Exception('Invalid session payload');
       }
+
       final profileUuid = profile['uuid'] as String?;
       final name = profile['name'] as String? ?? '';
       if (profileUuid == null) throw Exception('Invalid profile');
 
+      final identities = data['identities'];
+      String? identityUuid;
+      if (identities is List && identities.isNotEmpty) {
+        final first = identities.first;
+        if (first is Map<String, dynamic>) {
+          identityUuid = first['uuid'] as String?;
+        }
+      }
+
+      final email = profile['email'] as String? ?? '';
+      final phone = profile['phone'] as String? ?? '';
+      String? rolesJson;
+      final roles = profile['roles'];
+      if (roles != null) {
+        rolesJson = jsonEncode(roles);
+      }
+
+      AppLog.info('Sign-in API response OK', tag: 'LoginApi');
       await AuthPrefs.setSession(
         sessionToken: token,
         profileUuid: profileUuid,
         userName: name,
         regionCode: regionCode,
+        userIdentityUuid: identityUuid,
+        userEmail: email.isEmpty ? null : email,
+        userPhone: phone.isEmpty ? null : phone,
+        userRolesJson: rolesJson,
       );
 
-      final deviceUuid = _uuid.v4();
+      final tokenForFirebase = firebaseToken.isEmpty ? '' : firebaseToken;
+
       try {
         await _dio.post<Map<String, dynamic>>(
-          'data/user_firebase_tokens',
+          AppConfig.userFirebaseTokensPath,
           data: <String, dynamic>{
-            'uuid': deviceUuid,
-            'firebase_token': firebaseToken,
+            'uuid': _uuid.v4(),
+            'firebase_token': tokenForFirebase,
             'user_profile_uuid': profileUuid,
             'is_valid': '1',
           },
@@ -60,12 +89,34 @@ class LoginRepository {
         rethrow;
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401 || e.response?.statusCode == 400) {
-        throw LoginApiException('Invalid username / password');
-      }
-      throw LoginApiException(e.message ?? 'Network error');
+      final message = _loginErrorMessage(e);
+      AppLog.warning('Sign-in API failed', tag: 'LoginApi', data: {'message': message});
+      throw LoginApiException(message);
     }
   }
+}
+
+String _loginErrorMessage(DioException e) {
+  final response = e.response;
+  if (response == null) return e.message ?? 'Network error';
+
+  final data = response.data;
+  if (data is Map<String, dynamic>) {
+    final errField = data['error'];
+    if (errField is String && errField.isNotEmpty) {
+      try {
+        final inner = jsonDecode(errField) as Map<String, dynamic>;
+        final msg = inner['message'];
+        if (msg is String && msg.isNotEmpty) return msg;
+      } catch (_) {}
+    }
+    final top = data['message'];
+    if (top is String && top.isNotEmpty) return top;
+  }
+
+  final code = response.statusCode;
+  if (code == 401 || code == 400) return 'Invalid username / password';
+  return e.message ?? 'Something went wrong';
 }
 
 final class LoginApiException implements Exception {

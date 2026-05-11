@@ -1,4 +1,7 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/app_config.dart';
@@ -16,6 +19,7 @@ final dioProvider = Provider<Dio>((ref) {
       receiveTimeout: const Duration(seconds: 30),
       headers: <String, dynamic>{
         'Accept': 'application/json',
+        'Accept-Encoding': 'deflate',
         'Content-Type': 'application/json; charset=utf-8',
         'X-Application-Key': AppConfig.xApplicationKey(flavor),
       },
@@ -32,5 +36,16 @@ final dioProvider = Provider<Dio>((ref) {
       },
     ),
   );
+  if (kDebugMode) {
+    dio.interceptors.add(
+      LogInterceptor(
+        requestHeader: false,
+        requestBody: true,
+        responseHeader: false,
+        responseBody: false,
+        logPrint: (o) => developer.log(o.toString(), name: 'KipleGuard.Dio'),
+      ),
+    );
+  }
   return dio;
 });

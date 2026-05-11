@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/app_logger.dart';
 import '../../service/api_service.dart';
+import 'login_fcm_token.dart';
 import 'login_repository.dart';
 
 final loginRepositoryProvider = Provider<LoginRepository>(
@@ -71,12 +73,16 @@ class LoginNotifier extends Notifier<LoginUiState> {
       clearApiError: true,
     );
     try {
+      final fcm = firebaseToken.isNotEmpty
+          ? firebaseToken
+          : await readLoginFirebaseMessagingToken();
       await ref.read(loginRepositoryProvider).signIn(
             identifier: identifier,
             challenge: password,
             regionCode: regionCode,
-            firebaseToken: firebaseToken,
+            firebaseToken: fcm,
           );
+      AppLog.track('sign_in_success', screen: 'Login', attributes: {'region': regionCode});
       state = state.copyWith(loading: false);
       return true;
     } on LoginApiException catch (e) {
