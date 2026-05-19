@@ -17,4 +17,8 @@ abstract final class AppAssets {
   static const icDashboardCallBlue = 'assets/home_vectors/ic_dashboard_call_blue.svg';
   static const icDashboardAddUser = 'assets/home_vectors/ic_dashboard_add_user.svg';
   static const icDashboardQrBlue = 'assets/home_vectors/ic_dashboard_qr_blue.svg';
+
+  /// Android `ic_visitor_checkin.xml` / `ic_visitor_checkout.xml` (attendance record list).
+  static const icVisitorCheckin = 'assets/home_vectors/ic_visitor_checkin.svg';
+  static const icVisitorCheckout = 'assets/home_vectors/ic_visitor_checkout.svg';
 }

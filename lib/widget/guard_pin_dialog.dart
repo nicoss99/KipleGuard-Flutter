@@ -80,14 +80,12 @@ class _GuardPinDialogState extends State<GuardPinDialog> {
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-      child: Stack(
-        children: [
-          if (_phase == _PinPhase.enter) _buildEnter(),
-          if (_phase == _PinPhase.loading) const _PinCheckingAnimated(),
-          if (_phase == _PinPhase.success) _buildSuccess(),
-          if (_phase == _PinPhase.error) _buildError(),
-        ],
-      ),
+      child: switch (_phase) {
+        _PinPhase.enter => _buildEnter(),
+        _PinPhase.loading => const _PinCheckingAnimated(),
+        _PinPhase.success => _buildSuccess(),
+        _PinPhase.error => _buildError(),
+      },
     );
   }
 
@@ -149,12 +147,15 @@ class _GuardPinDialogState extends State<GuardPinDialog> {
       padding: EdgeInsets.all(20.w),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(height: 40.h),
-          Icon(Icons.check_circle, size: 48.sp, color: AppColor.primary),
-          SizedBox(height: 12.h),
-          Text(ReportingStrings.success, style: AppTextStyle.title),
-          SizedBox(height: 40.h),
+          Icon(Icons.check_circle, size: 56.sp, color: AppColor.primary),
+          SizedBox(height: 16.h),
+          Text(
+            ReportingStrings.success,
+            style: AppTextStyle.title,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -236,7 +237,6 @@ class _PinCheckingAnimatedState extends State<_PinCheckingAnimated>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: 20.h),
           AnimatedBuilder(
             animation: _ctrl,
             builder: (context, _) {
@@ -257,7 +257,6 @@ class _PinCheckingAnimatedState extends State<_PinCheckingAnimated>
           ),
           SizedBox(height: 16.h),
           Text(ReportingStrings.checkingPin, textAlign: TextAlign.center, style: AppTextStyle.title),
-          SizedBox(height: 50.h),
         ],
       ),
     );

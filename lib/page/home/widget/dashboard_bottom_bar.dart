@@ -27,6 +27,9 @@ class DashboardBottomBar extends StatelessWidget {
 
   static double get _iconSz => 24.sp;
 
+  static ColorFilter get _primaryIconFilter =>
+      ColorFilter.mode(AppColor.primary, BlendMode.srcIn);
+
   @override
   Widget build(BuildContext context) {
     final barHeight = 68.h;
@@ -46,14 +49,18 @@ class DashboardBottomBar extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: ColoredBox(
-              color: AppColor.white,
+              color: AppColor.lightGreyBar,
               child: SizedBox(
                 height: barHeight,
                 child: Row(
                   children: [
                     Expanded(
                       child: DashboardBottomItem(
-                        icon: DashboardSvgIcon(asset: callAsset, size: _iconSz),
+                        icon: DashboardSvgIcon(
+                          asset: callAsset,
+                          size: _iconSz,
+                          colorFilter: intercomEnabled ? _primaryIconFilter : null,
+                        ),
                         label: DashboardStrings.call,
                         labelColor: callLabelColor,
                         onTap: onCall,
@@ -75,7 +82,11 @@ class DashboardBottomBar extends StatelessWidget {
                     ),
                     Expanded(
                       child: DashboardBottomItem(
-                        icon: DashboardSvgIcon(asset: AppAssets.icDashboardQrBlue, size: _iconSz),
+                        icon: DashboardSvgIcon(
+                          asset: AppAssets.icDashboardQrBlue,
+                          size: _iconSz,
+                          colorFilter: _primaryIconFilter,
+                        ),
                         label: DashboardStrings.scanQr,
                         labelColor: AppColor.primary,
                         onTap: onScan,

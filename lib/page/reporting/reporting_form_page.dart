@@ -1,6 +1,4 @@
-import 'dart:async' show unawaited;
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,22 +9,27 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/modal_progress_hud.dart';
 import 'reporting_models.dart';
 import 'reporting_prefs.dart';
 import 'reporting_repository.dart';
 import 'reporting_strings.dart';
-import 'reporting_sync_service.dart';
-import 'widget/reporting_category_icon.dart';
+import 'reporting_submit_service.dart';
+import 'widget/reporting_category_field.dart';
+import 'widget/reporting_category_sheet.dart';
+import 'widget/reporting_datetime_field.dart';
+import 'widget/reporting_description_field.dart';
 import 'widget/reporting_page_header.dart';
+import 'widget/reporting_photo_strip.dart';
+import 'widget/reporting_success_dialog.dart';
 
-/// Android `ReportingStep2Activity` + `activity_reportingstep2.xml`.
+/// Android `ReportingStep2Activity` + dashboard incident API pipeline.
 class ReportingFormPage extends ConsumerStatefulWidget {
   const ReportingFormPage({super.key, required this.args});
 
@@ -41,6 +44,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   final _descFocus = FocusNode();
   final _picker = ImagePicker();
   var _loadingCats = true;
+  var _submitting = false;
   List<ReportingCategory> _cats = [];
   String? _selectedUuid;
   String _dateLabel = '';
@@ -53,11 +57,29 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   var _errDate = false;
   var _errCat = false;
 
+  bool get _canSubmit =>
+      (_selectedUuid?.isNotEmpty ?? false) &&
+      _desc.text.trim().isNotEmpty &&
+      _incidentUtc.isNotEmpty;
+
+  String? get _categoryName {
+    if (_selectedUuid == null) return null;
+    for (final c in _cats) {
+      if (c.uuid == _selectedUuid) return c.name;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
     AppLog.track('incidents_view', screen: 'ReportingForm');
+    _desc.addListener(_onFormChanged);
     _init();
+  }
+
+  void _onFormChanged() {
+    if (mounted) setState(() => _errDesc = false);
   }
 
   Future<void> _init() async {
@@ -68,9 +90,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   Future<void> _location() async {
     try {
       var p = await Geolocator.checkPermission();
-      if (p == LocationPermission.denied) {
-        p = await Geolocator.requestPermission();
-      }
+      if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
       if (p == LocationPermission.denied || p == LocationPermission.deniedForever) return;
       final pos = await Geolocator.getCurrentPosition();
       _lat = pos.latitude;
@@ -101,7 +121,6 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       setState(() {
         _cats = _parseCats(cached);
         _loadingCats = false;
-        _pickDefaultCat();
       });
     }
     try {
@@ -111,17 +130,10 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       setState(() {
         _cats = _parseCats(raw);
         _loadingCats = false;
-        _pickDefaultCat();
       });
     } catch (e, st) {
       AppLog.error('Incident categories', tag: 'Reporting', error: e, stackTrace: st);
       if (mounted) setState(() => _loadingCats = false);
-    }
-  }
-
-  void _pickDefaultCat() {
-    if (_selectedUuid == null && _cats.isNotEmpty) {
-      _selectedUuid = _cats.first.uuid;
     }
   }
 
@@ -136,6 +148,14 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     }
   }
 
+  ThemeData _pickerTheme(BuildContext context) {
+    final base = Theme.of(context);
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(primary: AppColor.primary, onPrimary: AppColor.white),
+      dialogTheme: DialogThemeData(backgroundColor: AppColor.white),
+    );
+  }
+
   Future<void> _pickDateTime() async {
     AppLog.track('select_datetime', screen: 'ReportingForm');
     final now = DateTime.now();
@@ -144,14 +164,27 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       initialDate: now,
       firstDate: DateTime(2000),
       lastDate: now,
+      helpText: ReportingStrings.reportDateTime,
+      cancelText: ReportingStrings.cancel,
+      confirmText: ReportingStrings.pickerOk,
+      builder: (ctx, child) => Theme(data: _pickerTheme(ctx), child: child!),
     );
     if (d == null || !mounted) return;
-    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(now));
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now),
+      helpText: ReportingStrings.reportDateTime,
+      cancelText: ReportingStrings.cancel,
+      confirmText: ReportingStrings.pickerOk,
+      builder: (ctx, child) => Theme(data: _pickerTheme(ctx), child: child!),
+    );
     if (t == null || !mounted) return;
     var picked = DateTime(d.year, d.month, d.day, t.hour, t.minute);
     if (picked.isAfter(now)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(ReportingStrings.errorReportDate)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(ReportingStrings.errorReportDate)),
+      );
       await _pickDateTime();
       return;
     }
@@ -162,50 +195,74 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     });
   }
 
-  Future<void> _openAddPhoto() async {
-    AppLog.track('add_photo', screen: 'ReportingForm');
-    final choice = await showModalBottomSheet<int>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: const Text(ReportingStrings.camera), onTap: () => Navigator.pop(ctx, 0)),
-            ListTile(title: const Text(ReportingStrings.gallery), onTap: () => Navigator.pop(ctx, 1)),
-          ],
-        ),
-      ),
+  Future<void> _openCategorySheet() async {
+    if (_cats.isEmpty) return;
+    final uuid = await showReportingCategorySheet(
+      context,
+      categories: _cats,
+      selectedUuid: _selectedUuid,
     );
-    if (choice == null || !mounted) return;
-    if (choice == 0) {
+    if (uuid == null || !mounted) return;
+    setState(() {
+      _selectedUuid = uuid;
+      _errCat = false;
+      if (!_firstSpinner) _descFocus.requestFocus();
+      _firstSpinner = false;
+    });
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    if (_files.length >= ReportingPhotoStrip.maxPhotos) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ReportingStrings.imageLimit)),
+        );
+      }
+      return;
+    }
+    if (source == ImageSource.camera) {
+      AppLog.track('add_photo', screen: 'ReportingForm');
       final st = await Permission.camera.request();
       if (!st.isGranted) return;
-      final img = await _picker.pickImage(source: ImageSource.camera);
-      if (img != null && mounted && _files.length < 5) setState(() => _files.add(img));
-    } else {
-      final limit = 5 - _files.length;
-      if (limit <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(ReportingStrings.imageLimit)));
-        return;
-      }
-      final imgs = await _picker.pickMultiImage(limit: limit);
-      if (mounted) setState(() => _files.addAll(imgs));
     }
+    final img = await _picker.pickImage(source: source, imageQuality: 72);
+    if (img != null && mounted) setState(() => _files.add(img));
+  }
+
+  Future<void> _pickGallery() async {
+    AppLog.track('add_photo', screen: 'ReportingForm');
+    final limit = ReportingPhotoStrip.maxPhotos - _files.length;
+    if (limit <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ReportingStrings.imageLimit)),
+        );
+      }
+      return;
+    }
+    final imgs = await _picker.pickMultiImage(limit: limit);
+    if (mounted) setState(() => _files.addAll(imgs));
   }
 
   Future<void> _submit() async {
-    AppLog.track('submit_incident', screen: 'ReportingForm');
+    if (!_canSubmit || _submitting) return;
+
     final desc = _desc.text.trim();
-    final pass = desc.isNotEmpty && _incidentUtc.isNotEmpty && (_selectedUuid?.isNotEmpty ?? false);
     setState(() {
       _errDesc = desc.isEmpty;
       _errDate = _incidentUtc.isEmpty;
       _errCat = _selectedUuid == null || _selectedUuid!.isEmpty;
     });
-    if (!pass) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(ReportingStrings.errorBlank)));
+    if (!_canSubmit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(ReportingStrings.errorBlank)),
+      );
       return;
     }
+
+    AppLog.track('submit_incident', screen: 'ReportingForm');
+    setState(() => _submitting = true);
+
     final snap = await DashboardPrefs.loadSnapshot();
     final body = <String, dynamic>{
       'incident_date': _incidentUtc,
@@ -219,15 +276,39 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       'status': 'PENDING',
       'pin': widget.args.guardPin,
     };
-    await ReportingPrefs.enqueue(body: body, imagePaths: _files.map((e) => e.path).toList());
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(ReportingStrings.reportSaved)));
-    unawaited(ref.read(reportingSyncServiceProvider).processQueue());
-    context.pop();
+    final paths = _files.map((e) => e.path).toList();
+    final categoryName = _categoryName ?? '';
+
+    try {
+      final outcome = await ref.read(reportingSubmitServiceProvider).submit(
+            body: body,
+            imagePaths: paths,
+          );
+      if (!mounted) return;
+      await showReportingSuccessDialog(
+        context,
+        categoryName: categoryName,
+        dateLabel: _dateLabel,
+        photoCount: _files.length,
+        queuedOffline: outcome == ReportingSubmitOutcome.queued,
+      );
+      if (!mounted) return;
+      context.pop();
+    } catch (e, st) {
+      AppLog.error('Incident submit', tag: 'Reporting', error: e, stackTrace: st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ReportingStrings.submitFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   void dispose() {
+    _desc.removeListener(_onFormChanged);
     _desc.dispose();
     _descFocus.dispose();
     super.dispose();
@@ -240,240 +321,89 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: AppColor.white,
-        body: Column(
-          children: [
-            ReportingPageHeader(title: ReportingStrings.reportIncident),
-            Expanded(
-              child: RefreshIndicator(
-                color: AppColor.primary,
-                onRefresh: _onPullRefresh,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(bottom: 100.h),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _label(ReportingStrings.reportType, error: _errCat),
-                          SizedBox(height: 4.h),
-                          Card(
-                            elevation: 2,
-                            margin: EdgeInsets.all(5.w),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                            child: _loadingCats
-                                ? Padding(padding: EdgeInsets.all(16.w), child: const LinearProgressIndicator())
-                                : Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<String>(
-                                        isExpanded: true,
-                                        value: _selectedUuid != null && _cats.any((c) => c.uuid == _selectedUuid)
-                                            ? _selectedUuid
-                                            : null,
-                                        hint: const Text(''),
-                                        items: _cats
-                                            .map(
-                                              (c) => DropdownMenuItem(
-                                                value: c.uuid,
-                                                child: Row(
-                                                  children: [
-                                                    reportingCategoryIcon(
-                                                      c.name,
-                                                      selected: c.uuid == _selectedUuid,
-                                                      size: 18,
-                                                    ),
-                                                    SizedBox(width: 8.w),
-                                                    Expanded(child: Text(c.name, style: AppTextStyle.subtitle)),
-                                                  ],
-                                                ),
-                                              ),
-                                            )
-                                            .toList(),
-                                        onChanged: (v) {
-                                          setState(() {
-                                            _selectedUuid = v;
-                                            _errCat = false;
-                                            if (!_firstSpinner) {
-                                              _descFocus.requestFocus();
-                                            }
-                                            _firstSpinner = false;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                          SizedBox(height: 20.h),
-                          _label(ReportingStrings.reportDesc, error: _errDesc),
-                          TextField(
-                            controller: _desc,
-                            focusNode: _descFocus,
-                            maxLines: 5,
-                            style: AppTextStyle.subtitle,
-                            decoration: InputDecoration(
-                              hintText: ReportingStrings.reportDetails,
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(10.w),
+      child: ModalProgressHud(
+        inAsyncCall: _submitting,
+        child: Scaffold(
+          backgroundColor: AppColor.white,
+          body: Column(
+            children: [
+              ReportingPageHeader(title: ReportingStrings.reportIncident),
+              Expanded(
+                child: RefreshIndicator(
+                  color: AppColor.primary,
+                  onRefresh: _onPullRefresh,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(20.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ReportingCategoryField(
+                              label: ReportingStrings.reportType,
+                              loading: _loadingCats,
+                              categories: _cats,
+                              selectedUuid: _selectedUuid,
+                              error: _errCat,
+                              onTap: _openCategorySheet,
                             ),
-                            onChanged: (_) => setState(() => _errDesc = false),
-                          ),
-                          Container(height: 1, margin: EdgeInsets.symmetric(horizontal: 5.w), color: _lineDesc),
-                          SizedBox(height: 20.h),
-                          _label(ReportingStrings.reportDateTime, error: _errDate),
-                          Card(
-                            elevation: 2,
-                            margin: EdgeInsets.all(5.w),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                            child: InkWell(
+                            SizedBox(height: 20.h),
+                            ReportingDescriptionField(
+                              label: ReportingStrings.reportDesc,
+                              hint: ReportingStrings.reportDetails,
+                              controller: _desc,
+                              focusNode: _descFocus,
+                              error: _errDesc,
+                              onChanged: (_) => setState(() => _errDesc = false),
+                            ),
+                            SizedBox(height: 20.h),
+                            ReportingDateTimeField(
+                              label: ReportingStrings.reportDateTime,
+                              hint: ReportingStrings.reportDateTimeHint,
+                              value: _dateLabel,
+                              error: _errDate,
                               onTap: _pickDateTime,
-                              child: Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(10.w),
-                                color: AppColor.lightGreyBar,
-                                child: Text(
-                                  _dateLabel.isEmpty ? ReportingStrings.reportDateTimeHint : _dateLabel,
-                                  style: AppTextStyle.subtitle.copyWith(
-                                    color: _dateLabel.isEmpty ? AppColor.textSecondary : AppColor.textPrimary,
-                                  ),
-                                ),
-                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 0),
-                      child: Text(ReportingStrings.reportAddPhoto, style: _sectionStyle),
-                    ),
-                    SizedBox(
-                      height: 140.h,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        children: [
-                          if (_files.length < 5) _addTile(),
-                          ..._files.asMap().entries.map((e) => _thumbTile(e.key, e.value)),
-                        ],
+                      ReportingPhotoStrip(
+                        photos: _files,
+                        onPickCamera: () => _pickImage(ImageSource.camera),
+                        onPickGallery: _pickGallery,
+                        onRemoveAt: (i) => setState(() => _files.removeAt(i)),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColor.primary,
-                    padding: EdgeInsets.all(20.w),
-                  ),
-                  onPressed: _submit,
-                  child: Text(
-                    ReportingStrings.reportSubmit,
-                    style: AppTextStyle.subtitle.copyWith(color: AppColor.white),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color get _lineDesc => _errDesc ? AppColor.red : AppColor.greyBorder;
-
-  TextStyle get _sectionStyle => AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600);
-
-  Widget _label(String t, {bool error = false}) {
-    return Padding(
-      padding: EdgeInsets.all(5.w),
-      child: Text(t, style: _sectionStyle.copyWith(color: error ? AppColor.red : AppColor.textPrimary)),
-    );
-  }
-
-  Widget _addTile() {
-    return Padding(
-      padding: EdgeInsets.all(10.w),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _openAddPhoto,
-          child: Container(
-            width: 100.w,
-            height: 100.h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(color: AppColor.greyBorder, width: 1),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/android/drawable/ic_register_upload.xml',
-                  width: 28.w,
-                  height: 28.h,
-                  colorFilter: const ColorFilter.mode(AppColor.textSecondary, BlendMode.srcIn),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: EdgeInsets.all(20.w),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColor.primary,
+                        disabledBackgroundColor: AppColor.greyBorder,
+                        disabledForegroundColor: AppColor.textSecondary,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                      ),
+                      onPressed: _canSubmit && !_submitting ? _submit : null,
+                      child: Text(
+                        ReportingStrings.reportSubmit,
+                        style: AppTextStyle.subtitle.copyWith(color: AppColor.white),
+                      ),
+                    ),
+                  ),
                 ),
-                SizedBox(height: 4.h),
-                Text(ReportingStrings.addPhoto, style: AppTextStyle.body.copyWith(fontSize: 12.sp)),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _thumbTile(int index, XFile f) {
-    return Padding(
-      padding: EdgeInsets.all(10.w),
-      child: SizedBox(
-        width: 120.w,
-        height: 120.h,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.all(2.w),
-                child: Material(
-                  elevation: 2,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      builder: (ctx) => Dialog(
-                        child: InteractiveViewer(child: Image.file(File(f.path), fit: BoxFit.contain)),
-                      ),
-                    ),
-                    child: Image.file(File(f.path), fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: IconButton(
-                icon: SvgPicture.asset(
-                  'assets/android/drawable/ic_delete.xml',
-                  width: 25.w,
-                  height: 25.h,
-                  colorFilter: const ColorFilter.mode(AppColor.red, BlendMode.srcIn),
-                ),
-                onPressed: () => setState(() => _files.removeAt(index)),
-              ),
-            ),
-          ],
         ),
       ),
     );

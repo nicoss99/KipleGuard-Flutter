@@ -21,6 +21,7 @@ import 'widget/attendance_day_strip.dart';
 import 'widget/attendance_pin_dialog.dart';
 import 'widget/attendance_record_tile.dart';
 import 'widget/attendance_records_date_header.dart';
+import 'widget/attendance_records_empty_state.dart';
 
 class AttendancePage extends ConsumerStatefulWidget {
   const AttendancePage({super.key});
@@ -345,51 +346,56 @@ class _RecordsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      color: AppColor.primary,
-      onRefresh: onRefresh,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: AttendanceRecordsDateHeader(
-              selectedDay: selectedDay,
-              onPickDate: () => onPickDate(),
-              onShiftMonth: onShiftMonth,
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: AttendanceDayStrip(
-              monthDate: selectedDay,
-              selectedDay: selectedDay,
-              onSelectDay: onSelectDay,
-            ),
-          ),
-          if (error != null)
+    return ColoredBox(
+      color: AppColor.lightGreyBar,
+      child: RefreshIndicator(
+        color: AppColor.primary,
+        onRefresh: onRefresh,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
             SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Text(
-                  error!,
-                  style: AppTextStyle.body.copyWith(color: AppColor.red),
+              child: AttendanceRecordsDateHeader(
+                selectedDay: selectedDay,
+                onPickDate: () => onPickDate(),
+                onShiftMonth: onShiftMonth,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: AttendanceDayStrip(
+                monthDate: selectedDay,
+                selectedDay: selectedDay,
+                onSelectDay: onSelectDay,
+              ),
+            ),
+            if (error != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(AppSpacing.md, 8.h, AppSpacing.md, 0),
+                  child: Material(
+                    color: AppColor.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Padding(
+                      padding: EdgeInsets.all(12.w),
+                      child: Text(error!, style: AppTextStyle.body.copyWith(color: AppColor.red)),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          if (records.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Text('No records', style: AppTextStyle.bodyMuted),
+            if (records.isEmpty)
+              const SliverToBoxAdapter(child: AttendanceRecordsEmptyState())
+            else
+              SliverPadding(
+                padding: EdgeInsets.only(top: 4.h, bottom: 80.h),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => AttendanceRecordTile(row: records[i]),
+                    childCount: records.length,
+                  ),
+                ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (ctx, i) => AttendanceRecordTile(row: records[i]),
-                childCount: records.length,
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

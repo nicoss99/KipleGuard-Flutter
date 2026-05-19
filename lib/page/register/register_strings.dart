@@ -42,6 +42,8 @@ abstract final class RegisterStrings {
   static const addVisitorCta = 'Add';
   static const submit = 'Submit';
   static const success = 'Visitor registered';
+  static const successMessage = 'The visitor has been added successfully.';
+  static const successDone = 'Done';
   static const errorRequired = 'Please complete all required fields';
   static const scanTitle = 'Scan ID';
   static const scanAlignHint = 'Align the card in the frame for a better result';

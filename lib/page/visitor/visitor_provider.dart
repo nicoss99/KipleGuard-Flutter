@@ -191,11 +191,13 @@ class VisitorNotifier extends Notifier<VisitorState> {
         dateStartUtc: bounds.start,
         dateEndUtc: bounds.end,
       ),
+      category: VisitorListCategory.checkedIn,
       offset: offset,
       limit: _defaultPageSize,
     );
     final overtimeFuture = repo.fetchRevisedVisitors(
       filter: visitorOvertimeFilter(residenceClause: clause),
+      category: VisitorListCategory.overtime,
       offset: offset,
       limit: _defaultPageSize,
     );

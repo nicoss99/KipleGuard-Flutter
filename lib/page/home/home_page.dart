@@ -81,7 +81,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColor.white,
+        systemNavigationBarColor: AppColor.lightGreyBar,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: ModalProgressHud(

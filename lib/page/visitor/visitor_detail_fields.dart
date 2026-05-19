@@ -107,13 +107,22 @@ class VisitorDetailFields {
 
   /// API stores `ic_passport` encrypted (same as register/patch). Decrypt for UI
   /// masking; keep raw if decrypt fails (legacy plaintext).
+  static bool _hasIcPassportValue(dynamic raw) {
+    if (raw == null) return false;
+    final t = raw.toString().trim();
+    if (t.isEmpty) return false;
+    final lower = t.toLowerCase();
+    return lower != 'null' && lower != 'undefined';
+  }
+
   static String _icPassportPlainForDisplay(Map<String, dynamic> r) {
-    final cipher = r['ic_passport']?.toString() ?? '';
-    if (cipher.isEmpty) return '';
+    if (!_hasIcPassportValue(r['ic_passport'])) return '';
+    final cipher = r['ic_passport'].toString().trim();
     final resUuid = r['residence_uuid']?.toString() ?? '';
     if (resUuid.isEmpty) return cipher;
-    final plain = decryptIcForResidence(cipher, resUuid);
-    return plain.isNotEmpty ? plain : cipher;
+    final plain = decryptIcForResidence(cipher, resUuid).trim();
+    if (plain.isNotEmpty) return plain;
+    return _hasIcPassportValue(cipher) ? cipher : '';
   }
 
   final String uuid;
@@ -175,7 +184,7 @@ class VisitorDetailFields {
   }
 
   String get maskedIcPassport {
-    if (icPassport.isEmpty) return '***********';
+    if (icPassport.isEmpty) return '';
     if (icPassport.length <= 4) return '****';
     final stars = List<String>.filled(icPassport.length - 4, '*').join();
     return '$stars${icPassport.substring(icPassport.length - 4)}';

@@ -6,12 +6,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
-import '../../theme/app_text_style.dart';
 import 'register_models.dart';
 import 'register_payload.dart';
 import 'register_repository.dart';
-import 'register_strings.dart';
 import 'register_visitor_draft.dart';
+import 'widget/register_success_dialog.dart';
 import 'widget/register_time_field.dart';
 
 Future<void> submitRegisterVisit({
@@ -53,12 +52,14 @@ Future<void> submitRegisterVisit({
     );
   }
   if (!context.mounted) return;
-  await showDialog<void>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(RegisterStrings.success, style: AppTextStyle.title),
-      actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('OK'))],
-    ),
+  final unitLabel = unit.blockName.trim().isEmpty
+      ? unit.unitName
+      : '${unit.blockName} · ${unit.unitName}';
+  await showRegisterSuccessDialog(
+    context,
+    visitorName: visitor.name,
+    unitLabel: unitLabel,
+    visitTypeName: type.name,
   );
   if (context.mounted) context.pop();
 }

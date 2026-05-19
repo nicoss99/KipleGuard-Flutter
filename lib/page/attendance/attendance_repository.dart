@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../service/api_service.dart';
 import 'attendance_model.dart';
+import 'attendance_record_format.dart';
 
 final attendanceRepositoryProvider = Provider<AttendanceRepository>(
   (ref) => AttendanceRepository(ref.watch(dioProvider)),
@@ -183,17 +184,6 @@ List<Map<String, dynamic>> _mapList(List<dynamic> raw) {
 
 List<AttendanceRecordRow> _parseRecords(dynamic data) {
   final list = _extractResourceList(data);
-  final fmtIn = DateFormat('yyyy-MM-dd HH:mm:ss');
-  final fmtOut = DateFormat('hh:mma EE dd MMM yyyy', 'en_US');
-  String label(String? raw) {
-    if (raw == null || raw.trim().isEmpty || raw == 'null') return '';
-    try {
-      final dt = fmtIn.parseUtc(raw).toLocal();
-      return fmtOut.format(dt).replaceAll('AM', 'am').replaceAll('PM', 'pm');
-    } catch (_) {
-      return raw;
-    }
-  }
 
   final rows = <AttendanceRecordRow>[];
   for (final m in list) {
@@ -223,8 +213,8 @@ List<AttendanceRecordRow> _parseRecords(dynamic data) {
         guardName: name,
         imageUrl: image,
         guardCode: code,
-        checkInLabel: label(checkinAt),
-        checkOutLabel: hasCheckout ? label(checkoutAt) : null,
+        checkInLabel: AttendanceRecordFormat.timeLabel(checkinAt),
+        checkOutLabel: hasCheckout ? AttendanceRecordFormat.timeLabel(checkoutAt) : null,
         isCheckedInOnly: !hasCheckout,
       ),
     );

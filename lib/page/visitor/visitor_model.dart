@@ -1,3 +1,6 @@
+/// List bucket from Android `visitorList(..., status)` — drives stripe on Visitor(s) tab.
+enum VisitorListCategory { checkedIn, upcoming, overtime }
+
 /// Row model for visitor list (Android `VisitorObject` subset).
 class VisitorListItem {
   const VisitorListItem({
@@ -11,6 +14,7 @@ class VisitorListItem {
     required this.startTime,
     required this.qrCode,
     required this.residenceUuid,
+    required this.category,
     this.createdByUuid = '',
   });
 
@@ -27,4 +31,6 @@ class VisitorListItem {
 
   /// Android `VisitorAdapter` passes `data.created_by` into `scanQRcode` as `userProfileID`.
   final String createdByUuid;
+
+  final VisitorListCategory category;
 }

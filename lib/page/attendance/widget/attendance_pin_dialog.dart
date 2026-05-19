@@ -4,8 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../widget/guard_pin_dialog.dart';
 import '../attendance_provider.dart';
 import '../attendance_state.dart';
-import '../attendance_strings.dart';
 import '../../reporting/reporting_strings.dart';
+import 'attendance_shift_success_dialog.dart';
 
 /// Same PIN UX as reporting ([GuardPinDialog]): 6 cells, loading, success, error + try again.
 abstract final class AttendancePinDialog {
@@ -37,16 +37,8 @@ abstract final class AttendancePinDialog {
     if (!pageContext.mounted) return;
     if (photoErr != null) {
       messenger.showSnackBar(SnackBar(content: Text(photoErr)));
-    } else {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            flow == AttendanceShiftFlow.startShift
-                ? AttendanceStrings.shiftStarted
-                : AttendanceStrings.shiftEnded,
-          ),
-        ),
-      );
+      return;
     }
+    await showAttendanceShiftSuccessDialog(pageContext, flow: flow);
   }
 }

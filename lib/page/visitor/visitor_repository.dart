@@ -25,6 +25,7 @@ class VisitorRepository {
 
   Future<VisitorListPageResult> fetchRevisedVisitors({
     required String filter,
+    required VisitorListCategory category,
     int offset = 1,
     int limit = 5,
   }) async {
@@ -39,7 +40,7 @@ class VisitorRepository {
         'limit': '$limit',
       },
     );
-    return _parseListPage(res.data);
+    return _parseListPage(res.data, category);
   }
 
   Future<VisitorListPageResult> fetchAllOvertimeVisitors({
@@ -64,7 +65,7 @@ class VisitorRepository {
         'limit': '$limit',
       },
     );
-    return _parseListPage(res.data);
+    return _parseListPage(res.data, VisitorListCategory.overtime);
   }
 
   Future<VisitorListPageResult> fetchUpcoming(String residenceUuid, {int offset = 1, int limit = 5}) async {
@@ -77,7 +78,7 @@ class VisitorRepository {
         'limit': '$limit',
       },
     );
-    return _parseListPage(res.data);
+    return _parseListPage(res.data, VisitorListCategory.upcoming);
   }
 
   Future<VisitorListPageResult> searchVisitors({
@@ -97,7 +98,7 @@ class VisitorRepository {
         'limit': '$limit',
       },
     );
-    return _parseListPage(res.data);
+    return _parseListPage(res.data, null);
   }
 
   Future<Map<String, dynamic>?> fetchVisitorDetails(String visitorUuid) async {
@@ -144,11 +145,11 @@ class VisitorListPageResult {
   final int? pages;
 }
 
-VisitorListPageResult _parseListPage(dynamic data) {
+VisitorListPageResult _parseListPage(dynamic data, VisitorListCategory? category) {
   final list = _extractResourceList(data);
   final items = <VisitorListItem>[];
   for (final m in list) {
-    final row = _mapRow(m);
+    final row = _mapRow(m, category: category);
     if (row != null) items.add(row);
   }
   int? total;
@@ -186,7 +187,21 @@ List<Map<String, dynamic>> _mapList(List<dynamic> raw) {
   return out;
 }
 
-VisitorListItem? _mapRow(Map<String, dynamic> m) {
+VisitorListCategory _inferCategory(Map<String, dynamic> m) {
+  final status = (m['status']?.toString() ?? '').toLowerCase();
+  final visitStatus = (m['visit_status']?.toString() ?? '').toUpperCase();
+  if (status == 'incoming' || visitStatus == 'CHECKEDIN') {
+    return VisitorListCategory.upcoming;
+  }
+  if (status == 'checkin' || visitStatus == 'UPCOMING') {
+    return VisitorListCategory.checkedIn;
+  }
+  if (status == 'overtime') return VisitorListCategory.overtime;
+  final scan = (m['latest_scan_type']?.toString() ?? '').toUpperCase();
+  return scan == 'IN' ? VisitorListCategory.checkedIn : VisitorListCategory.upcoming;
+}
+
+VisitorListItem? _mapRow(Map<String, dynamic> m, {VisitorListCategory? category}) {
   final uuid = m['uuid']?.toString() ?? '';
   if (uuid.isEmpty) return null;
 
@@ -250,6 +265,7 @@ VisitorListItem? _mapRow(Map<String, dynamic> m) {
     startTime: m['start_time']?.toString() ?? '',
     qrCode: m['qr_code']?.toString() ?? '',
     residenceUuid: m['residence_uuid']?.toString() ?? '',
+    category: category ?? _inferCategory(m),
     createdByUuid: _parseCreatedByUuid(m),
   );
 }
