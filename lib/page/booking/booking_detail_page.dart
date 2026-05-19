@@ -12,6 +12,7 @@ import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/app_progress_indicator.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import '../register/register_ic_encrypt.dart';
@@ -213,7 +214,7 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
   Widget _body() {
     if (_loading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColor.primary),
+        child: AppProgressIndicator(),
       );
     }
     if (_error != null) {

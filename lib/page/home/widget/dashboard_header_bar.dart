@@ -23,19 +23,25 @@ class DashboardHeaderBar extends StatelessWidget {
           height: 50.h,
           width: double.infinity,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
-                child: Text(
-                  title,
-                  style: DashboardTextStyle.headerTitle(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+              SizedBox(width: 40.w),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      title,
+                      style: DashboardTextStyle.headerTitle(),
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(width: 4.w),
               Icon(Icons.keyboard_arrow_down, color: AppColor.primary, size: 22.sp),
+              SizedBox(width: 14.w),
             ],
           ),
         ),

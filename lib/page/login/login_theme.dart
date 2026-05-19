@@ -7,7 +7,7 @@ import '../../theme/app_color.dart';
 /// Typography for login screen.
 abstract final class LoginTheme {
   static TextStyle label(BuildContext context) => GoogleFonts.manrope(
-        fontSize: 16.sp,
+        fontSize: 13.sp,
         fontWeight: FontWeight.w500,
         color: AppColor.white,
       );

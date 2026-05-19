@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_logger.dart';
 import 'dashboard_prefs.dart';
 
 /// Session data persisted like Android `DBOthers` (userToken, userID, userName, …).
@@ -18,6 +20,7 @@ abstract final class AuthPrefs {
   static Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     _tokenCache = prefs.getString(sessionTokenKey);
+    logBearerToken(reason: 'loaded from storage');
   }
 
   static bool get isLoggedInSync => (_tokenCache != null && _tokenCache!.isNotEmpty);
@@ -44,6 +47,7 @@ abstract final class AuthPrefs {
     await _setOptional(prefs, userPhoneKey, userPhone);
     await _setOptional(prefs, userRolesJsonKey, userRolesJson);
     _tokenCache = sessionToken;
+    logBearerToken(reason: 'session set');
   }
 
   static Future<void> _setOptional(SharedPreferences prefs, String key, String? value) async {
@@ -94,6 +98,19 @@ abstract final class AuthPrefs {
     await prefs.remove(userPhoneKey);
     await prefs.remove(userRolesJsonKey);
     _tokenCache = null;
+    logBearerToken(reason: 'session cleared');
     await DashboardPrefs.clear();
+  }
+
+  /// Debug only — logs the full bearer token (filter DevTools by `KipleGuard.Auth`).
+  static void logBearerToken({String? reason}) {
+    if (!kDebugMode) return;
+    final prefix = reason == null ? '' : '($reason) ';
+    final token = _tokenCache;
+    if (token == null || token.isEmpty) {
+      AppLog.debug('${prefix}Bearer token: <empty>', tag: 'KipleGuard.Auth');
+      return;
+    }
+    AppLog.debug('${prefix}Bearer token: $token', tag: 'KipleGuard.Auth');
   }
 }

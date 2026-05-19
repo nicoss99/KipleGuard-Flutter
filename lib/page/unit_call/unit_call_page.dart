@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../router/app_route.dart';
+import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -190,7 +191,7 @@ class _UnitCallPageState extends ConsumerState<UnitCallPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: AppColor.primary),
+            const AppProgressIndicator(),
             SizedBox(height: 16.h),
             Text(UnitCallStrings.loadingUnits, style: AppTextStyle.bodyMuted),
           ],

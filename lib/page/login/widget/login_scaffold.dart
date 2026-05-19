@@ -66,35 +66,29 @@ class LoginScaffold extends StatelessWidget {
     );
   }
 
-  /// Height of one-line login inputs using [fieldDecoration] (matches [TextField] + suffix icon row).
+  static double get _fieldFontSize => 15.sp;
+  static double get _hintFontSize => 12.sp;
+
+  /// Height of one-line login inputs (text row + vertical padding).
   static double oneLineFieldHeight(BuildContext context) {
-    final style = LoginTheme.fieldText(context);
-    final fontSize = style.fontSize ?? 16.sp;
-    final line = fontSize * 1.25;
-    final padV = 18.h * 2;
+    final line = _fieldFontSize * 1.3;
+    final padV = 14.h * 2;
     return math.max(kMinInteractiveDimension, padV + line);
   }
 
-  static InputDecoration fieldDecoration(
-    BuildContext context, {
-    Widget? suffixIcon,
-  }) =>
-      InputDecoration(
-        hintStyle: LoginTheme.fieldText(context).copyWith(
-          color: AppColor.white.withValues(alpha: 0.65),
-        ),
-        filled: true,
-        fillColor: AppColor.white.withValues(alpha: 0.15),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.r),
-          borderSide: BorderSide(color: AppColor.white.withValues(alpha: 0.45)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.r),
-          borderSide: const BorderSide(color: AppColor.white),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 18.h),
-        suffixIcon: suffixIcon,
+  static TextStyle fieldTextStyle(BuildContext context, {bool active = false}) =>
+      LoginTheme.fieldText(context).copyWith(
+        fontSize: _fieldFontSize,
+        height: 1.25,
+        color: AppColor.white,
+        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+      );
+
+  static TextStyle fieldHintStyle(BuildContext context, {bool active = false}) =>
+      LoginTheme.fieldText(context).copyWith(
+        fontSize: _hintFontSize,
+        height: 1.2,
+        color: AppColor.white.withValues(alpha: active ? 0.7 : 0.5),
+        fontWeight: FontWeight.w400,
       );
 }

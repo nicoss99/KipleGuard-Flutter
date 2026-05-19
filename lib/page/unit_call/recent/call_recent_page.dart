@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../widget/app_progress_indicator.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
 import '../../../theme/app_spacing.dart';
@@ -126,7 +127,7 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
 
   Widget _body(BuildContext context, CallRecentState state) {
     if (state.loading && state.rows.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppColor.primary));
+      return const Center(child: AppProgressIndicator());
     }
     if (state.error != null && state.rows.isEmpty) {
       return Center(

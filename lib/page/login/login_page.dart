@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, SystemUiOverlayStyle;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,13 +9,14 @@ import '../../core/app_config.dart';
 import '../../core/app_logger.dart';
 import '../../core/app_flavor.dart';
 import '../../core/auth_prefs.dart';
-import '../../core/region_location_permission.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'login_provider.dart';
 import 'login_theme.dart';
+import 'widget/login_region_field.dart';
 import 'widget/login_scaffold.dart';
+import 'widget/login_text_field.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -96,22 +95,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               children: [
                 Text('Region', style: LoginTheme.label(context)),
                 SizedBox(height: 10.h),
-                _regionField(context, fieldHeight),
+                SizedBox(
+                  height: fieldHeight,
+                  child: LoginRegionField(
+                    value: _region,
+                    onChanged: (v) => setState(() => _region = v),
+                    onClearError: ref.read(loginNotifierProvider.notifier).clearFieldErrors,
+                  ),
+                ),
                 SizedBox(height: 15.h),
                 Text('Email or Phone Number', style: LoginTheme.label(context)),
                 SizedBox(height: 10.h),
                 SizedBox(
                   height: fieldHeight,
-                  child: TextField(
+                  child: LoginTextField(
                     controller: _idController,
+                    hint: 'Email or phone number',
                     keyboardType: TextInputType.emailAddress,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: LoginTheme.fieldText(context),
-                    decoration: LoginScaffold.fieldDecoration(context).copyWith(
-                      hintText: '',
-                    ),
+                    textInputAction: TextInputAction.next,
                   ),
                 ),
                 SizedBox(height: 15.h),
@@ -119,23 +120,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 SizedBox(height: 10.h),
                 SizedBox(
                   height: fieldHeight,
-                  child: TextField(
+                  child: LoginTextField(
                     controller: _passwordController,
+                    hint: 'Password',
                     obscureText: _obscurePassword,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: LoginTheme.fieldText(context),
+                    textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _submit(),
-                    decoration: LoginScaffold.fieldDecoration(context).copyWith(
-                      hintText: '',
-                      suffixIcon: IconButton(
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          color: AppColor.white,
-                        ),
+                    suffixIcon: IconButton(
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: AppColor.white,
                       ),
+                      style: IconButton.styleFrom(foregroundColor: AppColor.white),
                     ),
                   ),
                 ),
@@ -177,49 +174,4 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _regionField(BuildContext context, double fieldHeight) {
-    return SizedBox(
-      height: fieldHeight,
-      child: InputDecorator(
-        decoration: LoginScaffold.fieldDecoration(context).copyWith(
-          suffixIcon: IconButton(
-            onPressed: () => unawaited(requestLocationForRegionField()),
-            icon: Icon(Icons.location_on_outlined, color: AppColor.white, size: 22.sp),
-          ),
-        ),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String?>(
-              isDense: true,
-              isExpanded: true,
-              padding: EdgeInsets.zero,
-              value: _region,
-              hint: Text(
-                'Select your region',
-                textAlign: TextAlign.start,
-                style: LoginTheme.fieldText(context).copyWith(
-                  color: AppColor.white.withValues(alpha: 0.65),
-                ),
-              ),
-              icon: const SizedBox.shrink(),
-              dropdownColor: AppColor.loginScreenBlueDeep,
-              style: LoginTheme.fieldText(context),
-              alignment: AlignmentDirectional.centerStart,
-              items: const [
-                DropdownMenuItem(value: 'MY', child: Text('Malaysia')),
-                DropdownMenuItem(value: 'ID', child: Text('Indonesia')),
-                DropdownMenuItem(value: 'VN', child: Text('Vietnam')),
-              ],
-              onTap: () => unawaited(requestLocationForRegionField()),
-              onChanged: (v) {
-                setState(() => _region = v);
-                ref.read(loginNotifierProvider.notifier).clearFieldErrors();
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

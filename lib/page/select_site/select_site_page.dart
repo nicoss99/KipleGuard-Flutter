@@ -7,14 +7,19 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
+import '../../theme/app_spacing.dart';
+import '../../widget/app_progress_indicator.dart';
+import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import '../home/home_repository.dart';
 import 'residence_choice.dart';
 import 'residence_choices.dart';
 import 'select_site_strings.dart';
 import 'widget/select_site_residence_tile.dart';
+import 'widget/select_site_search_bar.dart';
+import 'widget/select_site_status_message.dart';
 
-/// Android `ResidenceActivity` / `activity_selectresidence` — list from `GET data/residences` + roles.
+/// Android `ResidenceActivity` — list from `GET data/residences` + roles.
 class SelectSitePage extends ConsumerStatefulWidget {
   const SelectSitePage({super.key});
 
@@ -23,14 +28,30 @@ class SelectSitePage extends ConsumerStatefulWidget {
 }
 
 class _SelectSitePageState extends ConsumerState<SelectSitePage> {
+  final _searchController = TextEditingController();
   List<ResidenceChoice> _choices = [];
+  String _selectedId = '';
+  String _query = '';
   bool _loading = true;
+  bool _picking = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<ResidenceChoice> get _visible {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return _choices;
+    return _choices.where((c) => c.name.toLowerCase().contains(q)).toList();
   }
 
   Future<void> _load() async {
@@ -42,7 +63,8 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
       final repo = ref.read(homeRepositoryProvider);
       var list = await loadResidenceChoicesSafe(repo);
       final snap = await DashboardPrefs.loadSnapshot();
-      _sortChoices(list, snap.residenceId);
+      _selectedId = snap.residenceId;
+      _sortChoices(list, _selectedId);
       if (mounted) {
         setState(() {
           _choices = list;
@@ -80,80 +102,93 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
   }
 
   Future<void> _pick(ResidenceChoice c) async {
-    await DashboardPrefs.writeResidenceSelection(
-      residenceUuid: c.uuid,
-      residenceName: c.name,
-      coverUrl: c.coverUrl,
-      callOption: c.callOption,
-      intercomEnabled: c.intercom,
-      attendance: c.attendance,
-      visitors: c.visitors,
-      reporting: c.reporting,
-      booking: c.booking,
-      securityCompanyUuid: c.securityUuid,
-      qr: c.qr,
-      officeType: c.officeType,
-      frEnable: c.frEnable,
-      buildingResidencesJson: c.buildingResidencesJson,
-      hdf: c.hdf,
-      healthCode: c.healthCode,
-      quarantineDays: c.quarantineDays,
-      normalTemp: c.normalTemp,
-      lpr: c.lpr,
-    );
-    if (mounted) context.pop(true);
+    if (_picking) return;
+    setState(() => _picking = true);
+    try {
+      await c.persist();
+      if (mounted) context.pop(c);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _picking = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save site selection')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final visible = _visible;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: standardPrimaryOverlayStyle(),
-      child: Scaffold(
-        backgroundColor: AppColor.white,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            StandardPrimaryHeader(
-              title: SelectSiteStrings.pageTitle,
-              onBack: () => context.pop(false),
-            ),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: AppColor.primary))
-                  : _error != null
-                  ? Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24.w),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_error!, textAlign: TextAlign.center),
-                            SizedBox(height: 16.h),
-                            TextButton(onPressed: _load, child: const Text('Retry')),
-                          ],
-                        ),
-                      ),
-                    )
-                  : _choices.isEmpty
-                  ? const Center(child: Text('No sites available'))
-                  : RefreshIndicator(
-                      color: AppColor.primary,
-                      onRefresh: _load,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.only(bottom: bottom),
-                        itemCount: _choices.length,
-                        itemBuilder: (context, index) {
-                          final c = _choices[index];
-                          return SelectSiteResidenceTile(choice: c, onTap: () => _pick(c));
-                        },
-                      ),
-                    ),
-            ),
-          ],
+      child: ModalProgressHud(
+        inAsyncCall: _picking,
+        child: Scaffold(
+          backgroundColor: AppColor.lightGreyBar,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              StandardPrimaryHeader(
+                title: SelectSiteStrings.pageTitle,
+                onBack: _picking ? () {} : () => context.pop(),
+              ),
+              if (!_loading && _error == null && _choices.isNotEmpty)
+                SelectSiteSearchBar(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+              Expanded(child: _body(visible, bottom)),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _body(List<ResidenceChoice> visible, double bottom) {
+    if (_loading) {
+      return const Center(child: AppProgressIndicator());
+    }
+    if (_error != null) {
+      return SelectSiteStatusMessage(
+        icon: Icons.cloud_off_outlined,
+        title: _error!,
+        actionLabel: SelectSiteStrings.retry,
+        onAction: _load,
+      );
+    }
+    if (_choices.isEmpty) {
+      return const SelectSiteStatusMessage(
+        icon: Icons.domain_disabled_outlined,
+        title: SelectSiteStrings.emptyTitle,
+        subtitle: SelectSiteStrings.emptySubtitle,
+      );
+    }
+    if (visible.isEmpty) {
+      return const SelectSiteStatusMessage(
+        icon: Icons.search_off_outlined,
+        title: 'No matching sites',
+        subtitle: 'Try a different search term.',
+      );
+    }
+    return RefreshIndicator(
+      color: AppColor.primary,
+      onRefresh: _load,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(top: 4.h, bottom: bottom + AppSpacing.md),
+        itemCount: visible.length,
+        itemBuilder: (context, index) {
+          final c = visible[index];
+          return SelectSiteResidenceTile(
+            choice: c,
+            isCurrent: c.uuid == _selectedId,
+            onTap: _picking ? () {} : () => _pick(c),
+          );
+        },
       ),
     );
   }

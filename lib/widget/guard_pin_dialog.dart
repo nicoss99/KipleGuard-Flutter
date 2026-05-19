@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../page/reporting/reporting_strings.dart';
 import '../theme/app_color.dart';
 import '../theme/app_radius.dart';
+import 'app_progress_indicator.dart';
 import '../theme/app_text_style.dart';
 
 /// Returned from [GuardPinDialog] on success (with optional payload) or dismissed without success.
@@ -252,7 +253,7 @@ class _PinCheckingAnimatedState extends State<_PinCheckingAnimated>
           SizedBox(
             width: 30.w,
             height: 30.w,
-            child: const CircularProgressIndicator(strokeWidth: 2.8, color: AppColor.primary),
+            child: const AppProgressIndicator.compact(),
           ),
           SizedBox(height: 16.h),
           Text(ReportingStrings.checkingPin, textAlign: TextAlign.center, style: AppTextStyle.title),

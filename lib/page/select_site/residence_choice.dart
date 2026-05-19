@@ -1,3 +1,5 @@
+import '../../core/dashboard_prefs.dart';
+
 /// One selectable row matching Android `ResidenceObject` / `DBResidences` + prefs write.
 class ResidenceChoice {
   const ResidenceChoice({
@@ -42,5 +44,33 @@ class ResidenceChoice {
   final String normalTemp;
   final String lpr;
 
-  bool get hasCover => coverUrl.isNotEmpty;
+  bool get hasCover {
+    final u = coverUrl.trim();
+    if (u.isEmpty) return false;
+    final lower = u.toLowerCase();
+    if (lower == 'null' || lower == 'undefined') return false;
+    return true;
+  }
+
+  Future<void> persist() => DashboardPrefs.writeResidenceSelection(
+        residenceUuid: uuid,
+        residenceName: name,
+        coverUrl: coverUrl,
+        callOption: callOption,
+        intercomEnabled: intercom,
+        attendance: attendance,
+        visitors: visitors,
+        reporting: reporting,
+        booking: booking,
+        securityCompanyUuid: securityUuid,
+        qr: qr,
+        officeType: officeType,
+        frEnable: frEnable,
+        buildingResidencesJson: buildingResidencesJson,
+        hdf: hdf,
+        healthCode: healthCode,
+        quarantineDays: quarantineDays,
+        normalTemp: normalTemp,
+        lpr: lpr,
+      );
 }

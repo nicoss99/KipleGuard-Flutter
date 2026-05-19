@@ -31,7 +31,7 @@ class VisitorListTile extends StatelessWidget {
     };
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 8.h),
       child: InkWell(
         borderRadius: BorderRadius.circular(10.r),
         onTap: onTap,
@@ -67,15 +67,15 @@ class VisitorListTile extends StatelessWidget {
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(10.w, 12.h, 8.w, 12.h),
+                      padding: EdgeInsets.fromLTRB(12.w, 14.h, 8.w, 14.h),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
                               Container(
-                                width: 34.w,
-                                height: 34.w,
+                                width: 38.w,
+                                height: 38.w,
                                 decoration: BoxDecoration(
                                   border: Border.all(color: AppColor.primary, width: 1.2),
                                   shape: BoxShape.circle,
@@ -95,11 +95,11 @@ class VisitorListTile extends StatelessWidget {
                               ),
                             ],
                           ),
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 10.h),
                           _metaRow(Icons.apartment, item.unitLabel.trim().isEmpty ? 'N/A' : item.unitLabel),
-                          SizedBox(height: 4.h),
+                          SizedBox(height: 6.h),
                           _metaRow(Icons.directions_car, item.carPlate.isEmpty ? 'N/A' : item.carPlate),
-                          SizedBox(height: 4.h),
+                          SizedBox(height: 6.h),
                           _metaRow(Icons.badge_outlined, item.passId.isEmpty ? 'N/A' : item.passId),
                         ],
                       ),
@@ -111,8 +111,8 @@ class VisitorListTile extends StatelessWidget {
                       onTap: onActionTap,
                       borderRadius: BorderRadius.circular(10.r),
                       child: Container(
-                        width: 88.w,
-                        height: 84.h,
+                        width: 92.w,
+                        height: 100.h,
                         decoration: BoxDecoration(
                           color: AppColor.grey.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(10.r),

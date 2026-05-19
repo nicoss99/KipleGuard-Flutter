@@ -28,6 +28,11 @@ abstract final class AppTheme {
         elevation: 0,
         centerTitle: false,
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppColor.primary,
+        circularTrackColor: Color(0x24283A85),
+        linearTrackColor: Color(0x24283A85),
+      ),
     );
   }
 }

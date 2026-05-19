@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../theme/app_color.dart';
 import '../../../theme/app_spacing.dart';
+import '../../../widget/app_progress_indicator.dart';
 import '../../../theme/app_text_style.dart';
 import '../booking_filter_query.dart';
 import '../booking_repository.dart';
@@ -181,7 +182,7 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
             Text(BookingStrings.category, style: AppTextStyle.subtitle),
             SizedBox(height: 8.h),
             if (_loadingCat)
-              const Center(child: CircularProgressIndicator(color: AppColor.primary))
+              const Center(child: AppProgressIndicator())
             else if (_loadError != null)
               Text(_loadError!, style: AppTextStyle.body.copyWith(color: AppColor.red))
             else
@@ -214,7 +215,7 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
             Text(BookingStrings.bookingType, style: AppTextStyle.subtitle),
             SizedBox(height: 8.h),
             if (_loadingRooms)
-              const Center(child: CircularProgressIndicator(color: AppColor.primary))
+              const Center(child: AppProgressIndicator())
             else
               Wrap(
                 spacing: 8.w,

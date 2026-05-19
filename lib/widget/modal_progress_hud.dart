@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_color.dart';
+import 'app_progress_indicator.dart';
 
 /// Full-screen blocking load overlay for page-level work.
 class ModalProgressHud extends StatelessWidget {
@@ -25,7 +26,7 @@ class ModalProgressHud extends StatelessWidget {
             dismissible: false,
             color: AppColor.textPrimary.withValues(alpha: opacity),
           ),
-        if (inAsyncCall) const Center(child: CircularProgressIndicator()),
+        if (inAsyncCall) const Center(child: AppProgressIndicator(onDark: true, size: 44)),
       ],
     );
   }

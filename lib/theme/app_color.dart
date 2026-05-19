@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 /// Design tokens aligned with Android `res/values/colors.xml`.
 abstract final class AppColor {
-  static const Color primary = Color(0xFF00A3EA);
-  static const Color primaryDark = Color(0xFF007FE8);
+  static const Color primary = Color(0xFF283A85);
+  static const Color primaryDark = Color(0xFF1E2D63);
 
-  /// Login screen solid blue (reference mockup ~#0091EA).
-  static const Color loginScreenBlue = Color(0xFF0091EA);
-  static const Color loginScreenBlueDeep = Color(0xFF0077C2);
+  /// Login screen background (matches [primary]).
+  static const Color loginScreenBlue = Color(0xFF283A85);
+  static const Color loginScreenBlueDeep = Color(0xFF1E2D63);
   static const Color accent = Color(0xFF0CB0DB);
 
   static const Color onPrimary = Color(0xFFFFFFFF);
@@ -28,4 +28,7 @@ abstract final class AppColor {
 
   /// Android residence picker rows (`adapter_residence` grey bars).
   static const Color siteListRowGrey = Color(0xFFC4C4C4);
+
+  /// Selected site card outline.
+  static const Color siteSelectedBorder = Color(0xFF999999);
 }

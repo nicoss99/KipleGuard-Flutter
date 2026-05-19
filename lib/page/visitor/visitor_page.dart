@@ -11,6 +11,7 @@ import '../../router/app_route.dart' show AppPaths;
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/app_progress_indicator.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import 'visitor_provider.dart';
@@ -42,7 +43,7 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
     final isToday =
         now.year == s.selectedDay.year && now.month == s.selectedDay.month && now.day == s.selectedDay.day;
     final dayLabel = DateFormat('dd MMM yyyy').format(s.selectedDay);
-    final dateHeaderRowHeight = 64.h;
+    final dateHeaderRowHeight = 78.h;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: standardPrimaryOverlayStyle(),
@@ -97,7 +98,7 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
                     borderRadius: BorderRadius.circular(12.r),
                     onTap: () => ref.read(visitorProvider.notifier).openAllOvertimeSection(),
                     child: Container(
-                      width: 104.w,
+                      width: 112.w,
                       height: dateHeaderRowHeight,
                       decoration: BoxDecoration(
                         color: s.tabIndex == 2 ? AppColor.textPrimary : AppColor.grey.withValues(alpha: 0.32),
@@ -259,7 +260,7 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
           onTap: () => ref.read(visitorProvider.notifier).setTab(index),
           borderRadius: BorderRadius.circular(10.r),
           child: Container(
-            height: 70.h,
+            height: 88.h,
             margin: EdgeInsets.symmetric(horizontal: 4.w),
             decoration: BoxDecoration(
               color: selected ? AppColor.textPrimary : AppColor.white,
@@ -279,13 +280,17 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 4.h),
                 Text(
                   label,
                   style: AppTextStyle.body.copyWith(
                     fontSize: 12.sp,
+                    height: 1.2,
                     color: selected ? AppColor.white : AppColor.textPrimary,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -360,7 +365,7 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
               SizedBox(
                 width: 18.w,
                 height: 18.w,
-                child: const CircularProgressIndicator(strokeWidth: 2),
+                child: const AppProgressIndicator.compact(),
               ),
               SizedBox(width: 10.w),
               Text(

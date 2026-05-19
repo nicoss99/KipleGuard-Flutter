@@ -1,12 +1,10 @@
-import 'dart:developer' as developer;
-
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/app_config.dart';
 import '../core/app_flavor.dart';
 import '../core/auth_prefs.dart';
+import 'api_logging_interceptor.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final flavor = ref.watch(appFlavorProvider);
@@ -36,16 +34,6 @@ final dioProvider = Provider<Dio>((ref) {
       },
     ),
   );
-  if (kDebugMode) {
-    dio.interceptors.add(
-      LogInterceptor(
-        requestHeader: false,
-        requestBody: true,
-        responseHeader: false,
-        responseBody: false,
-        logPrint: (o) => developer.log(o.toString(), name: 'KipleGuard.Dio'),
-      ),
-    );
-  }
+  dio.interceptors.add(ApiLoggingInterceptor());
   return dio;
 });

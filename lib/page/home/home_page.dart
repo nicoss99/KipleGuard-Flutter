@@ -6,10 +6,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
+import '../../core/dashboard_prefs.dart';
 import '../../router/app_route.dart';
+import '../select_site/residence_choice.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/modal_progress_hud.dart';
+import 'dashboard_header_title.dart';
 import 'dashboard_strings.dart';
 import 'home_provider.dart';
 import 'widget/dashboard_bottom_bar.dart';
@@ -93,12 +96,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: SizedBox(height: topInset, width: double.infinity),
               ),
               DashboardHeaderBar(
-                title: state.residenceTitle,
+                title: DashboardHeaderTitle.format(state.residenceTitle),
                 onTitleTap: () async {
-                  final changed = await context.push<bool>(AppRoute.selectSite.path);
-                  if (changed == true && mounted) {
-                    await ref.read(homeProvider.notifier).onSiteChanged();
-                  }
+                  final router = GoRouter.of(context);
+                  final snap = await DashboardPrefs.loadSnapshot();
+                  if (!mounted) return;
+                  final picked = await router.push<ResidenceChoice?>(
+                    AppRoute.selectSite.path,
+                  );
+                  if (!mounted || picked == null) return;
+                  await ref.read(homeProvider.notifier).applySiteSelection(
+                        picked,
+                        previousResidenceId: snap.residenceId,
+                        previousSecurityUuid: snap.securityUuid,
+                      );
                 },
               ),
               if (state.loadError != null)

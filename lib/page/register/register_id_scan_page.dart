@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
@@ -193,7 +194,7 @@ class _RegisterIdScanPageState extends State<RegisterIdScanPage> with SingleTick
               children: [
                 Expanded(
                   child: cam == null || !cam.value.isInitialized
-                      ? const Center(child: CircularProgressIndicator(color: AppColor.primary))
+                      ? const Center(child: AppProgressIndicator())
                       : Stack(
                           fit: StackFit.expand,
                           children: [

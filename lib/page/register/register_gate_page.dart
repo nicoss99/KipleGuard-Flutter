@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/dashboard_prefs.dart';
 import '../../router/app_route.dart' show AppPaths;
-import '../../theme/app_color.dart';
+import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import 'register_models.dart';
@@ -56,7 +56,7 @@ class _RegisterGatePageState extends State<RegisterGatePage> {
       title: RegisterStrings.title,
       onBack: () => context.pop(),
       child: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColor.primary))
+          ? const Center(child: AppProgressIndicator())
           : _buildings.isEmpty
           ? Center(
               child: Padding(

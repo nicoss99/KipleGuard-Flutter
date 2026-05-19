@@ -85,30 +85,25 @@ abstract final class DashboardPrefs {
     required String lpr,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    Future<void> put(String k, String v) async {
-      await prefs.remove(k);
-      await prefs.setString(k, v);
-    }
-
-    await put(userResidenceIdKey, residenceUuid);
-    await put(userResidenceKey, residenceName);
-    await put(userResidenceImageKey, coverUrl);
-    await put(userResidenceCallKey, callOption);
-    await put(userResidenceIntercomKey, intercomEnabled);
-    await put(attendanceEnableKey, attendance);
-    await put(visitorEnableKey, visitors);
-    await put(reportEnableKey, reporting);
-    await put(bookingEnableKey, booking);
-    await put(securityUuidKey, securityCompanyUuid);
-    await put(qrEnableKey, qr);
-    await put(officeEnableKey, officeType);
-    await put(frEnableKey, frEnable);
-    await put(buildingResidencesKey, buildingResidencesJson);
-    await put(hdfEnabledKey, hdf);
-    await put(healthCodeEnabledKey, healthCode);
-    await put(quarantineDaysKey, quarantineDays);
-    await put(normalTempKey, normalTemp);
-    await put(lprEnabledKey, lpr);
+    await prefs.setString(userResidenceIdKey, residenceUuid);
+    await prefs.setString(userResidenceKey, residenceName);
+    await prefs.setString(userResidenceImageKey, coverUrl);
+    await prefs.setString(userResidenceCallKey, callOption);
+    await prefs.setString(userResidenceIntercomKey, intercomEnabled);
+    await prefs.setString(attendanceEnableKey, attendance);
+    await prefs.setString(visitorEnableKey, visitors);
+    await prefs.setString(reportEnableKey, reporting);
+    await prefs.setString(bookingEnableKey, booking);
+    await prefs.setString(securityUuidKey, securityCompanyUuid);
+    await prefs.setString(qrEnableKey, qr);
+    await prefs.setString(officeEnableKey, officeType);
+    await prefs.setString(frEnableKey, frEnable);
+    await prefs.setString(buildingResidencesKey, buildingResidencesJson);
+    await prefs.setString(hdfEnabledKey, hdf);
+    await prefs.setString(healthCodeEnabledKey, healthCode);
+    await prefs.setString(quarantineDaysKey, quarantineDays);
+    await prefs.setString(normalTempKey, normalTemp);
+    await prefs.setString(lprEnabledKey, lpr);
   }
 
   static Future<void> setSecurityJson(String json) async {

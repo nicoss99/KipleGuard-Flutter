@@ -13,6 +13,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../widget/app_progress_indicator.dart';
 import '../../widget/standard_primary_header.dart';
 import 'booking_provider.dart';
 import 'booking_strings.dart';
@@ -359,9 +360,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                                 return Padding(
                                   padding: EdgeInsets.all(16.h),
                                   child: const Center(
-                                    child: CircularProgressIndicator(
-                                      color: AppColor.primary,
-                                    ),
+                                    child: AppProgressIndicator.compact(),
                                   ),
                                 );
                               }

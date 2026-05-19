@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../core/app_config.dart';
 import '../core/app_flavor.dart';
 import '../core/auth_prefs.dart';
+import 'app_progress_indicator.dart';
 import '../theme/app_color.dart';
 
 /// [Image.network] with session `Authorization` and API-relative URL resolution.
@@ -72,10 +73,7 @@ class AuthorizedNetworkImage extends ConsumerWidget {
                 child: SizedBox(
                   width: 28,
                   height: 28,
-                  child: CircularProgressIndicator(
-                    color: AppColor.primary,
-                    strokeWidth: 2,
-                  ),
+                  child: AppProgressIndicator.compact(),
                 ),
               ),
             );
