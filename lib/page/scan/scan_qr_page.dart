@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -12,9 +13,10 @@ import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
 import 'scan_dispatch.dart';
 import 'scan_strings.dart';
+import 'widget/scan_gallery_bar.dart';
 import 'widget/scan_viewfinder_overlay.dart';
 
-/// Android [QRScanActivity] + `activity_qrscan.xml`.
+/// Android [QRScanActivity] + gallery QR via [MobileScannerController.analyzeImage].
 class ScanQrPage extends ConsumerStatefulWidget {
   const ScanQrPage({super.key});
 
@@ -24,6 +26,7 @@ class ScanQrPage extends ConsumerStatefulWidget {
 
 class _ScanQrPageState extends ConsumerState<ScanQrPage> {
   late final MobileScannerController _scanner;
+  final _picker = ImagePicker();
   var _busy = false;
   var _badScans = 0;
   String? _lastRaw;
@@ -68,38 +71,81 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
 
   Future<void> _onDetect(BarcodeCapture cap) async {
     if (_busy) return;
-    final codes = cap.barcodes;
-    if (codes.isEmpty) return;
-    final raw = codes.first.rawValue;
-    if (raw == null || raw.isEmpty) return;
-    if (!_debounce(raw)) return;
+    final raw = _firstQr(cap);
+    if (raw == null || !_debounce(raw)) return;
+    await _handleRaw(raw, fromCamera: true);
+  }
 
-    _busy = true;
-    AppLog.track('scan_qr_detect', screen: 'ScanQr');
+  Future<void> _pickFromGallery() async {
+    if (_busy) return;
+    AppLog.track('scan_qr_gallery', screen: 'ScanQr');
+    final image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null || !mounted) return;
+
     await _scanner.stop();
     if (!mounted) return;
 
-    var navigated = false;
+    var handled = false;
+    try {
+      final capture = await _scanner.analyzeImage(image.path);
+      if (!mounted) return;
+      final raw = capture != null ? _firstQr(capture) : null;
+      if (raw == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ScanStrings.noQrInImage)),
+        );
+        return;
+      }
+      handled = await _handleRaw(raw, fromCamera: false);
+    } catch (e, st) {
+      AppLog.error('Gallery QR analyze', tag: 'Scan', error: e, stackTrace: st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ScanStrings.noQrInImage)),
+        );
+      }
+    } finally {
+      if (mounted && !handled) await _scanner.start();
+    }
+  }
+
+  String? _firstQr(BarcodeCapture cap) {
+    if (cap.barcodes.isEmpty) return null;
+    final raw = cap.barcodes.first.rawValue;
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
+  }
+
+  Future<bool> _handleRaw(String raw, {required bool fromCamera}) async {
+    _busy = true;
+    AppLog.track(fromCamera ? 'scan_qr_detect' : 'scan_qr_gallery_ok', screen: 'ScanQr');
+    if (fromCamera) await _scanner.stop();
+    if (!mounted) return false;
+
+    var success = false;
     try {
       final result = await ref.read(scanDispatcherProvider).dispatch(raw);
-      if (!mounted) return;
+      if (!mounted) return false;
       if (result != null) {
-        navigated = true;
         _apply(result);
-        return;
+        success = true;
+        return true;
       }
       _badScans += 1;
       if (_badScans > 3) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(ScanStrings.unableScanQr)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ScanStrings.unableScanQr)),
+        );
         context.pop();
-        return;
       }
+      return false;
     } catch (e, st) {
       AppLog.error('Scan dispatch', tag: 'Scan', error: e, stackTrace: st);
       _badScans += 1;
+      return false;
     } finally {
       _busy = false;
-      if (mounted && !navigated) await _scanner.start();
+      if (mounted && fromCamera && !success) await _scanner.start();
     }
   }
 
@@ -132,38 +178,47 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
           children: [
             MobileScanner(controller: _scanner, fit: BoxFit.cover, onDetect: _onDetect),
             const ScanViewfinderOverlay(),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Material(
-                elevation: 2,
-                color: AppColor.white,
-                child: SafeArea(
-                  bottom: false,
-                  child: SizedBox(
-                    height: 56.h,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => context.pop(),
-                          icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: AppColor.primary),
-                        ),
-                        Expanded(
-                          child: Text(
-                            ScanStrings.scanQrCode,
-                            textAlign: TextAlign.center,
-                            style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        SizedBox(width: 48.w),
-                      ],
-                    ),
+            _header(),
+            ScanGalleryBar(onPickGallery: _pickFromGallery, busy: _busy),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _header() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Material(
+        elevation: 2,
+        color: AppColor.white,
+        child: SafeArea(
+          bottom: false,
+          child: SizedBox(
+            height: 56.h,
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: _busy ? null : () => context.pop(),
+                  icon: Icon(Icons.arrow_back_ios_new, size: 20.sp, color: AppColor.primary),
+                ),
+                Expanded(
+                  child: Text(
+                    ScanStrings.scanQrCode,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-              ),
+                IconButton(
+                  onPressed: _busy ? null : _pickFromGallery,
+                  icon: Icon(Icons.photo_library_outlined, size: 24.sp, color: AppColor.primary),
+                  tooltip: ScanStrings.scanFromGallery,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
