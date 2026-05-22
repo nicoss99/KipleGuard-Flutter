@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../core/app_bar_title_format.dart';
 import '../../core/app_logger.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
@@ -206,7 +207,7 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
                 ),
                 Expanded(
                   child: Text(
-                    ScanStrings.scanQrCode,
+                    AppBarTitleFormat.format(ScanStrings.scanQrCode),
                     textAlign: TextAlign.center,
                     style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
                   ),

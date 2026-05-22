@@ -74,16 +74,18 @@ class LoginRepository {
 
       final tokenForFirebase = firebaseToken.isEmpty ? '' : firebaseToken;
 
+      final firebaseRecordUuid = _uuid.v4();
       try {
         await _dio.post<Map<String, dynamic>>(
           AppConfig.userFirebaseTokensPath,
           data: <String, dynamic>{
-            'uuid': _uuid.v4(),
+            'uuid': firebaseRecordUuid,
             'firebase_token': tokenForFirebase,
             'user_profile_uuid': profileUuid,
             'is_valid': '1',
           },
         );
+        await AuthPrefs.setUserFirebaseRecordUuid(firebaseRecordUuid);
       } catch (_) {
         await AuthPrefs.clearSession();
         rethrow;

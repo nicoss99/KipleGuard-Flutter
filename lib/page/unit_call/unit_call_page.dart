@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/app_bar_title_format.dart';
 import '../../router/app_route.dart';
 import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_color.dart';
@@ -118,7 +119,7 @@ class _UnitCallPageState extends ConsumerState<UnitCallPage> {
                             );
                           },
                           child: Text(
-                            state.appBarTitle,
+                            AppBarTitleFormat.format(state.appBarTitle),
                             key: ValueKey<String>(state.appBarTitle),
                             textAlign: TextAlign.center,
                             style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),

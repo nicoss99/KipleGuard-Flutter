@@ -25,7 +25,15 @@ class _OnboardingIntroPageState extends State<OnboardingIntroPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _timer = Timer(const Duration(seconds: 1), () {
         if (!mounted) return;
-        context.go(AppRoute.onboarding.path);
+        final from = GoRouterState.of(context).uri.queryParameters['from'];
+        final next = from == 'profile'
+            ? '${AppRoute.onboarding.path}?from=profile'
+            : AppRoute.onboarding.path;
+        if (from == 'profile') {
+          context.push(next);
+        } else {
+          context.go(next);
+        }
       });
     });
   }

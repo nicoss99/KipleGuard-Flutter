@@ -14,6 +14,9 @@ import '../page/booking/booking_detail_page.dart';
 import '../page/booking/booking_page.dart';
 import '../page/visitor/visitor_details_page.dart';
 import '../page/visitor/visitor_page.dart';
+import '../page/profile/change_password_page.dart';
+import '../page/profile/edit_profile_page.dart';
+import '../page/profile/profile_offline_page.dart';
 import '../page/reporting/reporting_form_page.dart';
 import '../page/reporting/reporting_gate_page.dart';
 import '../page/reporting/reporting_models.dart';
@@ -146,5 +149,20 @@ List<RouteBase> buildHomeRoutes() => [
       final id = state.pathParameters['formUuid'] ?? '';
       return ScanFormStubPage(applicationUuid: id);
     },
+  ),
+  GoRoute(
+    path: AppRoute.editProfile.path,
+    name: AppRoute.editProfile.name,
+    builder: (context, state) => const EditProfilePage(),
+  ),
+  GoRoute(
+    path: AppRoute.changePassword.path,
+    name: AppRoute.changePassword.name,
+    builder: (context, state) => const ChangePasswordPage(),
+  ),
+  GoRoute(
+    path: AppRoute.profileOffline.path,
+    name: AppRoute.profileOffline.name,
+    builder: (context, state) => const ProfileOfflinePage(),
   ),
 ];

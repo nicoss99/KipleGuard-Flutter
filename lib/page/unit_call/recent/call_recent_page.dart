@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../core/app_bar_title_format.dart';
 import '../../../widget/app_progress_indicator.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
@@ -79,7 +80,7 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
                     ),
                     Expanded(
                       child: Text(
-                        UnitCallStrings.recent,
+                        AppBarTitleFormat.format(UnitCallStrings.recent),
                         textAlign: TextAlign.center,
                         style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
                       ),

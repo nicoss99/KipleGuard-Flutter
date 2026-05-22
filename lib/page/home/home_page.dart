@@ -12,6 +12,7 @@ import '../select_site/residence_choice.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../core/app_bar_title_format.dart';
 import 'dashboard_header_title.dart';
 import 'dashboard_strings.dart';
 import 'home_provider.dart';
@@ -96,7 +97,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: SizedBox(height: topInset, width: double.infinity),
               ),
               DashboardHeaderBar(
-                title: DashboardHeaderTitle.format(state.residenceTitle),
+                title: DashboardHeaderTitle.format(
+                  AppBarTitleFormat.format(state.residenceTitle),
+                ),
                 onTitleTap: () async {
                   final router = GoRouter.of(context);
                   final snap = await DashboardPrefs.loadSnapshot();
@@ -148,6 +151,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                           userEmail: state.userEmail,
                           profileInitial: state.profileInitial,
                           qrEnabled: state.qrEnabled,
+                          onGreetingTap: () async {
+                            AppLog.track('edit_profile_tap', screen: 'Home');
+                            final updated = await context.push<bool>(AppRoute.editProfile.path);
+                            if (updated == true && mounted) {
+                              await ref.read(homeProvider.notifier).reloadUserFromPrefs();
+                            }
+                          },
                           onViewQr: state.qrEnabled
                               ? () {
                                   AppLog.track('view_qr_tap', screen: 'Home');

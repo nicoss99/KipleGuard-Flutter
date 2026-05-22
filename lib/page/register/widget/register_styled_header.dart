@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/app_bar_title_format.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_text_style.dart';
 
@@ -55,7 +56,7 @@ class RegisterStyledHeader extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      title,
+                      AppBarTitleFormat.format(title),
                       key: ValueKey<String>(title),
                       textAlign: TextAlign.center,
                       style: AppTextStyle.title,

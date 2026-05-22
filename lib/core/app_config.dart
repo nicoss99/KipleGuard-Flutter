@@ -45,6 +45,16 @@ abstract final class AppConfig {
   /// `POST data/user_firebase_tokens` (after session).
   static const userFirebaseTokensPath = 'data/user_firebase_tokens';
 
+  /// `PUT data/user_profiles/{uuid}` — body `{ uuid, name }`.
+  static String userProfilePath(String profileUuid) => 'data/user_profiles/$profileUuid';
+
+  /// `PUT data/user_firebase_tokens/{uuid}` — sign out body `{ is_valid: "0" }`.
+  static String userFirebaseTokenPath(String recordUuid) =>
+      'data/user_firebase_tokens/$recordUuid';
+
+  /// `POST identity/{uuid}/challenge` — change password.
+  static String identityChallengePath(String identityUuid) => 'identity/$identityUuid/challenge';
+
   static String baseUrl(AppFlavor flavor) => switch (flavor) {
     AppFlavor.dev => const String.fromEnvironment(
       'API_BASE_URL',

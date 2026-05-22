@@ -142,6 +142,9 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(triggerNoRoleDialog: false);
   }
 
+  /// After edit profile saves name (Android `updateProfile` → dashboard refresh).
+  Future<void> reloadUserFromPrefs() => _hydrateFromPrefs();
+
   Future<void> _hydrateFromPrefs() async {
     final snap = await DashboardPrefs.loadSnapshot();
     final name = (await AuthPrefs.readUserName()) ?? '';

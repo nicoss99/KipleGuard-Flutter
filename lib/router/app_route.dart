@@ -19,6 +19,9 @@ enum AppRoute {
   scanHealth('/scan/health', 'scanHealth'),
   scanForm('/scan/form/:formUuid', 'scanForm'),
   login('/login', 'login'),
+  editProfile('/profile', 'editProfile'),
+  changePassword('/profile/change-password', 'changePassword'),
+  profileOffline('/profile/offline', 'profileOffline'),
   onboardingIntro('/onboarding-intro', 'onboardingIntro'),
   onboarding('/onboarding', 'onboarding');
 

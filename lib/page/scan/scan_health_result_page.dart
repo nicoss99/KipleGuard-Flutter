@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/app_bar_title_format.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
@@ -28,7 +29,10 @@ class ScanHealthResultPage extends StatelessWidget {
           elevation: 2,
           backgroundColor: AppColor.white,
           foregroundColor: AppColor.primary,
-          title: Text(ScanStrings.scanQrCode, style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600)),
+          title: Text(
+            AppBarTitleFormat.format(ScanStrings.scanQrCode),
+            style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => context.pop(),

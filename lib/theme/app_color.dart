@@ -20,6 +20,8 @@ abstract final class AppColor {
   static const Color textMuted = Color(0xFF4A4A4A);
 
   static const Color red = Color(0xFFEF4050);
+  static const Color errorLight = Color(0xFFFFE2E2);
+  static const Color errorStrong = Color(0xFFFF5252);
   static const Color orange = Color(0xFFF7941D);
   static const Color green = Color(0xFF99CA44);
   static const Color grey = Color(0xFFF2F2F2);

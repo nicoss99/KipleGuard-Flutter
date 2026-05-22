@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../core/app_bar_title_format.dart';
 import '../../../theme/app_color.dart';
 import '../dashboard_text_style.dart';
 
@@ -32,7 +33,7 @@ class DashboardHeaderBar extends StatelessWidget {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.center,
                     child: Text(
-                      title,
+                      AppBarTitleFormat.format(title),
                       style: DashboardTextStyle.headerTitle(),
                       maxLines: 1,
                       textAlign: TextAlign.center,

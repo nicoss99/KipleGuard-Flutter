@@ -15,6 +15,7 @@ class DashboardHeroSection extends StatelessWidget {
     required this.profileInitial,
     required this.qrEnabled,
     this.onViewQr,
+    this.onGreetingTap,
   });
 
   final String userName;
@@ -22,6 +23,7 @@ class DashboardHeroSection extends StatelessWidget {
   final String profileInitial;
   final bool qrEnabled;
   final VoidCallback? onViewQr;
+  final VoidCallback? onGreetingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +65,15 @@ class DashboardHeroSection extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   Flexible(
-                    child: Text(
-                      welcome,
-                      style: DashboardTextStyle.heroPillGreeting(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: GestureDetector(
+                      onTap: onGreetingTap,
+                      behavior: HitTestBehavior.opaque,
+                      child: Text(
+                        welcome,
+                        style: DashboardTextStyle.heroPillGreeting(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ],

@@ -14,6 +14,8 @@ abstract final class AuthPrefs {
   static const userEmailKey = 'kiple_user_email';
   static const userPhoneKey = 'kiple_user_phone';
   static const userRolesJsonKey = 'kiple_user_roles_json';
+  /// Local UUID for `PUT data/user_firebase_tokens/{uuid}` (Android `userFirebase`).
+  static const userFirebaseRecordUuidKey = 'kiple_user_firebase_record_uuid';
 
   static String? _tokenCache;
 
@@ -88,6 +90,31 @@ abstract final class AuthPrefs {
     return prefs.getString(profileUuidKey);
   }
 
+  static Future<String?> readUserPhone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userPhoneKey);
+  }
+
+  static Future<String?> readUserIdentityUuid() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userIdentityUuidKey);
+  }
+
+  static Future<String?> readUserFirebaseRecordUuid() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userFirebaseRecordUuidKey);
+  }
+
+  static Future<void> setUserName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(userNameKey, name);
+  }
+
+  static Future<void> setUserFirebaseRecordUuid(String uuid) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(userFirebaseRecordUuidKey, uuid);
+  }
+
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(sessionTokenKey);
@@ -97,6 +124,7 @@ abstract final class AuthPrefs {
     await prefs.remove(userEmailKey);
     await prefs.remove(userPhoneKey);
     await prefs.remove(userRolesJsonKey);
+    await prefs.remove(userFirebaseRecordUuidKey);
     _tokenCache = null;
     logBearerToken(reason: 'session cleared');
     await DashboardPrefs.clear();

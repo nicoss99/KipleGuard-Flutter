@@ -17,6 +17,7 @@ class RegisterUnderlineField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
     this.readOnly = false,
+    this.obscureText = false,
   });
 
   final TextEditingController controller;
@@ -27,6 +28,7 @@ class RegisterUnderlineField extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
+  final bool obscureText;
 
   @override
   State<RegisterUnderlineField> createState() => _RegisterUnderlineFieldState();
@@ -65,6 +67,9 @@ class _RegisterUnderlineFieldState extends State<RegisterUnderlineField> {
                 maxLines: widget.maxLines,
                 textCapitalization: widget.textCapitalization,
                 inputFormatters: widget.inputFormatters,
+                obscureText: widget.obscureText,
+                autocorrect: false,
+                enableSuggestions: false,
                 style: AppTextStyle.body,
                 cursorColor: AppColor.primary,
                 decoration: InputDecoration(

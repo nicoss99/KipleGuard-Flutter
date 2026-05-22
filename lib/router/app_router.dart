@@ -51,16 +51,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path == AppRoute.reportingForm.path ||
             path == AppRoute.scanQr.path ||
             path == AppRoute.scanHealth.path ||
-            path.startsWith('/scan/form/')) {
+            path.startsWith('/scan/form/') ||
+            path == AppRoute.editProfile.path ||
+            path == AppRoute.changePassword.path ||
+            path == AppRoute.profileOffline.path) {
           return AppRoute.login.path;
         }
         return AppRoute.login.path;
       }
 
       if (loggedIn) {
-        if (path == AppRoute.login.path ||
-            path == AppRoute.onboardingIntro.path ||
-            path == AppRoute.onboarding.path) {
+        if (path == AppRoute.login.path) return AppRoute.home.path;
+        final fromProfile = state.uri.queryParameters['from'] == 'profile';
+        if ((path == AppRoute.onboardingIntro.path || path == AppRoute.onboarding.path) &&
+            !fromProfile) {
           return AppRoute.home.path;
         }
         return null;

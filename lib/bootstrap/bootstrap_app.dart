@@ -32,6 +32,7 @@ class KipleGuardApp extends ConsumerWidget {
       builder: (context, child) {
         return MaterialApp.router(
           title: 'KipleGuard',
+          debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           routerConfig: router,
         );

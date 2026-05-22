@@ -61,6 +61,7 @@ dependencies:
   share_plus: ^10.1.4
   geolocator: ^14.0.2
   mobile_scanner: ^7.2.0
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
@@ -91,6 +92,7 @@ flutter:
     - assets/home_vectors/
     - assets/lottie/
     - assets/images/
+    - assets/images/dashboard/
     - assets/android/drawable/
     - assets/android/mipmap-hdpi/
     - assets/android/mipmap-mdpi/

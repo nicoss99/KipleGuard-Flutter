@@ -1,30 +1,29 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../core/app_assets.dart';
-import 'dashboard_svg_icon.dart';
+import 'dashboard_tile_icon.dart';
 
-/// Android `ic_dashboard_*` artwork (ported as SVG under [AppAssets]).
+/// Dashboard grid module icons (3D PNG — color when enabled, grey when disabled).
 class DashboardTileIcons {
-  static double get _sz => 40.sp;
+  static double get _sz => 56.w;
 
-  static Widget attendance({required bool enabled}) => DashboardSvgIcon(
-        asset: enabled ? AppAssets.icDashboardSchedule : AppAssets.icDashboardScheduleGrey,
+  static DashboardTileIcon attendance({required bool enabled}) => DashboardTileIcon(
+        asset: enabled ? AppAssets.icDashboardAttendance : AppAssets.icDashboardAttendanceGrey,
         size: _sz,
       );
 
-  static Widget visitor({required bool enabled}) => DashboardSvgIcon(
-        asset: enabled ? AppAssets.icDashboardUser : AppAssets.icDashboardUserGrey,
+  static DashboardTileIcon visitor({required bool enabled}) => DashboardTileIcon(
+        asset: enabled ? AppAssets.icDashboardVisitor : AppAssets.icDashboardVisitorGrey,
         size: _sz,
       );
 
-  static Widget booking({required bool enabled}) => DashboardSvgIcon(
+  static DashboardTileIcon booking({required bool enabled}) => DashboardTileIcon(
         asset: enabled ? AppAssets.icDashboardBooking : AppAssets.icDashboardBookingGrey,
         size: _sz,
       );
 
-  static Widget reporting({required bool enabled}) => DashboardSvgIcon(
-        asset: enabled ? AppAssets.icDashboardAlert : AppAssets.icDashboardAlertGrey,
+  static DashboardTileIcon reporting({required bool enabled}) => DashboardTileIcon(
+        asset: enabled ? AppAssets.icDashboardReporting : AppAssets.icDashboardReportingGrey,
         size: _sz,
       );
 }

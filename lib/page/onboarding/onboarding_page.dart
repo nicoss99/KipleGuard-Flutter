@@ -36,6 +36,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Future<void> _goNext(BuildContext context) async {
     if (_index >= _slides.length - 1) {
+      final fromProfile = GoRouterState.of(context).uri.queryParameters['from'] == 'profile';
+      if (fromProfile) {
+        if (!context.mounted) return;
+        context.pop();
+        if (context.mounted) context.pop();
+        return;
+      }
       await requestPostOnboardingPermissions();
       if (!context.mounted) return;
       await OnboardingPrefs.setComplete();

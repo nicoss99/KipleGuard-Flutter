@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../core/app_bar_title_format.dart';
 import '../theme/app_color.dart';
 import '../theme/app_text_style.dart';
 
@@ -45,7 +46,7 @@ class StandardPrimaryHeader extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    title,
+                    AppBarTitleFormat.format(title),
                     textAlign: TextAlign.center,
                     style: AppTextStyle.title,
                     maxLines: 1,
