@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../widget/app_calendar_picker.dart';
+
 Future<DateTime?> pickVisitUtcFromSheet(
   BuildContext context, {
   required DateTime initialUtc,
 }) async {
   final local = initialUtc.toLocal();
-  final d = await showDatePicker(
+  final combined = await AppCalendarPicker.showDayAndTime(
     context: context,
-    initialDate: local,
-    firstDate: DateTime(local.year - 1),
-    lastDate: DateTime(local.year + 2),
+    initial: local,
+    lastDate: DateTime(local.year + 2, 12, 31),
   );
-  if (d == null || !context.mounted) return null;
-  final t = await showTimePicker(
-    context: context,
-    initialTime: TimeOfDay.fromDateTime(local),
-  );
-  if (t == null || !context.mounted) return null;
-  final combined = DateTime(d.year, d.month, d.day, t.hour, t.minute);
-  return combined.toUtc();
+  return combined?.toUtc();
 }
 
 String formatVisitDisplayUtc(DateTime utc) {

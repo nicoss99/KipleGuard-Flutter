@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+
+import '../../widget/app_calendar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -135,38 +136,8 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
   }
 
   Future<void> _pickDate(DateTime current) async {
-    final values = await showCalendarDatePicker2Dialog(
-      context: context,
-      dialogSize: Size(330.w, 420.h),
-      borderRadius: BorderRadius.circular(16.r),
-      value: [current],
-      config: CalendarDatePicker2WithActionButtonsConfig(
-        firstDate: DateTime(current.year - 2, 1, 1),
-        lastDate: DateTime(current.year + 2, 12, 31),
-        currentDate: DateTime.now(),
-        selectedDayHighlightColor: AppColor.primary,
-        selectedDayTextStyle: AppTextStyle.body.copyWith(
-          color: AppColor.white,
-          fontWeight: FontWeight.w600,
-        ),
-        controlsTextStyle: AppTextStyle.subtitle.copyWith(fontSize: 16.sp),
-        dayTextStyle: AppTextStyle.body,
-        weekdayLabelTextStyle: AppTextStyle.bodyMuted.copyWith(fontSize: 12.sp),
-        okButton: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-          child: Text(
-            'OK',
-            style: AppTextStyle.subtitle.copyWith(color: AppColor.primary),
-          ),
-        ),
-        cancelButton: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-          child: Text('Cancel', style: AppTextStyle.bodyMuted),
-        ),
-      ),
-    );
+    final picked = await AppCalendarPicker.showDay(context: context, initial: current);
     if (!mounted) return;
-    final picked = (values == null || values.isEmpty) ? null : values.first;
     if (picked != null) {
       await ref
           .read(attendanceProvider.notifier)

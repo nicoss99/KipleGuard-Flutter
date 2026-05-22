@@ -15,6 +15,7 @@ import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/app_calendar_picker.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'reporting_models.dart';
 import 'reporting_prefs.dart';
@@ -148,38 +149,18 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     }
   }
 
-  ThemeData _pickerTheme(BuildContext context) {
-    final base = Theme.of(context);
-    return base.copyWith(
-      colorScheme: base.colorScheme.copyWith(primary: AppColor.primary, onPrimary: AppColor.white),
-      dialogTheme: DialogThemeData(backgroundColor: AppColor.white),
-    );
-  }
-
   Future<void> _pickDateTime() async {
     AppLog.track('select_datetime', screen: 'ReportingForm');
     final now = DateTime.now();
-    final d = await showDatePicker(
+    var picked = await AppCalendarPicker.showDayAndTime(
       context: context,
-      initialDate: now,
-      firstDate: DateTime(2000),
+      initial: now,
       lastDate: now,
       helpText: ReportingStrings.reportDateTime,
       cancelText: ReportingStrings.cancel,
       confirmText: ReportingStrings.pickerOk,
-      builder: (ctx, child) => Theme(data: _pickerTheme(ctx), child: child!),
     );
-    if (d == null || !mounted) return;
-    final t = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(now),
-      helpText: ReportingStrings.reportDateTime,
-      cancelText: ReportingStrings.cancel,
-      confirmText: ReportingStrings.pickerOk,
-      builder: (ctx, child) => Theme(data: _pickerTheme(ctx), child: child!),
-    );
-    if (t == null || !mounted) return;
-    var picked = DateTime(d.year, d.month, d.day, t.hour, t.minute);
+    if (picked == null || !mounted) return;
     if (picked.isAfter(now)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

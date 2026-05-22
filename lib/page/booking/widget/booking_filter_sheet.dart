@@ -1,4 +1,4 @@
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import '../../../widget/app_calendar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -95,23 +95,12 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
   }
 
   Future<void> _pickSubmitted() async {
-    final values = await showCalendarDatePicker2Dialog(
+    final picked = await AppCalendarPicker.showDay(
       context: context,
-      dialogSize: Size(330.w, 420.h),
-      borderRadius: BorderRadius.circular(16.r),
-      value: [_submittedDay ?? DateTime.now()],
-      config: CalendarDatePicker2WithActionButtonsConfig(
-        firstDate: DateTime(DateTime.now().year - 2),
-        lastDate: DateTime(DateTime.now().year + 2, 12, 31),
-        currentDate: DateTime.now(),
-        selectedDayHighlightColor: AppColor.primary,
-      ),
+      initial: _submittedDay ?? DateTime.now(),
     );
     if (!mounted) return;
-    final picked = (values == null || values.isEmpty) ? null : values.first;
-    if (picked != null) {
-      setState(() => _submittedDay = DateTime(picked.year, picked.month, picked.day));
-    }
+    if (picked != null) setState(() => _submittedDay = picked);
   }
 
   bool get _hasPass =>

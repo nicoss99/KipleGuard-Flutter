@@ -11,7 +11,7 @@ import 'visitor_provider.dart';
 import 'visitor_search_delegate.dart';
 import 'visitor_state.dart';
 import 'visitor_strings.dart';
-import 'widget/visitor_calendar_picker.dart';
+import '../../widget/app_calendar_picker.dart';
 import 'widget/visitor_date_toolbar.dart';
 import 'widget/visitor_error_banner.dart';
 import 'widget/visitor_list_body.dart';
@@ -92,7 +92,11 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
   }
 
   Future<void> _pickDateWithDialog(BuildContext context, DateTime selected) async {
-    final picked = await showVisitorDayPicker(context: context, selected: selected);
+    final picked = await AppCalendarPicker.showDay(
+      context: context,
+      initial: selected,
+      okLabel: 'Apply',
+    );
     if (!context.mounted || picked == null) return;
     await ref.read(visitorProvider.notifier).setDay(picked);
   }
