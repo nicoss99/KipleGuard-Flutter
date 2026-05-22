@@ -23,6 +23,9 @@ migrate_working_dir/
 # is commented out by default.
 #.vscode/
 
+# Stale Flutter plugin registrant (regenerated on build; do not commit)
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

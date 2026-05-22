@@ -1,7 +1,7 @@
 import 'bootstrap/bootstrap_app.dart';
 import 'core/app_flavor.dart';
 
-/// Android `stag_k8s` → [BaseConfig.STAGBASEURLK8S] / [BaseConfig.STAGPORTALK8S] (`jni/keys.c`).
+/// Same staging APIs as [main_dev]; prefer `lib/main_dev.dart` for build scripts.
 Future<void> main() async {
   await runKipleGuardApp(flavor: AppFlavor.staging);
 }

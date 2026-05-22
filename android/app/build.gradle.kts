@@ -28,6 +28,19 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue("string", "app_name", "KipleGuard")
+    }
+
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            resValue("string", "app_name", "KipleGuard (Staging)")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "KipleGuard")
+        }
     }
 
     buildTypes {

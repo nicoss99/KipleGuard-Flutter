@@ -18,7 +18,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appFlavorProvider.overrideWithValue(AppFlavor.prod)],
-        child: const KipleGuardApp(),
+        child: const KipleGuardApp(flavor: AppFlavor.prod),
       ),
     );
     await tester.pumpAndSettle();

@@ -175,7 +175,7 @@ Enable **flutter_lints**. Avoid `dynamic`, unnecessary `late`, and needless null
 
 ## Environment
 
-- Flavors: **dev** / **prod** with `main_dev.dart` / `main_prod.dart` (or project standard).
+- Environments: **staging** (`main_dev.dart`, Android flavor `dev`) / **production** (`main_prod.dart`, flavor `prod`). See `docs/BUILD_APK.md`.
 - Secrets: `.env` or `--dart-define` — never commit keys.
 
 ---

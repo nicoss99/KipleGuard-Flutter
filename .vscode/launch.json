@@ -1,0 +1,73 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "staging_debug",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "flutterMode": "debug",
+      "args": ["--flavor", "dev"],
+      "toolArgs": ["--dart-define=API_ENV=dev"]
+    },
+    {
+      "name": "staging_release",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "flutterMode": "release",
+      "args": ["--flavor", "dev"],
+      "toolArgs": ["--dart-define=API_ENV=dev"]
+    },
+    {
+      "name": "prod_debug",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "debug",
+      "args": ["--flavor", "prod"],
+      "toolArgs": ["--dart-define=API_ENV=prod"]
+    },
+    {
+      "name": "prod_release",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "release",
+      "args": ["--flavor", "prod"],
+      "toolArgs": ["--dart-define=API_ENV=prod"]
+    },
+    {
+      "name": "staging_debug (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "flutterMode": "debug",
+      "toolArgs": ["--dart-define=API_ENV=dev"]
+    },
+    {
+      "name": "staging_release (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dev.dart",
+      "flutterMode": "release",
+      "toolArgs": ["--dart-define=API_ENV=dev"]
+    },
+    {
+      "name": "prod_debug (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "debug",
+      "toolArgs": ["--dart-define=API_ENV=prod"]
+    },
+    {
+      "name": "prod_release (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_prod.dart",
+      "flutterMode": "release",
+      "toolArgs": ["--dart-define=API_ENV=prod"]
+    }
+  ]
+}

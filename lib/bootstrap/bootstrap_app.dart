@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../core/api_env.dart';
 import '../core/app_flavor.dart';
 import '../core/auth_prefs.dart';
 import '../core/onboarding_prefs.dart';
@@ -11,27 +12,31 @@ import '../theme/app_theme.dart';
 Future<void> runKipleGuardApp({required AppFlavor flavor}) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([OnboardingPrefs.load(), AuthPrefs.load()]);
+  final effective = resolveEffectiveFlavor(flavor);
   runApp(
     ProviderScope(
-      overrides: [appFlavorProvider.overrideWithValue(flavor)],
-      child: const KipleGuardApp(),
+      overrides: [appFlavorProvider.overrideWithValue(effective)],
+      child: KipleGuardApp(flavor: effective),
     ),
   );
 }
 
 class KipleGuardApp extends ConsumerWidget {
-  const KipleGuardApp({super.key});
+  const KipleGuardApp({super.key, required this.flavor});
+
+  final AppFlavor flavor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final title = flavor == AppFlavor.prod ? 'KipleGuard' : 'KipleGuard (Staging)';
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
-          title: 'KipleGuard',
+          title: title,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           routerConfig: router,
