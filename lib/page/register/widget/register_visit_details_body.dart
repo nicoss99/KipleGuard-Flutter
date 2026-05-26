@@ -77,8 +77,16 @@ class RegisterVisitDetailsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardBottom = MediaQuery.viewInsetsOf(context).bottom;
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: _gutter.w, vertical: 16.h),
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(
+        _gutter.w,
+        16.h,
+        _gutter.w,
+        16.h + keyboardBottom,
+      ),
       children: [
         if (allowDaysError) ...[
           Text(RegisterStrings.typeNotAllowedToday, style: AppTextStyle.body.copyWith(color: AppColor.red)),

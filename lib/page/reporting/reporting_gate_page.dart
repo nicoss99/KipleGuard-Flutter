@@ -38,6 +38,7 @@ class _ReportingGatePageState extends ConsumerState<ReportingGatePage> {
             securityJson: snap.securityJson,
             residenceUuid: snap.residenceId,
             pin: pin,
+            fallbackCompanyUuid: snap.securityUuid,
           );
           if (r.ok) return GuardPinOutcome.success(r);
           return const GuardPinOutcome.failure();

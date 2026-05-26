@@ -33,6 +33,7 @@ class RegisterPageScaffold extends StatelessWidget {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: background ?? AppColor.white,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

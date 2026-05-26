@@ -6,13 +6,14 @@ abstract final class AppConfig {
   // --- XAPPKEY (JNI: `Java_..._BaseConfig_XAPPLICATIONKEY`) ---
   static const _kXApplicationKey =
       '5Syw49JVgmCDrGv5QBDbxtDvpTR2XxkF36Vr4EMVkvDVecJX';
+  static const _kGuardApplicationKey = 'LSsWONolTqkiFRggUZMwyDegoIWgudqL';
 
   // --- BASEURL (JNI: `DEVBASEURL`, `STAGBASEURLK8S`, `PRODBASEURL*`) ---
   static const _kDevBaseUrl = 'https://api-dev.dhome.io/v1.0/';
-  static const _kStgK8sBaseUrl = 'https://k8s-stg-api.kiplelive.com/';
+  static const _kStgK8sBaseUrl = 'https://kiplehome2-0-staging.kiple.com/';
   static const _kProdInBaseUrl = 'https://api-in.kiplelive.com/';
   static const _kProdVnBaseUrl = 'https://api-vn.kiplelive.com/';
-  static const _kProdK8sBaseUrl = 'https://k8s-api.kiplelive.com/';
+  static const _kProdK8sBaseUrl = 'https://kiplehome2-0.kiple.com/';
 
   // --- PORTAL (JNI: `DEVPORTAL`, `STAGPORTALK8S`, `PRODPORTAL*`) ---
   static const _kDevPortal = 'https://admin-dev.dhome.io/';
@@ -39,7 +40,7 @@ abstract final class AppConfig {
   static const _kProdTwilioUrl = 'https://voip.kiplelive.com/';
   static const _kProdTwilioPushSid = 'CR7b2fabb61b0d1b4ff840b051ad3d080e';
 
-  /// Android `RetrofitListAPI.sessionAPI` — JSON body: `{ "identifier", "challenge" }`.
+  /// Legacy session API (unused by guard login).
   static const sessionApiPath = 'admin/session';
 
   /// `POST data/user_firebase_tokens` (after session).
@@ -70,11 +71,15 @@ abstract final class AppConfig {
     ),
   };
 
-  /// Required for `X-Application-Key` (same value for all flavors in JNI).
-  static String xApplicationKey(AppFlavor _) => const String.fromEnvironment(
-    'X_APPLICATION_KEY',
-    defaultValue: _kXApplicationKey,
-  );
+  /// `X-Application-Key` — staging/prod use guard key; dev keeps legacy default.
+  static String xApplicationKey(AppFlavor flavor) {
+    const fromEnv = String.fromEnvironment('X_APPLICATION_KEY');
+    if (fromEnv.isNotEmpty) return fromEnv;
+    return switch (flavor) {
+      AppFlavor.staging || AppFlavor.prod => _kGuardApplicationKey,
+      AppFlavor.dev => _kXApplicationKey,
+    };
+  }
 
   static String webPortalBaseUrl(AppFlavor flavor) => switch (flavor) {
     AppFlavor.dev => const String.fromEnvironment(

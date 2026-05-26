@@ -6,8 +6,8 @@ Environment is selected by **entrypoint** (`lib/main_*.dart`) and Android **prod
 
 | Build | Entrypoint | Android flavor | Default API (K8s) | App label |
 |--------|------------|----------------|---------------------|-----------|
-| **Staging** | `lib/main_dev.dart` | `dev` | `https://k8s-stg-api.kiplelive.com/` | KipleGuard (Staging) |
-| **Production** | `lib/main_prod.dart` | `prod` | `https://k8s-api.kiplelive.com/` | KipleGuard |
+| **Staging** | `lib/main_dev.dart` | `dev` | `https://kiplehome2-0-staging.kiple.com/` | KipleGuard (Staging) |
+| **Production** | `lib/main_prod.dart` | `prod` | `https://kiplehome2-0.kiple.com/` | KipleGuard |
 
 Optional overrides: `--dart-define=API_ENV=dev|prod`, `API_BASE_URL=...`, etc. (see `lib/core/api_env.dart`, `lib/core/app_config.dart`).
 

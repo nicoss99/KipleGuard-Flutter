@@ -1,10 +1,25 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/dashboard_prefs.dart';
+import '../auth/guard_visitor_repository.dart';
 import 'visitor_detail_fields.dart';
-import 'visitor_repository.dart';
 
 final visitorDetailProvider = FutureProvider.autoDispose.family<VisitorDetailFields?, String>((ref, visitorUuid) async {
-  final raw = await ref.watch(visitorRepositoryProvider).fetchVisitorDetails(visitorUuid);
+  final visitorId = int.tryParse(visitorUuid);
+  if (visitorId == null) return null;
+
+  final snap = await DashboardPrefs.loadSnapshot();
+  if (snap.residenceId.isEmpty) return null;
+
+  final raw = await ref.read(guardVisitorRepositoryProvider).fetchVisitorById(
+    snap.residenceId,
+    visitorId: visitorId,
+  );
   if (raw == null) return null;
-  return VisitorDetailFields.fromResource(raw);
+
+  return VisitorDetailFields.fromGuardJson(
+    raw,
+    residenceUuid: snap.residenceId,
+    residenceName: snap.residenceName,
+  );
 });

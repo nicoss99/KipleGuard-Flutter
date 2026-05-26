@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -7,6 +9,7 @@ import 'app_route.dart';
 import 'home_routes.dart';
 import 'login_routes.dart';
 import 'onboarding_routes.dart';
+import 'root_navigator_key.dart';
 
 String _resolveInitialLocation() {
   if (!OnboardingPrefs.isCompleteSync) return AppRoute.onboardingIntro.path;
@@ -16,11 +19,17 @@ String _resolveInitialLocation() {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: _resolveInitialLocation(),
     redirect: (context, state) {
       final path = state.uri.path;
       final onboardingDone = OnboardingPrefs.isCompleteSync;
       final loggedIn = AuthPrefs.isLoggedInSync;
+      final token = AuthPrefs.sessionToken;
+      if (loggedIn && (token == null || token.isEmpty)) {
+        unawaited(AuthPrefs.clearSession());
+        return AppRoute.login.path;
+      }
 
       if (!onboardingDone) {
         if (path == AppRoute.onboardingIntro.path ||

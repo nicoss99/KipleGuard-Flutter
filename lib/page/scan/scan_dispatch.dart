@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
+import '../auth/guard_visitor_repository.dart';
 import 'scan_repository.dart';
 
 final scanDispatcherProvider = Provider<ScanDispatcher>(
@@ -45,7 +46,18 @@ class ScanDispatcher {
     final snap = await DashboardPrefs.loadSnapshot();
     if (snap.residenceId.isEmpty) return null;
 
+    final guardVisitors = _ref.read(guardVisitorRepositoryProvider);
     final repo = _ref.read(scanRepositoryProvider);
+
+    try {
+      final scan = await guardVisitors.scanVisitor(
+        residenceUuid: snap.residenceId,
+        qrCodeData: raw,
+      );
+      return ScanDispatchVisitor(scan.visitorId.toString());
+    } catch (e, st) {
+      AppLog.error('Guard visitor scan', tag: 'Scan', error: e, stackTrace: st);
+    }
 
     try {
       final visitorUuid = await repo.scanQrVisitorUuid(
@@ -56,7 +68,7 @@ class ScanDispatcher {
         return ScanDispatchVisitor(visitorUuid);
       }
     } catch (e, st) {
-      AppLog.error('ScanQR visitor', tag: 'Scan', error: e, stackTrace: st);
+      AppLog.error('ScanQR visitor legacy', tag: 'Scan', error: e, stackTrace: st);
     }
 
     try {

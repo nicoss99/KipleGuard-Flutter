@@ -12,6 +12,7 @@ import '../../core/app_logger.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import 'scan_dispatch.dart';
 import 'scan_strings.dart';
 import 'widget/scan_gallery_bar.dart';
@@ -142,6 +143,7 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
       return false;
     } catch (e, st) {
       AppLog.error('Scan dispatch', tag: 'Scan', error: e, stackTrace: st);
+      if (mounted) await showApiFailedDialog(context, error: e);
       _badScans += 1;
       return false;
     } finally {

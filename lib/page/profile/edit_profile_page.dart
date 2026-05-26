@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
-import '../../widget/app_confirm_dialog.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'widget/sign_out_dialog.dart';
 import '../../widget/standard_primary_header.dart';
@@ -20,6 +17,7 @@ import 'profile_strings.dart';
 import 'widget/edit_profile_divider.dart';
 import 'widget/edit_profile_header.dart';
 import 'widget/edit_profile_menu_row.dart';
+import 'widget/edit_profile_residences_section.dart';
 import 'widget/edit_profile_section_title.dart';
 
 /// Android `EditProfileActivity` — local prefs + PUT profile / sign-out APIs.
@@ -32,7 +30,6 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late final TextEditingController _nameCtrl;
-  String _versionLabel = '';
 
   @override
   void initState() {
@@ -42,11 +39,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       await ref.read(profileProvider.notifier).load();
       final s = ref.read(profileProvider);
       _nameCtrl.text = s.savedName;
-      final info = await PackageInfo.fromPlatform();
-      if (!mounted) return;
-      setState(() {
-        _versionLabel = '${ProfileStrings.appName} v${info.version}';
-      });
     });
   }
 
@@ -66,12 +58,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       context.pop(true);
     } else {
       final err = ref.read(profileProvider).error;
-      if (err != null) _snack(err);
+      if (err != null) await showApiFailedDialog(context, message: err);
     }
-  }
-
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _confirmSignOut() {
@@ -88,33 +76,28 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final ok = await ref.read(profileProvider.notifier).signOut();
     if (!mounted) return;
     if (ok) {
+      while (context.canPop()) {
+        context.pop();
+      }
       context.go(AppRoute.login.path);
       return;
     }
-    await _showForceLogoutDialog();
-  }
-
-  Future<void> _showForceLogoutDialog() async {
-    final force = await showAppConfirmDialog(
-      context,
-      icon: LucideIcons.log_out,
-      iconColor: AppColor.errorStrong,
-      iconBackgroundColor: AppColor.errorLight,
-      title: ProfileStrings.appName,
-      message: ProfileStrings.signOutFailed,
-      cancelLabel: ProfileStrings.cancel,
-      confirmLabel: ProfileStrings.forceLogout,
-      confirmButtonColor: AppColor.errorStrong,
-    );
-    if (force != true || !mounted) return;
-    final ok = await ref.read(profileProvider.notifier).signOut(force: true);
-    if (!mounted) return;
-    if (ok) context.go(AppRoute.login.path);
+    await showApiFailedDialog(context, title: 'Sign out failed');
   }
 
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(profileProvider);
+    final versionAsync = ref.watch(appVersionLabelProvider);
+    ref.listen(profileProvider, (prev, next) {
+      final err = next.error;
+      if (err == null || err == prev?.error || next.loading || !mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await showApiFailedDialog(context, message: err);
+        ref.read(profileProvider.notifier).clearError();
+      });
+    });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: standardPrimaryOverlayStyle(),
@@ -141,66 +124,65 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     : const [],
               ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            EditProfileHeader(initials: s.initials),
-                            const EditProfileSectionTitle(label: ProfileStrings.account),
-                            _nameRow(s),
-                            const EditProfileDivider(),
-                            EditProfileMenuRow(
-                              label: ProfileStrings.changePassword,
-                              onTap: () => context.push(AppRoute.changePassword.path),
-                            ),
-                            const EditProfileDivider(),
-                            _readOnlyRow(ProfileStrings.email, s.email),
-                            const EditProfileDivider(),
-                            _readOnlyRow(ProfileStrings.mobileNumber, s.phone),
-                            const EditProfileSectionTitle(label: ProfileStrings.helpSupport),
-                            EditProfileMenuRow(
-                              label: ProfileStrings.whatsNew,
-                              onTap: () =>
-                                  context.push('${AppRoute.onboardingIntro.path}?from=profile'),
-                            ),
-                            const EditProfileDivider(),
-                            EditProfileMenuRow(
-                              label: ProfileStrings.offlineData,
-                              onTap: () => context.push(AppRoute.profileOffline.path),
-                            ),
-                            SizedBox(height: 24.h),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w),
-                              child: RegisterGradientButton(
-                                label: ProfileStrings.signOut,
-                                onPressed: _confirmSignOut,
-                                margin: EdgeInsets.zero,
-                              ),
-                            ),
-                            SizedBox(height: 16.h),
-                          ],
-                        ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      EditProfileHeader(initials: s.initials),
+                      const EditProfileSectionTitle(label: ProfileStrings.account),
+                      _nameRow(s),
+                      const EditProfileDivider(),
+                      EditProfileMenuRow(
+                        label: ProfileStrings.changePassword,
+                        onTap: () => context.push(AppRoute.changePassword.path),
                       ),
-                    ),
-                    if (_versionLabel.isNotEmpty)
+                      const EditProfileDivider(),
+                      _readOnlyRow(ProfileStrings.email, s.email),
+                      const EditProfileDivider(),
+                      _readOnlyRow(ProfileStrings.mobileNumber, s.phone),
+                      EditProfileResidencesSection(residences: s.residences),
+                      const EditProfileSectionTitle(label: ProfileStrings.helpSupport),
+                      EditProfileMenuRow(
+                        label: ProfileStrings.whatsNew,
+                        onTap: () =>
+                            context.push('${AppRoute.onboardingIntro.path}?from=profile'),
+                      ),
+                      const EditProfileDivider(),
+                      EditProfileMenuRow(
+                        label: ProfileStrings.offlineData,
+                        onTap: () => context.push(AppRoute.profileOffline.path),
+                      ),
+                      SizedBox(height: 24.h),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          16.w,
-                          8.h,
-                          16.w,
-                          16.h + MediaQuery.paddingOf(context).bottom,
-                        ),
-                        child: Text(
-                          _versionLabel,
-                          textAlign: TextAlign.center,
-                          style: ProfileTextStyle.version,
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: RegisterGradientButton(
+                          label: ProfileStrings.signOut,
+                          onPressed: _confirmSignOut,
+                          margin: EdgeInsets.zero,
                         ),
                       ),
-                  ],
+                      SizedBox(height: 16.h),
+                      versionAsync.when(
+                        data: (label) => label.isEmpty
+                            ? const SizedBox.shrink()
+                            : Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  16.w,
+                                  8.h,
+                                  16.w,
+                                  16.h + MediaQuery.paddingOf(context).bottom,
+                                ),
+                                child: Text(
+                                  label,
+                                  textAlign: TextAlign.center,
+                                  style: ProfileTextStyle.version,
+                                ),
+                              ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -12,6 +12,7 @@ class RegisterBuildingRow {
 
 class RegisterVisitorTypeOption {
   const RegisterVisitorTypeOption({
+    this.id,
     required this.uuid,
     required this.name,
     this.isLprEnabled = false,
@@ -23,6 +24,7 @@ class RegisterVisitorTypeOption {
     this.mustLeaveBeforeDay,
   });
 
+  final int? id;
   final String uuid;
   final String name;
   final bool isLprEnabled;
@@ -50,12 +52,14 @@ class RegisterHostOption {
   const RegisterHostOption({
     required this.uuid,
     required this.name,
+    this.userId,
     this.email,
     this.phone,
   });
 
   final String uuid;
   final String name;
+  final int? userId;
   final String? email;
   final String? phone;
 }

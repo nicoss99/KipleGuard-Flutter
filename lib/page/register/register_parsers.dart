@@ -13,17 +13,27 @@ List<RegisterVisitorTypeOption> parseVisitorTypeOptions(String json) {
   if (json.isEmpty) return [];
   try {
     final d = jsonDecode(json);
-    final resource = d is Map<String, dynamic> ? d['resource'] : null;
-    if (resource is! List<dynamic>) return [];
+    List<dynamic>? resource;
+    if (d is Map<String, dynamic>) {
+      final data = d['data'];
+      if (data is Map<String, dynamic> && data['visitor_types'] is List<dynamic>) {
+        resource = data['visitor_types'] as List<dynamic>;
+      } else if (d['resource'] is List<dynamic>) {
+        resource = d['resource'] as List<dynamic>;
+      }
+    }
+    if (resource == null) return [];
     final out = <RegisterVisitorTypeOption>[];
     for (final raw in resource) {
       if (raw is! Map) continue;
       final m = Map<String, dynamic>.from(raw);
-      final uuid = m['uuid']?.toString();
+      final id = _intOrNull(m['id']);
+      final uuid = m['uuid']?.toString() ?? id?.toString();
       final name = m['name']?.toString();
       if (uuid == null || uuid.isEmpty || name == null) continue;
       out.add(
         RegisterVisitorTypeOption(
+          id: id,
           uuid: uuid,
           name: name,
           isLprEnabled: m['is_lpr_enabled'] == true,
@@ -82,8 +92,36 @@ List<RegisterHostOption> parseUnitMembersResponse(dynamic data) {
       RegisterHostOption(
         uuid: uuid,
         name: m['name']?.toString() ?? '',
+        userId: _intOrNull(m['user_id']) ?? _intOrNull(m['id']),
         email: m['email']?.toString(),
         phone: m['phone']?.toString(),
+      ),
+    );
+  }
+  return out;
+}
+
+List<RegisterVisitorTypeOption> parseVisitorTypeOptionsFromApi(
+  Map<String, dynamic>? body,
+) {
+  if (body == null) return const [];
+  final data = body['data'];
+  if (data is! Map<String, dynamic>) return const [];
+  final raw = data['visitor_types'];
+  if (raw is! List<dynamic>) return const [];
+  final out = <RegisterVisitorTypeOption>[];
+  for (final item in raw) {
+    if (item is! Map) continue;
+    final m = Map<String, dynamic>.from(item);
+    final id = _intOrNull(m['id']);
+    final uuid = id?.toString() ?? m['uuid']?.toString() ?? '';
+    final name = m['label']?.toString() ?? m['name']?.toString() ?? '';
+    if (uuid.isEmpty || name.isEmpty) continue;
+    out.add(
+      RegisterVisitorTypeOption(
+        id: id,
+        uuid: uuid,
+        name: name,
       ),
     );
   }

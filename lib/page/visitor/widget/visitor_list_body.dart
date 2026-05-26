@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../router/app_route.dart' show AppPaths;
 import '../../../theme/app_color.dart';
+import '../../auth/guard_visitor_status.dart';
 import '../visitor_provider.dart';
 import '../visitor_state.dart';
 import '../visitor_tab_colors.dart';
@@ -63,7 +64,10 @@ class VisitorListBody extends ConsumerWidget {
                       return VisitorListFooter(state: state);
                     }
                     final row = state.items[i];
-                    final isIn = row.latestScanType.toUpperCase() == 'IN';
+                    final isIn =
+                        row.visitStatus == GuardVisitorApiStatus.checkedIn ||
+                        row.latestScanType.toUpperCase() == 'IN';
+
                     return VisitorListTile(
                       item: row,
                       stripeColor: VisitorTabColors.stripeForItem(

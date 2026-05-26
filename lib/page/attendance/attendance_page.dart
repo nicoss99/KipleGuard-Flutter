@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import 'attendance_model.dart';
@@ -19,7 +20,7 @@ import 'attendance_provider.dart';
 import 'attendance_state.dart';
 import 'attendance_strings.dart';
 import 'widget/attendance_day_strip.dart';
-import 'widget/attendance_pin_dialog.dart';
+import 'widget/attendance_shift_dialog.dart';
 import 'widget/attendance_record_tile.dart';
 import 'widget/attendance_records_date_header.dart';
 import 'widget/attendance_records_empty_state.dart';
@@ -58,6 +59,15 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(attendanceProvider);
+    ref.listen(attendanceProvider, (prev, next) {
+      final err = next.error;
+      if (err == null || err == prev?.error || !mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await showApiFailedDialog(context, message: err);
+        ref.read(attendanceProvider.notifier).clearError();
+      });
+    });
     final title = s.tabIndex == 0
         ? AttendanceStrings.titleTaking
         : AttendanceStrings.titleRecords;
@@ -100,8 +110,8 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
                   controller: _tabs,
                   children: [
                     _TakingTab(
-                      onStart: () => _pinFlow(AttendanceShiftFlow.startShift),
-                      onEnd: () => _pinFlow(AttendanceShiftFlow.endShift),
+                      onStart: () => _shiftFlow(AttendanceShiftFlow.startShift),
+                      onEnd: () => _shiftFlow(AttendanceShiftFlow.endShift),
                     ),
                     _RecordsTab(
                       selectedDay: s.selectedDay,
@@ -145,9 +155,9 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
     }
   }
 
-  Future<void> _pinFlow(AttendanceShiftFlow flow) async {
+  Future<void> _shiftFlow(AttendanceShiftFlow flow) async {
     final pageCtx = context;
-    await AttendancePinDialog.show(
+    await AttendanceShiftDialog.show(
       context: context,
       pageContext: pageCtx,
       ref: ref,
@@ -188,12 +198,21 @@ class _TakingTabState extends State<_TakingTab> {
     final now = DateTime.now();
     final timeFmt = DateFormat('hh:mm', 'en_US');
     final ampm = DateFormat('a', 'en_US').format(now);
+    final dateLine = DateFormat('EEEE, dd MMM yyyy', 'en_US').format(now);
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(bottom: 32.h),
       child: Column(
         children: [
           SizedBox(height: 28.h),
+          Text(
+            dateLine,
+            style: AppTextStyle.body.copyWith(
+              fontSize: 14.sp,
+              color: AppColor.textSecondary,
+            ),
+          ),
+          SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,

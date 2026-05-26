@@ -40,11 +40,26 @@ class _RegisterUnderlineFieldState extends State<RegisterUnderlineField> {
   @override
   void initState() {
     super.initState();
-    _focus.addListener(() => setState(() {}));
+    _focus.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    setState(() {});
+    if (!_focus.hasFocus) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_focus.hasFocus) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.25,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   @override
   void dispose() {
+    _focus.removeListener(_onFocusChange);
     _focus.dispose();
     super.dispose();
   }

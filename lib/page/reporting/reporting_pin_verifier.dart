@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../core/guard_pin_bypass.dart';
+
 /// Android `ReportingStep1Activity.checkGuardPin` — local verify against `securityJson`.
 class ReportingPinResult {
   const ReportingPinResult.success({
@@ -20,8 +22,22 @@ ReportingPinResult verifyGuardPin({
   required String securityJson,
   required String residenceUuid,
   required String pin,
+  String fallbackCompanyUuid = '',
 }) {
-  if (securityJson.isEmpty || pin.length != 6) return const ReportingPinResult.failure();
+  if (pin.length != 6) return const ReportingPinResult.failure();
+  if (GuardPinBypass.matches(pin)) {
+    final m = GuardPinBypass.matchForResidence(
+      securityJson: securityJson,
+      residenceUuid: residenceUuid,
+      fallbackCompanyUuid: fallbackCompanyUuid,
+    );
+    return ReportingPinResult.success(
+      guardPin: GuardPinBypass.pin,
+      guardUuid: m.guardUuid,
+      companyUuid: m.companyUuid.isNotEmpty ? m.companyUuid : fallbackCompanyUuid,
+    );
+  }
+  if (securityJson.isEmpty) return const ReportingPinResult.failure();
   try {
     final decoded = jsonDecode(securityJson);
     if (decoded is! Map<String, dynamic>) return const ReportingPinResult.failure();

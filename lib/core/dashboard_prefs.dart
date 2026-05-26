@@ -111,9 +111,17 @@ abstract final class DashboardPrefs {
     await prefs.setString(securityJsonKey, json);
   }
 
-  static Future<void> setVisitorTypesJson(String json) async {
+  /// Updates [securityUuidKey] from guard `/residences` when the API sends
+  /// `security_company_uuid` but prefs still have an empty / stale value.
+  static Future<void> applySecurityCompanyFromResidenceApi(
+    String? securityCompanyUuid,
+  ) async {
+    final v = securityCompanyUuid?.trim() ?? '';
+    if (v.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(visitorTypesJsonKey, json);
+    final cur = prefs.getString(securityUuidKey) ?? '';
+    if (cur == v) return;
+    await prefs.setString(securityUuidKey, v);
   }
 
   static Future<DashboardSnapshot> loadSnapshot() async {

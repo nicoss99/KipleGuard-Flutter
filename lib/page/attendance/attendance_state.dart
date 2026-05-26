@@ -10,8 +10,6 @@ class AttendanceState {
     this.loading = false,
     this.error,
     this.shiftFlow = AttendanceShiftFlow.none,
-    this.guardUuid = '',
-    this.companyUuid = '',
   });
 
   final int tabIndex;
@@ -20,8 +18,6 @@ class AttendanceState {
   final bool loading;
   final String? error;
   final AttendanceShiftFlow shiftFlow;
-  final String guardUuid;
-  final String companyUuid;
 
   AttendanceState copyWith({
     int? tabIndex,
@@ -31,8 +27,6 @@ class AttendanceState {
     String? error,
     bool clearError = false,
     AttendanceShiftFlow? shiftFlow,
-    String? guardUuid,
-    String? companyUuid,
   }) {
     return AttendanceState(
       tabIndex: tabIndex ?? this.tabIndex,
@@ -41,8 +35,6 @@ class AttendanceState {
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       shiftFlow: shiftFlow ?? this.shiftFlow,
-      guardUuid: guardUuid ?? this.guardUuid,
-      companyUuid: companyUuid ?? this.companyUuid,
     );
   }
 }

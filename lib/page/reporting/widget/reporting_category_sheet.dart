@@ -11,7 +11,7 @@ import 'reporting_sheet_option.dart';
 Future<String?> showReportingCategorySheet(
   BuildContext context, {
   required List<ReportingCategory> categories,
-  String? selectedUuid,
+  String? selectedKey,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -23,7 +23,7 @@ Future<String?> showReportingCategorySheet(
     ),
     builder: (ctx) => _ReportingCategorySheetBody(
       categories: categories,
-      selectedUuid: selectedUuid,
+      selectedKey: selectedKey,
     ),
   );
 }
@@ -31,11 +31,11 @@ Future<String?> showReportingCategorySheet(
 class _ReportingCategorySheetBody extends StatelessWidget {
   const _ReportingCategorySheetBody({
     required this.categories,
-    this.selectedUuid,
+    this.selectedKey,
   });
 
   final List<ReportingCategory> categories;
-  final String? selectedUuid;
+  final String? selectedKey;
 
   @override
   Widget build(BuildContext context) {
@@ -69,16 +69,16 @@ class _ReportingCategorySheetBody extends StatelessWidget {
                 separatorBuilder: (_, _) => SizedBox(height: 8.h),
                 itemBuilder: (_, i) {
                   final c = categories[i];
-                  final selected = c.uuid == selectedUuid;
+                  final selected = c.key == selectedKey;
                   return ReportingSheetOption(
                     selected: selected,
                     leading: reportingCategoryIcon(
-                      c.name,
+                      c.label,
                       selected: selected,
                       size: 20,
                     ),
-                    label: c.name,
-                    onTap: () => Navigator.pop(context, c.uuid),
+                    label: c.label,
+                    onTap: () => Navigator.pop(context, c.key),
                   );
                 },
               ),

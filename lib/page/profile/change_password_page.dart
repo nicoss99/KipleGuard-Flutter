@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../theme/app_color.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import '../register/widget/register_gradient_button.dart';
@@ -72,9 +73,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       return;
     }
     final err = ref.read(changePasswordProvider).apiError;
-    if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-    }
+    if (err != null) await showApiFailedDialog(context, message: err);
   }
 
   @override

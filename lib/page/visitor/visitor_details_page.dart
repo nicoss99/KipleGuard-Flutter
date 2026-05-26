@@ -16,12 +16,13 @@ import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/app_progress_indicator.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import 'visitor_detail_fields.dart';
 import 'visitor_detail_provider.dart';
 import 'visitor_epass_share_text.dart';
-import 'visitor_repository.dart';
+import '../auth/guard_visitor_repository.dart';
 import 'visitor_strings.dart';
 import 'widget/visitor_details_qr_header.dart';
 import 'widget/visitor_epass_actions_sheet.dart';
@@ -47,36 +48,30 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
     });
   }
 
-  Future<String> _profileForQr(VisitorDetailFields meta) async {
-    if (meta.userProfileUuid.isNotEmpty) return meta.userProfileUuid;
-    return (await AuthPrefs.readProfileUuid()) ?? '';
-  }
-
   Future<void> _performQr(VisitorDetailFields meta) async {
-    if (!meta.hasQr) {
+    final snap = _dash ?? await DashboardPrefs.loadSnapshot();
+    final residenceUuid =
+        snap.residenceId.isNotEmpty ? snap.residenceId : meta.residenceUuid;
+    if (residenceUuid.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(VisitorStrings.qrRequired)),
+          const SnackBar(content: Text('No residence selected')),
         );
       }
       return;
     }
-    final profile = await _profileForQr(meta);
-    if (profile.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Missing profile')));
-      }
-      return;
+
+    final guardRepo = ref.read(guardVisitorRepositoryProvider);
+    if (meta.hasQr && meta.qrCode.trim().isNotEmpty) {
+      await guardRepo.scanVisitor(
+        residenceUuid: residenceUuid,
+        qrCodeData: meta.qrCode.trim(),
+      );
+    } else {
+      final visitorId = int.tryParse(widget.visitorUuid);
+      if (visitorId == null) throw StateError('Invalid visitor');
+      await guardRepo.checkIn(residenceUuid: residenceUuid, visitorId: visitorId);
     }
-    await ref
-        .read(visitorRepositoryProvider)
-        .qrVisitorScan(
-          qrCodeRaw: meta.qrCode,
-          residenceUuid: meta.residenceUuid,
-          userProfileUuid: profile,
-        );
     ref.invalidate(visitorDetailProvider(widget.visitorUuid));
   }
 
@@ -92,9 +87,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
         stackTrace: st,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+        await showApiFailedDialog(context, error: e);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -113,9 +106,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
         stackTrace: st,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+        await showApiFailedDialog(context, error: e);
       }
     } finally {
       if (mounted) setState(() => _busy = false);

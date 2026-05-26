@@ -9,6 +9,7 @@ abstract final class ProfileStrings {
   static const changePassword = 'Change Password';
   static const email = 'Email';
   static const mobileNumber = 'Mobile number';
+  static const residences = 'RESIDENCES';
   static const helpSupport = 'HELP & SUPPORT';
   static const whatsNew = "What's new?";
   static const offlineData = 'Offline Data';
@@ -17,7 +18,6 @@ abstract final class ProfileStrings {
   static const passwordUpdated = 'Password updated';
   static const signOutFailed = 'Failed to logout';
   static const forceLogout = 'Force logout';
-  static const appName = 'kipleSafe';
   static const currentPassword = 'Current password';
   static const currentPasswordHint = 'Enter a current password';
   static const newPassword = 'New password';

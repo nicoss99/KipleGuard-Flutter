@@ -1,9 +1,9 @@
-/// Incident category from `data/kg_incident_categories` (`RetrofitPOJO.resource`).
+/// Incident type from `GET .../incidents/types` (`key` + `label`).
 class ReportingCategory {
-  const ReportingCategory({required this.uuid, required this.name});
+  const ReportingCategory({required this.key, required this.label});
 
-  final String uuid;
-  final String name;
+  final String key;
+  final String label;
 }
 
 /// Passed to the reporting form after PIN verification (Android intent extras).

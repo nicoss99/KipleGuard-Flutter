@@ -8,13 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_config.dart';
 import '../../core/app_logger.dart';
 import '../../core/app_flavor.dart';
-import '../../core/auth_prefs.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'login_provider.dart';
 import 'login_theme.dart';
-import 'widget/login_region_field.dart';
+import 'widget/login_sign_in_button.dart';
+import 'widget/login_switch_device_dialog.dart';
 import 'widget/login_scaffold.dart';
 import 'widget/login_text_field.dart';
 
@@ -28,8 +29,20 @@ class LoginPage extends ConsumerStatefulWidget {
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _idController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _region;
   var _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    void refresh() {
+      if (mounted) {
+        ref.read(loginNotifierProvider.notifier).clearFieldErrors();
+        setState(() {});
+      }
+    }
+    _idController.addListener(refresh);
+    _passwordController.addListener(refresh);
+  }
 
   @override
   void dispose() {
@@ -39,15 +52,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _openForgot() async {
-    if (_region == null || _region!.isEmpty) {
-      ref.read(loginNotifierProvider.notifier).requireRegion();
-      return;
-    }
-    await AuthPrefs.setRegionCode(_region!);
     final flavor = ref.read(appFlavorProvider);
-    // Same as Android LoginActivity: BASE_WEB_URL + "#/auth/resetpassword"
     final uri = Uri.parse('${AppConfig.webPortalBaseUrl(flavor)}#/auth/resetpassword');
-    // Avoid canLaunchUrl: its Pigeon channel can throw PlatformException(channel-error) on Android.
     try {
       final launched = await launchUrl(
         uri,
@@ -66,20 +72,70 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  Future<void> _submit() async {
-    final ok = await ref.read(loginNotifierProvider.notifier).signIn(
-          identifier: _idController.text.trim(),
-          password: _passwordController.text,
-          regionCode: _region ?? '',
-        );
-    if (!mounted || !ok) return;
+  Future<void> _goHome() async {
+    if (!mounted) return;
     context.go(AppRoute.home.path);
+  }
+
+  Future<void> _submit() async {
+    final identifier = _idController.text.trim();
+    final password = _passwordController.text;
+    final notifier = ref.read(loginNotifierProvider.notifier);
+
+    var result = await notifier.signIn(identifier: identifier, password: password);
+    if (!mounted) return;
+    if (result == null) {
+      await showApiFailedDialog(
+        context,
+        title: 'Sign in failed',
+        message: 'Invalid username / password',
+      );
+      notifier.clearFieldErrors();
+      return;
+    }
+
+    final switchInfo = result.switchDevice;
+    if (switchInfo != null) {
+      final proceed = await showLoginSwitchDeviceDialog(context, info: switchInfo);
+      if (!mounted) return;
+      if (proceed != true) {
+        await notifier.cancelPendingSwitchDevice();
+        return;
+      }
+      // TEMPORARY: Proceed re-login (`is_proceed`) disabled — use first login session.
+      // result = await notifier.confirmSwitchDevice(
+      //   identifier: identifier,
+      //   password: password,
+      // );
+      // if (!mounted) return;
+      // if (result == null) {
+      //   final msg = ref.read(loginNotifierProvider).apiError;
+      //   if (msg != null) {
+      //     await showApiFailedDialog(context, message: msg, title: 'Sign in failed');
+      //   }
+      //   return;
+      // }
+      // if (result.switchDevice != null) {
+      //   await showApiFailedDialog(
+      //     context,
+      //     message: 'Unable to continue login on this device.',
+      //     title: 'Sign in failed',
+      //   );
+      //   await notifier.cancelPendingSwitchDevice();
+      //   return;
+      // }
+    }
+
+    await _goHome();
   }
 
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(loginNotifierProvider);
     final fieldHeight = LoginScaffold.oneLineFieldHeight(context);
+    final canSubmit = !ui.loading &&
+        _idController.text.trim().isNotEmpty &&
+        _passwordController.text.isNotEmpty;
 
     return ModalProgressHud(
       inAsyncCall: ui.loading,
@@ -93,17 +149,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Region', style: LoginTheme.label(context)),
-                SizedBox(height: 10.h),
-                SizedBox(
-                  height: fieldHeight,
-                  child: LoginRegionField(
-                    value: _region,
-                    onChanged: (v) => setState(() => _region = v),
-                    onClearError: ref.read(loginNotifierProvider.notifier).clearFieldErrors,
-                  ),
-                ),
-                SizedBox(height: 15.h),
                 Text('Email or Phone Number', style: LoginTheme.label(context)),
                 SizedBox(height: 10.h),
                 SizedBox(
@@ -125,7 +170,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     hint: 'Password',
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submit(),
+                    onSubmitted: (_) {
+                      if (canSubmit) _submit();
+                    },
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       icon: Icon(
@@ -140,31 +187,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   onPressed: _openForgot,
                   child: Text('Forgot Password?', style: LoginTheme.link(context)),
                 ),
-                if (ui.fieldError == 'region')
-                  Text(
-                    'Please select your region',
-                    textAlign: TextAlign.center,
-                    style: LoginTheme.error(context),
-                  ),
-                if (ui.fieldError == 'credentials' || ui.apiError != null)
-                  Text(
-                    ui.apiError ?? 'Invalid username / password',
-                    textAlign: TextAlign.center,
-                    style: LoginTheme.error(context),
-                  ),
                 SizedBox(height: 30.h),
-                SizedBox(
-                  height: 56.h,
-                  child: FilledButton(
-                    onPressed: ui.loading ? null : _submit,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColor.white,
-                      foregroundColor: AppColor.loginScreenBlue,
-                      shape: const StadiumBorder(),
-                      elevation: 0,
-                    ),
-                    child: Text('Sign In', style: LoginTheme.buttonLabel(context)),
-                  ),
+                LoginSignInButton(
+                  enabled: canSubmit,
+                  absorbing: ui.loading,
+                  onPressed: _submit,
                 ),
               ],
             ),
@@ -173,5 +200,4 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     );
   }
-
 }

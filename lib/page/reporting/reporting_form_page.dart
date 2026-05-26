@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,9 +12,11 @@ import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/app_calendar_picker.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'reporting_models.dart';
+import 'reporting_parsers.dart';
 import 'reporting_prefs.dart';
 import 'reporting_repository.dart';
 import 'reporting_strings.dart';
@@ -47,11 +46,9 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   var _loadingCats = true;
   var _submitting = false;
   List<ReportingCategory> _cats = [];
-  String? _selectedUuid;
+  String? _selectedKey;
   String _dateLabel = '';
-  String _incidentUtc = '';
-  double _lat = 0;
-  double _lng = 0;
+  String _incidentAt = '';
   var _firstSpinner = true;
   final _files = <XFile>[];
   var _errDesc = false;
@@ -59,14 +56,14 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   var _errCat = false;
 
   bool get _canSubmit =>
-      (_selectedUuid?.isNotEmpty ?? false) &&
+      (_selectedKey?.isNotEmpty ?? false) &&
       _desc.text.trim().isNotEmpty &&
-      _incidentUtc.isNotEmpty;
+      _incidentAt.isNotEmpty;
 
-  String? get _categoryName {
-    if (_selectedUuid == null) return null;
+  String? get _categoryLabel {
+    if (_selectedKey == null) return null;
     for (final c in _cats) {
-      if (c.uuid == _selectedUuid) return c.name;
+      if (c.key == _selectedKey) return c.label;
     }
     return null;
   }
@@ -84,52 +81,33 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   }
 
   Future<void> _init() async {
-    await _location();
     await _loadCategories();
-  }
-
-  Future<void> _location() async {
-    try {
-      var p = await Geolocator.checkPermission();
-      if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
-      if (p == LocationPermission.denied || p == LocationPermission.deniedForever) return;
-      final pos = await Geolocator.getCurrentPosition();
-      _lat = pos.latitude;
-      _lng = pos.longitude;
-    } catch (_) {}
-  }
-
-  List<ReportingCategory> _parseCats(String raw) {
-    try {
-      final m = jsonDecode(raw) as Map<String, dynamic>;
-      final r = m['resource'];
-      if (r is! List<dynamic>) return [];
-      return r
-          .map((e) => e is Map<String, dynamic> ? e : null)
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ReportingCategory(uuid: '${e['uuid'] ?? ''}', name: '${e['name'] ?? ''}'))
-          .where((e) => e.uuid.isNotEmpty && e.name.isNotEmpty)
-          .toList();
-    } catch (_) {
-      return [];
-    }
   }
 
   Future<void> _loadCategories() async {
     final snap = await DashboardPrefs.loadSnapshot();
+    if (snap.residenceId.isEmpty) {
+      if (mounted) setState(() => _loadingCats = false);
+      return;
+    }
     final cached = await ReportingPrefs.readIncidentCategories(snap.residenceId);
     if (cached != null && cached.isNotEmpty) {
       setState(() {
-        _cats = _parseCats(cached);
+        _cats = parseIncidentTypesCache(cached);
         _loadingCats = false;
       });
     }
     try {
-      final raw = await ref.read(reportingRepositoryProvider).fetchIncidentCategoriesRaw();
-      await ReportingPrefs.writeIncidentCategories(snap.residenceId, raw);
+      final types = await ref
+          .read(reportingRepositoryProvider)
+          .fetchIncidentTypes(snap.residenceId);
+      await ReportingPrefs.writeIncidentCategories(
+        snap.residenceId,
+        encodeIncidentTypesCache(types),
+      );
       if (!mounted) return;
       setState(() {
-        _cats = _parseCats(raw);
+        _cats = types;
         _loadingCats = false;
       });
     } catch (e, st) {
@@ -171,21 +149,21 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     }
     setState(() {
       _dateLabel = DateFormat('dd MMM yyyy - hh:mm aa', 'en_US').format(picked);
-      _incidentUtc = DateFormat('yyyy-MM-dd HH:mm:ss').format(picked.toUtc());
+      _incidentAt = DateFormat('yyyy-MM-dd hh:mm aa', 'en_US').format(picked);
       _errDate = false;
     });
   }
 
   Future<void> _openCategorySheet() async {
     if (_cats.isEmpty) return;
-    final uuid = await showReportingCategorySheet(
+    final key = await showReportingCategorySheet(
       context,
       categories: _cats,
-      selectedUuid: _selectedUuid,
+      selectedKey: _selectedKey,
     );
-    if (uuid == null || !mounted) return;
+    if (key == null || !mounted) return;
     setState(() {
-      _selectedUuid = uuid;
+      _selectedKey = key;
       _errCat = false;
       if (!_firstSpinner) _descFocus.requestFocus();
       _firstSpinner = false;
@@ -231,8 +209,8 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     final desc = _desc.text.trim();
     setState(() {
       _errDesc = desc.isEmpty;
-      _errDate = _incidentUtc.isEmpty;
-      _errCat = _selectedUuid == null || _selectedUuid!.isEmpty;
+      _errDate = _incidentAt.isEmpty;
+      _errCat = _selectedKey == null || _selectedKey!.isEmpty;
     });
     if (!_canSubmit) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -245,24 +223,24 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     setState(() => _submitting = true);
 
     final snap = await DashboardPrefs.loadSnapshot();
-    final body = <String, dynamic>{
-      'incident_date': _incidentUtc,
-      'residence_uuid': snap.residenceId,
-      'category_uuid': _selectedUuid,
-      'kg_guard_uuid': widget.args.guardUuid,
-      'security_company_uuid': widget.args.companyUuid,
-      'lat': _lat,
-      'lng': _lng,
-      'description': desc,
-      'status': 'PENDING',
-      'pin': widget.args.guardPin,
-    };
+    if (snap.residenceId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(ReportingStrings.errorBlank)),
+        );
+        setState(() => _submitting = false);
+      }
+      return;
+    }
     final paths = _files.map((e) => e.path).toList();
-    final categoryName = _categoryName ?? '';
+    final categoryName = _categoryLabel ?? '';
 
     try {
       final outcome = await ref.read(reportingSubmitServiceProvider).submit(
-            body: body,
+            residenceUuid: snap.residenceId,
+            incidentType: _selectedKey!,
+            description: desc,
+            incidentAt: _incidentAt,
             imagePaths: paths,
           );
       if (!mounted) return;
@@ -277,11 +255,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       context.pop();
     } catch (e, st) {
       AppLog.error('Incident submit', tag: 'Reporting', error: e, stackTrace: st);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ReportingStrings.submitFailed)),
-        );
-      }
+      if (mounted) await showApiFailedDialog(context, error: e);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -326,7 +300,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
                               label: ReportingStrings.reportType,
                               loading: _loadingCats,
                               categories: _cats,
-                              selectedUuid: _selectedUuid,
+                              selectedKey: _selectedKey,
                               error: _errCat,
                               onTap: _openCategorySheet,
                             ),

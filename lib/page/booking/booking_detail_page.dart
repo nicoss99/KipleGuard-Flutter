@@ -12,6 +12,7 @@ import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/app_progress_indicator.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
@@ -170,11 +171,7 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
       ).showSnackBar(SnackBar(content: Text(BookingStrings.updated)));
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
-      }
+      if (mounted) await showApiFailedDialog(context, error: e);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

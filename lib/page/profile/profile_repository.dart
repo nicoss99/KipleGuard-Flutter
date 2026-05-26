@@ -1,31 +1,22 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_config.dart';
+import '../../core/guard_api_message.dart';
+import '../auth/guard_repository.dart';
+import '../../service/api_service.dart';
 
-/// Android `RetrofitListAPI` profile + sign-out + change-password calls.
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => ProfileRepository(ref.watch(dioProvider), ref.watch(guardRepositoryProvider)),
+);
+
 class ProfileRepository {
-  ProfileRepository(this._dio);
+  ProfileRepository(this._dio, this._guard);
 
   final Dio _dio;
+  final GuardRepository _guard;
 
-  Future<void> updateProfileName({
-    required String profileUuid,
-    required String name,
-  }) async {
-    await _dio.put<void>(
-      AppConfig.userProfilePath(profileUuid),
-      data: <String, dynamic>{'uuid': profileUuid, 'name': name},
-    );
-  }
-
-  Future<void> invalidateFirebaseToken(String recordUuid) async {
-    await _dio.put<void>(
-      AppConfig.userFirebaseTokenPath(recordUuid),
-      data: <String, dynamic>{'is_valid': '0'},
-    );
-  }
+  Future<void> logout() => _guard.logout();
 
   Future<void> changePassword({
     required String identityUuid,
@@ -42,25 +33,7 @@ class ProfileRepository {
   }
 }
 
-String profileApiErrorMessage(DioException e) {
-  final response = e.response;
-  if (response == null) return e.message ?? 'Network error';
-
-  final data = response.data;
-  if (data is Map<String, dynamic>) {
-    final errField = data['error'];
-    if (errField is String && errField.isNotEmpty) {
-      try {
-        final inner = jsonDecode(errField) as Map<String, dynamic>;
-        final msg = inner['message'];
-        if (msg is String && msg.isNotEmpty) return msg;
-      } catch (_) {}
-    }
-    final top = data['message'];
-    if (top is String && top.isNotEmpty) return top;
-  }
-  return e.message ?? 'Something went wrong';
-}
+String profileApiErrorMessage(DioException e) => guardApiMessage(e);
 
 final class ProfileApiException implements Exception {
   ProfileApiException(this.message);

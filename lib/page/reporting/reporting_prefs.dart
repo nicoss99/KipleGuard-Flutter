@@ -44,13 +44,19 @@ abstract final class ReportingPrefs {
   }
 
   static Future<void> enqueue({
-    required Map<String, dynamic> body,
+    required String residenceUuid,
+    required String incidentType,
+    required String description,
+    required String incidentAt,
     required List<String> imagePaths,
   }) async {
     final q = await loadPendingQueue();
     q.add(<String, dynamic>{
       'id': _uuid.v4(),
-      'body': body,
+      'residence_uuid': residenceUuid,
+      'incident_type': incidentType,
+      'description': description,
+      'incident_at': incidentAt,
       'paths': imagePaths,
     });
     await _saveQueue(q);

@@ -13,6 +13,8 @@ abstract final class AttendanceStrings {
   static const shiftEndedMessage = 'Your shift has ended successfully.';
   static const successDone = 'Done';
   static const invalidPin = 'That PIN is not valid for this site.';
+  static const noResidenceSelected =
+      'No residence selected. Select a site from the dashboard first.';
   static const missingSecurityProfile =
       'Site security data is missing. Select a site again or contact support.';
   static const shiftAlreadyStarted = 'Shift already started';

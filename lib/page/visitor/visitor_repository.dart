@@ -18,11 +18,6 @@ class VisitorRepository {
   static const _relatedAllOvertime =
       'user_profiles_by_user_profile_uuid,residences_by_residence_uuid,residence_units_by_unit_uuid,files_by_photo,visitor_pass_scans_by_visitor_uuid';
 
-  /// Matches Android `RetrofitListAPI.visitorDetailsAPI` related string, plus
-  /// `user_profiles_by_user_profile_uuid` for host name (same nested object as native).
-  static const _relatedDetails =
-      'visitor_pass_scans_by_visitor_uuid,residence_units_by_unit_uuid,user_profiles_by_user_profile_uuid,visitor_application_form_uuid,visitor_types_by_visitor_type_uuid';
-
   Future<VisitorListPageResult> fetchRevisedVisitors({
     required String filter,
     required VisitorListCategory category,
@@ -99,17 +94,6 @@ class VisitorRepository {
       },
     );
     return _parseListPage(res.data, null);
-  }
-
-  Future<Map<String, dynamic>?> fetchVisitorDetails(String visitorUuid) async {
-    final filter = "((deleted_at is null) AND (uuid='$visitorUuid')) ";
-    final res = await _dio.get<dynamic>(
-      'data/visitors',
-      queryParameters: <String, dynamic>{'filter': filter, 'related': _relatedDetails},
-    );
-    final list = _extractResourceList(res.data);
-    if (list.isEmpty) return null;
-    return Map<String, dynamic>.from(list.first);
   }
 
   Future<void> patchVisitor(String uuid, Map<String, dynamic> body) async {

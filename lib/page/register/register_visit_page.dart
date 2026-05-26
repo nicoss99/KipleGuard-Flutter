@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
@@ -33,7 +32,6 @@ class RegisterVisitPage extends ConsumerStatefulWidget {
 
 class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
   final _pass = TextEditingController();
-  static const _uuid = Uuid();
 
   RegisterVisitorTypeOption? _selectedType;
   RegisterUnitOption? _unit;
@@ -43,7 +41,6 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
   List<RegisterHostOption> _hosts = [];
   RegisterVisitorDraft? _visitor;
   final List<XFile> _photos = [];
-  final List<String> _photoUuids = [];
 
   DateTime _visitStartUtc = DateTime.now().toUtc();
   DateTime? _visitEndUtc;
@@ -113,7 +110,11 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
     });
     try {
       final snap = await DashboardPrefs.loadSnapshot();
-      final data = await loadRegisterVisitData(ref, widget.residenceUuid, forceRefreshTypes: true);
+      final data = await loadRegisterVisitData(
+        ref,
+        widget.residenceUuid,
+        officeMode: snap.officeEnvironment,
+      );
       if (!mounted) return;
       setState(() {
         _apiTypes = data.types;
@@ -143,7 +144,10 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
 
   Future<void> _loadHostsForUnit(String unitUuid) async {
     try {
-      final hosts = await ref.read(registerRepositoryProvider).fetchUnitMembers(unitUuid);
+      final hosts = await ref.read(registerRepositoryProvider).fetchHostsForUnit(
+        residenceUuid: widget.residenceUuid,
+        unitUuid: unitUuid,
+      );
       if (!mounted) return;
       setState(() {
         _hosts = hosts;
@@ -184,7 +188,6 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
     if (x != null && mounted) {
       setState(() {
         _photos.add(x);
-        _photoUuids.add(_uuid.v4());
       });
     }
   }
@@ -192,7 +195,6 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
   void _removePhoto(int index) {
     setState(() {
       _photos.removeAt(index);
-      _photoUuids.removeAt(index);
     });
   }
 
@@ -233,13 +235,11 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
         host: _host,
         visitor: visitor,
         passReference: _pass.text,
-        startUtc: _visitStartUtc,
-        endUtc: _visitEndUtc,
-        walkinPhotoUuids: List<String>.from(_photoUuids),
+        visitPhotos: List<XFile>.from(_photos),
       );
     } catch (e, st) {
       if (!mounted) return;
-      handleRegisterSubmitError(context, e, st);
+      await handleRegisterSubmitError(context, e, st);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

@@ -11,6 +11,7 @@ import '../../router/app_route.dart';
 import '../select_site/residence_choice.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../core/app_bar_title_format.dart';
 import 'dashboard_header_title.dart';
@@ -76,6 +77,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (next.triggerNoRoleDialog && (prev?.triggerNoRoleDialog != true)) {
         _showNoRoleDialog();
       }
+      final err = next.loadError;
+      if (err != null && err != prev?.loadError && !next.refreshing && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          await showApiFailedDialog(context, message: err);
+        });
+      }
     });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -110,7 +118,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                   if (!mounted || picked == null) return;
                   await ref.read(homeProvider.notifier).applySiteSelection(
                         picked,
-                        previousResidenceId: snap.residenceId,
                         previousSecurityUuid: snap.securityUuid,
                       );
                 },
@@ -150,7 +157,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                           userName: state.userName,
                           userEmail: state.userEmail,
                           profileInitial: state.profileInitial,
-                          qrEnabled: state.qrEnabled,
                           onGreetingTap: () async {
                             AppLog.track('edit_profile_tap', screen: 'Home');
                             final updated = await context.push<bool>(AppRoute.editProfile.path);
@@ -158,12 +164,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                               await ref.read(homeProvider.notifier).reloadUserFromPrefs();
                             }
                           },
-                          onViewQr: state.qrEnabled
-                              ? () {
-                                  AppLog.track('view_qr_tap', screen: 'Home');
-                                  _snack('View QR — coming soon');
-                                }
-                              : null,
                         ),
                         DashboardModuleGrid(
                           attendanceEnabled: state.attendanceEnabled,

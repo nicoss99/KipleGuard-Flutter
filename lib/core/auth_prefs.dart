@@ -1,21 +1,28 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../page/auth/guard_models.dart';
 import 'app_logger.dart';
 import 'dashboard_prefs.dart';
+import 'residence_prefs.dart';
 
 /// Session data persisted like Android `DBOthers` (userToken, userID, userName, …).
 abstract final class AuthPrefs {
   static const sessionTokenKey = 'kiple_session_token';
   static const profileUuidKey = 'kiple_profile_uuid';
   static const userNameKey = 'kiple_user_name';
-  static const regionCodeKey = 'kiple_region_code';
   static const userIdentityUuidKey = 'kiple_user_identity_uuid';
   static const userEmailKey = 'kiple_user_email';
   static const userPhoneKey = 'kiple_user_phone';
   static const userRolesJsonKey = 'kiple_user_roles_json';
   /// Local UUID for `PUT data/user_firebase_tokens/{uuid}` (Android `userFirebase`).
   static const userFirebaseRecordUuidKey = 'kiple_user_firebase_record_uuid';
+  static const guardIdKey = 'kiple_guard_id';
+  static const guardRoleKey = 'kiple_guard_role';
+  static const profileImageUrlKey = 'kiple_profile_image_url';
+  static const residencesJsonKey = 'kiple_guard_residences_json';
 
   static String? _tokenCache;
 
@@ -33,7 +40,6 @@ abstract final class AuthPrefs {
     required String sessionToken,
     required String profileUuid,
     required String userName,
-    required String regionCode,
     String? userIdentityUuid,
     String? userEmail,
     String? userPhone,
@@ -43,7 +49,6 @@ abstract final class AuthPrefs {
     await prefs.setString(sessionTokenKey, sessionToken);
     await prefs.setString(profileUuidKey, profileUuid);
     await prefs.setString(userNameKey, userName);
-    await prefs.setString(regionCodeKey, regionCode);
     await _setOptional(prefs, userIdentityUuidKey, userIdentityUuid);
     await _setOptional(prefs, userEmailKey, userEmail);
     await _setOptional(prefs, userPhoneKey, userPhone);
@@ -58,16 +63,6 @@ abstract final class AuthPrefs {
     } else {
       await prefs.setString(key, value);
     }
-  }
-
-  static Future<void> setRegionCode(String code) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(regionCodeKey, code);
-  }
-
-  static Future<String?> getRegionCode() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(regionCodeKey);
   }
 
   static Future<String?> readUserName() async {
@@ -110,6 +105,77 @@ abstract final class AuthPrefs {
     await prefs.setString(userNameKey, name);
   }
 
+  static Future<void> setGuardSession({
+    required String sessionToken,
+    required GuardProfile guard,
+    required List<GuardResidence> residences,
+  }) async {
+    await setSession(
+      sessionToken: sessionToken,
+      profileUuid: guard.id.toString(),
+      userName: guard.name,
+      userEmail: guard.email.isEmpty ? null : guard.email,
+      userPhone: guard.phone.isEmpty ? null : guard.phone,
+    );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(guardIdKey, guard.id);
+    await prefs.setString(guardRoleKey, guard.role);
+    await _setOptional(prefs, profileImageUrlKey, guard.profileImageUrl);
+    await prefs.setString(
+      residencesJsonKey,
+      jsonEncode(residences.map((r) => r.toJson()).toList()),
+    );
+    await ResidencePrefs.applyDefaultFromResidences(residences);
+  }
+
+  static Future<void> updateGuardProfile({
+    required GuardProfile guard,
+    required List<GuardResidence> residences,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(userNameKey, guard.name);
+    await _setOptional(prefs, userEmailKey, guard.email.isEmpty ? null : guard.email);
+    await _setOptional(prefs, userPhoneKey, guard.phone.isEmpty ? null : guard.phone);
+    await _setOptional(prefs, profileImageUrlKey, guard.profileImageUrl);
+    await prefs.setString(
+      residencesJsonKey,
+      jsonEncode(residences.map((r) => r.toJson()).toList()),
+    );
+  }
+
+  static Future<void> cacheGuardResidences(List<GuardResidence> residences) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      residencesJsonKey,
+      jsonEncode(residences.map((r) => r.toJson()).toList()),
+    );
+  }
+
+  static Future<List<GuardResidence>> readGuardResidences() async {
+    final raw = await readResidencesJson();
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map(GuardResidence.fromJson)
+          .where((r) => r.uuid.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<String?> readResidencesJson() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(residencesJsonKey);
+  }
+
+  static Future<String?> readProfileImageUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(profileImageUrlKey);
+  }
+
   static Future<void> setUserFirebaseRecordUuid(String uuid) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(userFirebaseRecordUuidKey, uuid);
@@ -125,6 +191,11 @@ abstract final class AuthPrefs {
     await prefs.remove(userPhoneKey);
     await prefs.remove(userRolesJsonKey);
     await prefs.remove(userFirebaseRecordUuidKey);
+    await prefs.remove(guardIdKey);
+    await prefs.remove(guardRoleKey);
+    await prefs.remove(profileImageUrlKey);
+    await prefs.remove(residencesJsonKey);
+    await ResidencePrefs.clearResidenceUuid();
     _tokenCache = null;
     logBearerToken(reason: 'session cleared');
     await DashboardPrefs.clear();

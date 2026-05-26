@@ -1,4 +1,6 @@
-/// Edit profile UI state (loaded from [AuthPrefs], no remote fetch on open).
+import '../auth/guard_models.dart';
+
+/// Edit profile UI state (guard `/api/v1/guard/me` + local draft name).
 class ProfileState {
   const ProfileState({
     this.loading = false,
@@ -6,6 +8,8 @@ class ProfileState {
     this.email = '',
     this.phone = '',
     this.initials = '',
+    this.profileImageUrl,
+    this.residences = const [],
     this.showSave = false,
     this.error,
   });
@@ -15,6 +19,8 @@ class ProfileState {
   final String email;
   final String phone;
   final String initials;
+  final String? profileImageUrl;
+  final List<GuardResidence> residences;
   final bool showSave;
   final String? error;
 
@@ -24,6 +30,8 @@ class ProfileState {
     String? email,
     String? phone,
     String? initials,
+    String? profileImageUrl,
+    List<GuardResidence>? residences,
     bool? showSave,
     String? error,
     bool clearError = false,
@@ -34,6 +42,8 @@ class ProfileState {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       initials: initials ?? this.initials,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      residences: residences ?? this.residences,
       showSave: showSave ?? this.showSave,
       error: clearError ? null : (error ?? this.error),
     );

@@ -13,7 +13,7 @@ class ReportingCategoryField extends StatelessWidget {
     required this.label,
     required this.loading,
     required this.categories,
-    required this.selectedUuid,
+    required this.selectedKey,
     required this.error,
     required this.onTap,
   });
@@ -21,14 +21,14 @@ class ReportingCategoryField extends StatelessWidget {
   final String label;
   final bool loading;
   final List<ReportingCategory> categories;
-  final String? selectedUuid;
+  final String? selectedKey;
   final bool error;
   final VoidCallback onTap;
 
   ReportingCategory? get _selected {
-    if (selectedUuid == null) return null;
+    if (selectedKey == null) return null;
     for (final c in categories) {
-      if (c.uuid == selectedUuid) return c;
+      if (c.key == selectedKey) return c;
     }
     return null;
   }
@@ -46,12 +46,12 @@ class ReportingCategoryField extends StatelessWidget {
         else
           ReportingPickerField(
             hint: ReportingStrings.reportTypeHint,
-            valueText: selected?.name,
+            valueText: selected?.label,
             emptyIcon: Icons.category_outlined,
             enabled: categories.isNotEmpty,
             onTap: onTap,
             leading: selected != null
-                ? reportingCategoryIcon(selected.name, selected: true, size: 22)
+                ? reportingCategoryIcon(selected.label, selected: true, size: 22)
                 : null,
           ),
       ],

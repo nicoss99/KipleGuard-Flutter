@@ -7,11 +7,12 @@ import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../core/profile_initials.dart';
+import '../../core/residence_prefs.dart';
 import '../../core/site_scope_invalidation.dart';
+import '../auth/guard_repository.dart';
 import '../reporting/reporting_sync_service.dart';
 import '../select_site/residence_choice.dart';
 import 'home_repository.dart';
-import 'home_residence_sync.dart';
 import 'home_state.dart';
 
 final homeProvider = NotifierProvider<HomeNotifier, HomeState>(HomeNotifier.new);
@@ -30,21 +31,30 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(refreshing: true, loadError: null, triggerNoRoleDialog: false);
     try {
       final repo = ref.read(homeRepositoryProvider);
-      final roles = await AuthPrefs.readUserRolesJson();
-      final before = await DashboardPrefs.loadSnapshot();
-      final body = await repo.fetchResidences();
-      await syncResidencesFromResponse(
-        body: body,
-        rolesJson: roles ?? '',
-        alreadyHadResidenceName: before.hasResidence,
-        currentResidenceId: before.residenceId,
-      );
+      final residences = await ref.read(guardRepositoryProvider).fetchResidences();
+      if (residences.isEmpty) {
+        state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
+        return;
+      }
+      final savedUuid = await ResidencePrefs.readResidenceUuid();
+      if (savedUuid == null || savedUuid.isEmpty) {
+        await ResidencePrefs.applyDefaultFromResidences(residences);
+      } else {
+        for (final r in residences) {
+          if (r.uuid == savedUuid) {
+            await DashboardPrefs.applySecurityCompanyFromResidenceApi(
+              r.securityCompanyUuid,
+            );
+            break;
+          }
+        }
+      }
       final after = await DashboardPrefs.loadSnapshot();
       if (!after.hasResidence) {
         state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
         return;
       }
-      await _refreshSiteScopedData(repo);
+      await _refreshSiteScopedData(repo, alwaysReloadGuardPin: false);
       await _hydrateFromPrefs();
       unawaited(ref.read(reportingSyncServiceProvider).processQueue());
       state = state.copyWith(refreshing: false);
@@ -60,15 +70,11 @@ class HomeNotifier extends Notifier<HomeState> {
   /// Updates dashboard UI, clears feature caches, then refreshes site-scoped APIs.
   Future<void> applySiteSelection(
     ResidenceChoice choice, {
-    required String previousResidenceId,
     required String previousSecurityUuid,
   }) async {
     _applyChoiceToState(choice);
     invalidateSiteScopedProviders(ref);
-    await _refreshSiteDataAfterSelection(
-      previousResidenceId: previousResidenceId,
-      previousSecurityUuid: previousSecurityUuid,
-    );
+    await _refreshSiteDataAfterSelection(previousSecurityUuid: previousSecurityUuid);
   }
 
   void _applyChoiceToState(ResidenceChoice c) {
@@ -85,15 +91,14 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _refreshSiteDataAfterSelection({
-    required String previousResidenceId,
     required String previousSecurityUuid,
   }) async {
     try {
       final repo = ref.read(homeRepositoryProvider);
       await _refreshSiteScopedData(
         repo,
-        previousResidenceId: previousResidenceId,
         previousSecurityUuid: previousSecurityUuid,
+        alwaysReloadGuardPin: true,
       );
       unawaited(ref.read(reportingSyncServiceProvider).processQueue());
     } on DioException catch (e, st) {
@@ -103,39 +108,33 @@ class HomeNotifier extends Notifier<HomeState> {
     }
   }
 
-  /// Guard PIN + visitor types when site/security actually changed.
+  /// Loads `securityJson` for PIN flows (attendance, reporting) when needed.
+  ///
+  /// Android stores `DBOthers.securityJson` after guard-pin API; we refetch when
+  /// the security company changes, JSON is missing, or [alwaysReloadGuardPin]
+  /// (e.g. user picked another site — refresh guard↔residence links).
   Future<void> _refreshSiteScopedData(
     HomeRepository repo, {
-    String? previousResidenceId,
     String? previousSecurityUuid,
+    bool alwaysReloadGuardPin = false,
   }) async {
     final snap = await DashboardPrefs.loadSnapshot();
-    final tasks = <Future<void>>[];
-    final residenceId = snap.residenceId;
     final securityUuid = snap.securityUuid;
+    if (securityUuid.isEmpty) return;
 
-    final residenceChanged =
-        residenceId.isNotEmpty && residenceId != (previousResidenceId ?? '');
-    final securityChanged =
-        securityUuid.isNotEmpty && securityUuid != (previousSecurityUuid ?? '');
+    final prev = previousSecurityUuid ?? '';
+    final companyChanged = securityUuid != prev;
+    final jsonMissing = snap.securityJson.trim().isEmpty;
+    final shouldLoad =
+        alwaysReloadGuardPin || companyChanged || jsonMissing;
+    if (!shouldLoad) return;
 
-    if (residenceChanged) {
-      tasks.add(_loadVisitorTypes(repo, residenceId));
-    }
-    if (securityChanged) {
-      tasks.add(_loadGuardPin(repo, securityUuid));
-    }
-    if (tasks.isNotEmpty) await Future.wait(tasks);
+    await _loadGuardPin(repo, securityUuid);
   }
 
   Future<void> _loadGuardPin(HomeRepository repo, String securityUuid) async {
     final raw = await repo.fetchGuardPinJson(securityUuid);
     await DashboardPrefs.setSecurityJson(repo.trimGuardPinPayload(raw));
-  }
-
-  Future<void> _loadVisitorTypes(HomeRepository repo, String residenceId) async {
-    final typesJson = await repo.fetchVisitorTypesJson(residenceId);
-    await DashboardPrefs.setVisitorTypesJson(typesJson);
   }
 
   void acknowledgeNoRoleDialog() {

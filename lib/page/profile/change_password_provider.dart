@@ -3,7 +3,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/auth_prefs.dart';
 import 'change_password_validator.dart';
-import 'profile_provider.dart';
 import 'profile_repository.dart';
 
 class ChangePasswordState {

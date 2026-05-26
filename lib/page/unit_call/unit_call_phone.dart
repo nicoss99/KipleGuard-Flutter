@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../widget/api_failed_dialog.dart';
 import 'unit_call_strings.dart';
 
 Future<void> dialMembershipPhone(BuildContext context, String rawPhone) async {
   var phone = rawPhone.trim();
   if (phone.length <= 5) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(UnitCallStrings.noPhone)));
+      await showApiFailedDialog(context, message: UnitCallStrings.noPhone);
     }
     return;
   }
@@ -25,15 +24,11 @@ Future<void> dialMembershipPhone(BuildContext context, String rawPhone) async {
     }
   } catch (_) {}
   if (context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text(UnitCallStrings.cannotLaunchDialer)));
+    await showApiFailedDialog(context, message: UnitCallStrings.cannotLaunchDialer);
   }
 }
 
-void showVoipPlaceholder(BuildContext context) {
+Future<void> showVoipPlaceholder(BuildContext context) async {
   if (!context.mounted) return;
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text(UnitCallStrings.voipComingSoon)));
+  await showApiFailedDialog(context, message: UnitCallStrings.voipComingSoon);
 }

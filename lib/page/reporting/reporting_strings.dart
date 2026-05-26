@@ -7,6 +7,7 @@ abstract final class ReportingStrings {
   static const cancel = 'Cancel';
   static const checkingPin = 'Checking your PIN in our system..';
   static const success = 'Success!';
+  static const pinSuccessMessage = 'Your PIN has been verified.';
   static const tryAgain = 'Try again';
   static const pinNotFound =
       "This PIN doesn't exist in our system\nPlease check with your site supervisor";

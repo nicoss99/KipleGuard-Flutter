@@ -18,6 +18,7 @@ class UnitCallUnitTile extends StatelessWidget {
     required this.onToggleExpand,
     required this.onMemberTap,
     required this.voipMasking,
+    this.hostsLoading = false,
   });
 
   final CallUnitRow row;
@@ -26,17 +27,71 @@ class UnitCallUnitTile extends StatelessWidget {
   final VoidCallback onToggleExpand;
   final void Function(UnitMemberLine member) onMemberTap;
   final bool voipMasking;
+  final bool hostsLoading;
 
   String _roleLabel(String type) {
     final t = type.toLowerCase();
-    if (t == 'primary') return UnitCallStrings.owner;
-    if (t == 'admin') return UnitCallStrings.tenant;
+    if (t == 'primary' || t == 'owner') return UnitCallStrings.owner;
+    if (t == 'admin' || t == 'tenant') return UnitCallStrings.tenant;
     return UnitCallStrings.member;
   }
 
   @override
   Widget build(BuildContext context) {
-    final canExpand = row.members.isNotEmpty;
+    final showsExpandControl = !(row.hostsLoaded && row.members.isEmpty);
+
+    final inner = Padding(
+      padding: EdgeInsets.fromLTRB(AppSpacing.md, 12.h, AppSpacing.md, 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: AppColor.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Icon(Icons.apartment_rounded, color: AppColor.primary, size: 22.sp),
+              ),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(row.name, style: AppTextStyle.subtitle),
+                    SizedBox(height: 2.h),
+                    Text(row.ownerName, style: AppTextStyle.bodyMuted),
+                  ],
+                ),
+              ),
+              if (showsExpandControl)
+                AnimatedRotation(
+                  turns: expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(Icons.expand_more_rounded, color: AppColor.primary, size: 28.sp),
+                ),
+            ],
+          ),
+          if (showsExpandControl)
+            AnimatedSize(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? Padding(
+                      padding: EdgeInsets.only(top: 12.h),
+                      child: _expandedBody(),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+        ],
+      ),
+    );
+
     return UnitCallFadeInIndex(
       key: ValueKey<String>(row.id),
       index: index,
@@ -49,100 +104,72 @@ class UnitCallUnitTile extends StatelessWidget {
             side: BorderSide(color: AppColor.primary.withValues(alpha: 0.1)),
           ),
           clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: canExpand ? onToggleExpand : null,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(AppSpacing.md, 12.h, AppSpacing.md, 12.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40.w,
-                        height: 40.w,
-                        decoration: BoxDecoration(
-                          color: AppColor.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                        child: Icon(Icons.apartment_rounded, color: AppColor.primary, size: 22.sp),
+          child: showsExpandControl
+              ? InkWell(
+                  onTap: onToggleExpand,
+                  child: inner,
+                )
+              : inner,
+        ),
+      ),
+    );
+  }
+
+  Widget _expandedBody() {
+    if (hostsLoading) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          child: SizedBox(
+            width: 28.w,
+            height: 28.w,
+            child: const CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+    if (row.members.isEmpty) {
+      return Text(
+        row.hostsLoaded ? UnitCallStrings.emptyHosts : UnitCallStrings.loadingHosts,
+        style: AppTextStyle.bodyMuted,
+      );
+    }
+    return Column(
+      children: row.members.map((m) {
+        final tappable = voipMasking || m.phone.trim().length > 5;
+        return Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: Material(
+            color: AppColor.siteListRowGrey.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: InkWell(
+              onTap: tappable ? () => onMemberTap(m) : null,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 10.h),
+                child: Row(
+                  children: [
+                    Icon(Icons.phone_in_talk_rounded, size: 20.sp, color: AppColor.primary),
+                    SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(m.name, style: AppTextStyle.body),
+                          Text(
+                            _roleLabel(m.membershipType),
+                            style: AppTextStyle.bodyMuted.copyWith(fontSize: 12.sp),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(row.name, style: AppTextStyle.subtitle),
-                            SizedBox(height: 2.h),
-                            Text(row.ownerName, style: AppTextStyle.bodyMuted),
-                          ],
-                        ),
-                      ),
-                      if (canExpand)
-                        AnimatedRotation(
-                          turns: expanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          child: Icon(Icons.expand_more_rounded, color: AppColor.primary, size: 28.sp),
-                        ),
-                    ],
-                  ),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.topCenter,
-                    child: expanded && row.members.isNotEmpty
-                        ? Padding(
-                            padding: EdgeInsets.only(top: 12.h),
-                            child: Column(
-                              children: row.members.map((m) {
-                                final tappable = voipMasking || m.phone.trim().length > 5;
-                                return Padding(
-                                  padding: EdgeInsets.only(bottom: 8.h),
-                                  child: Material(
-                                    color: AppColor.siteListRowGrey.withValues(alpha: 0.45),
-                                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                                    child: InkWell(
-                                      onTap: tappable ? () => onMemberTap(m) : null,
-                                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.sm,
-                                          vertical: 10.h,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.phone_in_talk_rounded, size: 20.sp, color: AppColor.primary),
-                                            SizedBox(width: AppSpacing.sm),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(m.name, style: AppTextStyle.body),
-                                                  Text(
-                                                    _roleLabel(m.membershipType),
-                                                    style: AppTextStyle.bodyMuted.copyWith(fontSize: 12.sp),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 }

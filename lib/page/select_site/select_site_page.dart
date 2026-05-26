@@ -9,17 +9,18 @@ import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../widget/app_progress_indicator.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
-import '../home/home_repository.dart';
+import '../auth/guard_repository.dart';
+import 'guard_residence_choices.dart';
 import 'residence_choice.dart';
-import 'residence_choices.dart';
 import 'select_site_strings.dart';
 import 'widget/select_site_residence_tile.dart';
 import 'widget/select_site_search_bar.dart';
 import 'widget/select_site_status_message.dart';
 
-/// Android `ResidenceActivity` — list from `GET data/residences` + roles.
+/// Site picker — `GET api/v1/guard/residences` (cached on login).
 class SelectSitePage extends ConsumerStatefulWidget {
   const SelectSitePage({super.key});
 
@@ -60,8 +61,16 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
       _error = null;
     });
     try {
-      final repo = ref.read(homeRepositoryProvider);
-      var list = await loadResidenceChoicesSafe(repo);
+      List<ResidenceChoice> list;
+      try {
+        final residences = await ref.read(guardRepositoryProvider).fetchResidences();
+        list = guardResidencesToChoices(residences);
+      } catch (_) {
+        list = await loadGuardResidenceChoices();
+      }
+      if (list.isEmpty) {
+        throw StateError('No residences available');
+      }
       final snap = await DashboardPrefs.loadSnapshot();
       _selectedId = snap.residenceId;
       _sortChoices(list, _selectedId);
@@ -73,17 +82,20 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
       }
     } on DioException catch (e) {
       if (mounted) {
+        final msg = e.message ?? 'Network error';
         setState(() {
           _loading = false;
-          _error = e.message ?? 'Network error';
+          _error = msg;
         });
+        await showApiFailedDialog(context, error: e);
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _loading = false;
           _error = 'Something went wrong';
         });
+        await showApiFailedDialog(context, error: e);
       }
     }
   }

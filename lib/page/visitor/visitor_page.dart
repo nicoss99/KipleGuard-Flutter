@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../theme/app_color.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import 'visitor_provider.dart';
@@ -13,7 +14,6 @@ import 'visitor_state.dart';
 import 'visitor_strings.dart';
 import '../../widget/app_calendar_picker.dart';
 import 'widget/visitor_date_toolbar.dart';
-import 'widget/visitor_error_banner.dart';
 import 'widget/visitor_list_body.dart';
 import 'widget/visitor_summary_row.dart';
 
@@ -36,6 +36,15 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(visitorProvider);
+    ref.listen(visitorProvider, (prev, next) {
+      final err = next.error;
+      if (err == null || err == prev?.error || !mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await showApiFailedDialog(context, message: err);
+        ref.read(visitorProvider.notifier).clearError();
+      });
+    });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: standardPrimaryOverlayStyle(),
@@ -62,7 +71,6 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
                     ),
                   ],
                 ),
-                if (s.error != null) VisitorErrorBanner(message: s.error!),
                 VisitorDateToolbar(
                   state: s,
                   onPickDate: () => _pickDateWithDialog(context, s.selectedDay),

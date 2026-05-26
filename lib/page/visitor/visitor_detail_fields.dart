@@ -33,6 +33,79 @@ class VisitorDetailFields {
     this.isLprEnabled = false,
   });
 
+  /// Guard `GET .../visitors/{id}` — `data.visitor` object.
+  factory VisitorDetailFields.fromGuardJson(
+    Map<String, dynamic> v, {
+    required String residenceUuid,
+    String residenceName = '',
+  }) {
+    final status = (v['status'] ?? '').toString().toLowerCase();
+    final latestScan = switch (status) {
+      'checked_in' => 'IN',
+      'checked_out' => 'OUT',
+      _ => '',
+    };
+    final checkpointTimes = switch (status) {
+      'checked_in' => 1,
+      'checked_out' => 2,
+      _ => 0,
+    };
+
+    var unitName = '';
+    var blockName = '';
+    final unit = v['unit'];
+    if (unit is Map<String, dynamic>) {
+      unitName = unit['display_label']?.toString() ??
+          unit['unit_number']?.toString() ??
+          '';
+      blockName = unit['block']?.toString() ?? unit['floor']?.toString() ?? '';
+    }
+
+    var hostName = '';
+    var profileUuid = '';
+    final guest = v['guest_of'];
+    if (guest is Map<String, dynamic>) {
+      hostName = guest['name']?.toString() ?? '';
+      profileUuid = guest['id']?.toString() ?? '';
+    }
+
+    var category = '';
+    final type = v['visitor_type'];
+    if (type is Map<String, dynamic>) {
+      category = type['name']?.toString() ?? type['label']?.toString() ?? '';
+    }
+
+    return VisitorDetailFields(
+      uuid: (v['id'] ?? '').toString(),
+      name: v['name']?.toString() ?? '',
+      phone: v['phone']?.toString() ?? '',
+      carPlate: v['vehicle_number']?.toString() ?? '',
+      passReference: v['pass_reference']?.toString() ?? v['pass_id']?.toString() ?? '',
+      parkingLot: v['parking_lot']?.toString() ?? '',
+      temperature: v['temperature']?.toString() ?? '',
+      from: v['purpose']?.toString() ?? '',
+      qrCode: v['pass_code']?.toString() ?? v['qr_code']?.toString() ?? '',
+      residenceUuid: residenceUuid,
+      residenceName: residenceName,
+      userProfileUuid: profileUuid,
+      latestScanType: latestScan,
+      visitStatus: status.toUpperCase(),
+      checkpointTimes: checkpointTimes,
+      repeatType: 'ONE_TIME',
+      unitName: unitName,
+      blockName: blockName,
+      hostName: hostName,
+      category: category,
+      remarks: v['remarks']?.toString() ?? '',
+      createdAt: v['scheduled_at']?.toString() ?? '',
+      startTime: v['scheduled_at']?.toString() ?? v['entry_time']?.toString() ?? '',
+      endTime: v['visit_ends_at']?.toString() ?? '',
+      actualArrivalTime: v['entry_time']?.toString() ?? '',
+      actualExitTime: v['exit_time']?.toString() ?? '',
+      icPassport: v['ic_passport_no']?.toString() ?? '',
+    );
+  }
+
   factory VisitorDetailFields.fromResource(Map<String, dynamic> r) {
     final type = r['visitor_types_by_visitor_type_uuid'];
     var lpr = false;

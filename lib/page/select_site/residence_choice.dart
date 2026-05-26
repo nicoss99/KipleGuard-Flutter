@@ -1,4 +1,5 @@
 import '../../core/dashboard_prefs.dart';
+import '../../core/residence_prefs.dart';
 
 /// One selectable row matching Android `ResidenceObject` / `DBResidences` + prefs write.
 class ResidenceChoice {
@@ -52,7 +53,9 @@ class ResidenceChoice {
     return true;
   }
 
-  Future<void> persist() => DashboardPrefs.writeResidenceSelection(
+  Future<void> persist() async {
+    await ResidencePrefs.saveResidenceUuid(uuid);
+    await DashboardPrefs.writeResidenceSelection(
         residenceUuid: uuid,
         residenceName: name,
         coverUrl: coverUrl,
@@ -73,4 +76,5 @@ class ResidenceChoice {
         normalTemp: normalTemp,
         lpr: lpr,
       );
+  }
 }
