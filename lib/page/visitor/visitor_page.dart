@@ -76,10 +76,12 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
                     ),
                   ],
                 ),
-                VisitorDateToolbar(
-                  state: s,
-                  onPickDate: () => _pickDateWithDialog(context, s.selectedDay),
-                ),
+                SizedBox(height: 8.h),
+                if (!s.allOvertimeSection)
+                  VisitorDateToolbar(
+                    state: s,
+                    onPickDate: () => _pickDateWithDialog(context, s.selectedDay),
+                  ),
                 OfflineCacheBanner(
                   fromCache: s.fromCache,
                   savedAt: s.cacheSavedAt,

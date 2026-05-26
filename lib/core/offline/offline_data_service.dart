@@ -64,6 +64,7 @@ final class OfflineDataService {
     final v = await GuardListCache.readVisitors(
       residenceUuid: residenceUuid,
       day: today,
+      tabKey: 'all',
     );
     if (v != null) {
       out.add(OfflineCacheEntry(

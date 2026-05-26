@@ -3,7 +3,11 @@ import 'guard_visitor_status.dart';
 
 /// Maps guard visitor list JSON to [VisitorListItem].
 abstract final class GuardVisitorMapper {
-  static VisitorListItem mapVisitor(Map<String, dynamic> m, String residenceUuid) {
+  static VisitorListItem mapVisitor(
+    Map<String, dynamic> m,
+    String residenceUuid, {
+    VisitorListCategory? listCategory,
+  }) {
     final id = m['id'] as int? ?? 0;
     final status = (m['status'] ?? m['visit_status'] ?? '').toString().toLowerCase();
     return VisitorListItem(
@@ -12,6 +16,7 @@ abstract final class GuardVisitorMapper {
       unitLabel: _unitLabel(m),
       carPlate: m['vehicle_number'] as String? ?? m['car_plate'] as String? ?? '',
       passId: m['pass_code'] as String? ??
+          m['pass_reference'] as String? ??
           m['pass_id'] as String? ??
           m['visitor_pass_id'] as String? ??
           '',
@@ -22,11 +27,14 @@ abstract final class GuardVisitorMapper {
           m['visit_start_at'] as String? ??
           m['start_time'] as String? ??
           '',
-      qrCode: m['qr_code'] as String? ?? m['qr_code_data'] as String? ?? m['pass_code'] as String? ?? '',
+      qrCode: m['qr_code'] as String? ??
+          m['qr_code_data'] as String? ??
+          m['pass_code'] as String? ??
+          '',
       residenceUuid: (m['residence_uuid'] as String?)?.trim().isNotEmpty == true
           ? m['residence_uuid'] as String
           : residenceUuid,
-      category: category(m, status),
+      category: listCategory ?? _categoryFromRecord(m, status),
     );
   }
 
@@ -43,6 +51,11 @@ abstract final class GuardVisitorMapper {
   static String _latestScanType(String status, Map<String, dynamic> m) {
     final legacy = m['latest_scan_type'] as String? ?? '';
     if (legacy.isNotEmpty) return legacy;
+    if (m['exit_time'] != null && m['exit_time'].toString().isNotEmpty) return 'OUT';
+    if (m['entry_time'] != null && m['entry_time'].toString().isNotEmpty &&
+        (m['exit_time'] == null || m['exit_time'].toString().isEmpty)) {
+      return 'IN';
+    }
     return switch (status) {
       GuardVisitorApiStatus.checkedIn => 'IN',
       GuardVisitorApiStatus.checkedOut => 'OUT',
@@ -50,8 +63,11 @@ abstract final class GuardVisitorMapper {
     };
   }
 
-  static VisitorListCategory category(Map<String, dynamic> m, String status) {
-    if (m['is_overtime'] == true || status.contains('overtime')) {
+  static VisitorListCategory _categoryFromRecord(
+    Map<String, dynamic> m,
+    String status,
+  ) {
+    if (m['is_overtime'] == true || status == GuardVisitorApiStatus.overtime) {
       return VisitorListCategory.overtime;
     }
     return switch (status) {
@@ -60,6 +76,7 @@ abstract final class GuardVisitorMapper {
       'checkin' when m['checked_in_at'] != null || m['is_checked_in'] == true =>
         VisitorListCategory.checkedIn,
       GuardVisitorApiStatus.checkedOut => VisitorListCategory.overtime,
+      GuardVisitorApiStatus.upcoming ||
       GuardVisitorApiStatus.pending ||
       GuardVisitorApiStatus.approved ||
       GuardVisitorApiStatus.rejected =>
@@ -69,4 +86,12 @@ abstract final class GuardVisitorMapper {
       _ => VisitorListCategory.upcoming,
     };
   }
+
+  static VisitorListCategory? listCategoryForApiStatus(String? status) =>
+      switch (status) {
+        GuardVisitorApiStatus.overtime => VisitorListCategory.overtime,
+        GuardVisitorApiStatus.checkedIn => VisitorListCategory.checkedIn,
+        GuardVisitorApiStatus.upcoming => VisitorListCategory.upcoming,
+        _ => null,
+      };
 }

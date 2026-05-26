@@ -11,15 +11,20 @@ abstract final class GuardListCache {
   static Future<void> saveVisitors({
     required String residenceUuid,
     required DateTime day,
+    required String tabKey,
     required String responseDate,
     required int totalCheckIn,
     required int totalIncoming,
     required int totalOvertime,
     required int totalVisitors,
     required List<VisitorListItem> items,
+    bool allOvertimeSection = false,
   }) async {
+    final key = allOvertimeSection
+        ? GuardCacheKeys.visitorsAllOvertime(residenceUuid)
+        : GuardCacheKeys.visitors(residenceUuid, day, tabKey: tabKey);
     await AppCacheStore.write(
-      GuardCacheKeys.visitors(residenceUuid, day),
+      key,
       <String, dynamic>{
         'responseDate': responseDate,
         'totalCheckIn': totalCheckIn,
@@ -34,8 +39,13 @@ abstract final class GuardListCache {
   static Future<VisitorCacheSnapshot?> readVisitors({
     required String residenceUuid,
     required DateTime day,
+    required String tabKey,
+    bool allOvertimeSection = false,
   }) async {
-    final env = await AppCacheStore.read(GuardCacheKeys.visitors(residenceUuid, day));
+    final key = allOvertimeSection
+        ? GuardCacheKeys.visitorsAllOvertime(residenceUuid)
+        : GuardCacheKeys.visitors(residenceUuid, day, tabKey: tabKey);
+    final env = await AppCacheStore.read(key);
     if (env == null) return null;
     final raw = env.data['items'];
     if (raw is! List) return null;

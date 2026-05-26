@@ -27,14 +27,15 @@ class VisitorDateToolbar extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.sm, 6.h, AppSpacing.sm, 0),
+          padding: EdgeInsets.fromLTRB(AppSpacing.sm, 0, AppSpacing.sm, 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               VisitorAllOvertimeCard(
-                selected: state.allOvertimeSection,
+                selected: false,
                 onTap: () => ref.read(visitorProvider.notifier).openAllOvertimeSection(),
               ),
+              SizedBox(width: 8.w),
               Expanded(
                 child: VisitorDateStrip(
                   selectedDay: state.selectedDay,

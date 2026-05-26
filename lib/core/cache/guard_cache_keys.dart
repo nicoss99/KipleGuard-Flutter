@@ -4,8 +4,15 @@ import 'package:intl/intl.dart';
 abstract final class GuardCacheKeys {
   static const _prefix = 'kiple_guard_cache_';
 
-  static String visitors(String residenceUuid, DateTime day) =>
-      '${_prefix}visitors_${residenceUuid}_${DateFormat('yyyy-MM-dd').format(day)}';
+  static String visitors(
+    String residenceUuid,
+    DateTime day, {
+    String tabKey = 'all',
+  }) =>
+      '${_prefix}visitors_${residenceUuid}_${DateFormat('yyyy-MM-dd').format(day)}_$tabKey';
+
+  static String visitorsAllOvertime(String residenceUuid) =>
+      '${_prefix}visitors_${residenceUuid}_all_overtime';
 
   static String bookings(String residenceUuid, DateTime day, String tab) =>
       '${_prefix}bookings_${residenceUuid}_${DateFormat('yyyy-MM-dd').format(day)}_$tab';
