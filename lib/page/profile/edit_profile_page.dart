@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
 import '../../widget/api_failed_dialog.dart';
+import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'widget/sign_out_dialog.dart';
 import '../../widget/standard_primary_header.dart';
@@ -52,9 +53,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final ok = await ref.read(profileProvider.notifier).saveName(_nameCtrl.text);
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ProfileStrings.profileUpdated)),
-      );
+      await showAppSuccessDialog(context, message: ProfileStrings.profileUpdated);
+      if (!mounted) return;
       context.pop(true);
     } else {
       final err = ref.read(profileProvider).error;
@@ -129,7 +129,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       EditProfileHeader(initials: s.initials),
-                      const EditProfileSectionTitle(label: ProfileStrings.account),
+                      EditProfileSectionTitle(label: ProfileStrings.account),
                       _nameRow(s),
                       const EditProfileDivider(),
                       EditProfileMenuRow(
@@ -141,7 +141,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       const EditProfileDivider(),
                       _readOnlyRow(ProfileStrings.mobileNumber, s.phone),
                       EditProfileResidencesSection(residences: s.residences),
-                      const EditProfileSectionTitle(label: ProfileStrings.helpSupport),
+                      EditProfileSectionTitle(label: ProfileStrings.helpSupport),
                       EditProfileMenuRow(
                         label: ProfileStrings.whatsNew,
                         onTap: () =>
@@ -179,7 +179,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                 ),
                               ),
                         loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (error, stackTrace) => const SizedBox.shrink(),
                       ),
                     ],
                   ),

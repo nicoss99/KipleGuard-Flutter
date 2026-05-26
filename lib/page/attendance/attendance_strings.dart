@@ -1,26 +1,27 @@
+import '../../l10n/app_l10n.dart';
+
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
 abstract final class AttendanceStrings {
-  static const titleTaking = 'Taking attendance';
-  static const titleRecords = 'Record list';
-  static const tabTaking = 'Attendance';
-  static const tabRecords = 'Record List';
-  static const startShiftTitle = 'Start Shift';
-  static const startShiftSubtitle = 'Mula';
-  static const endShiftTitle = 'End Shift';
-  static const endShiftSubtitle = 'Tamat';
-  static const shiftStarted = 'Shift started';
-  static const shiftEnded = 'Shift ended';
-  static const shiftStartedMessage = 'Your shift has started successfully.';
-  static const shiftEndedMessage = 'Your shift has ended successfully.';
-  static const successDone = 'Done';
-  static const invalidPin = 'That PIN is not valid for this site.';
-  static const noResidenceSelected =
-      'No residence selected. Select a site from the dashboard first.';
-  static const missingSecurityProfile =
-      'Site security data is missing. Select a site again or contact support.';
-  static const shiftAlreadyStarted = 'Shift already started';
-  static const shiftAlreadyEnded = 'Shift already ended';
-  static const recordsEmpty = 'No attendance records for this day';
-  static const recordCheckIn = 'Check in';
-  static const recordCheckOut = 'Check out';
-  static const recordGuardId = 'Guard ID';
+  static String get titleTaking => appL10n.attendanceTitleTaking;
+  static String get titleRecords => appL10n.attendanceTitleRecords;
+  static String get tabTaking => appL10n.attendanceTabTaking;
+  static String get tabRecords => appL10n.attendanceTabRecords;
+  static String get startShiftTitle => appL10n.attendanceStartShiftTitle;
+  static String get startShiftSubtitle => appL10n.attendanceStartShiftSubtitle;
+  static String get endShiftTitle => appL10n.attendanceEndShiftTitle;
+  static String get endShiftSubtitle => appL10n.attendanceEndShiftSubtitle;
+  static String get shiftStarted => appL10n.attendanceShiftStarted;
+  static String get shiftEnded => appL10n.attendanceShiftEnded;
+  static String get shiftStartedMessage => appL10n.attendanceShiftStartedMessage;
+  static String get shiftEndedMessage => appL10n.attendanceShiftEndedMessage;
+  static String get successDone => appL10n.attendanceSuccessDone;
+  static String get invalidPin => appL10n.attendanceInvalidPin;
+  static String get noResidenceSelected => appL10n.attendanceNoResidenceSelected;
+  static String get missingSecurityProfile => appL10n.attendanceMissingSecurityProfile;
+  static String get shiftAlreadyStarted => appL10n.attendanceShiftAlreadyStarted;
+  static String get shiftAlreadyEnded => appL10n.attendanceShiftAlreadyEnded;
+  static String get recordsEmpty => appL10n.attendanceRecordsEmpty;
+  static String get recordCheckIn => appL10n.attendanceRecordCheckIn;
+  static String get recordCheckOut => appL10n.attendanceRecordCheckOut;
+  static String get recordGuardId => appL10n.attendanceRecordGuardId;
 }

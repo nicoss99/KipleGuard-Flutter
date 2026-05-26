@@ -7,6 +7,7 @@ import '../../../theme/app_color.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../widget/app_progress_indicator.dart';
 import '../../../theme/app_text_style.dart';
+import '../../../widget/api_failed_dialog.dart';
 import '../booking_filter_query.dart';
 import '../booking_repository.dart';
 import '../booking_strings.dart';
@@ -108,22 +109,40 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
       (_categoryUuid != null && _categoryUuid!.isNotEmpty) ||
       (_roomUuid != null && _roomUuid!.isNotEmpty);
 
-  void _onApplyTap() {
+  Future<void> _onApplyTap() async {
     if (_pastChip && !_hasPass) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(BookingStrings.filterPickOne, style: AppTextStyle.body)),
-      );
+      await showApiFailedDialog(context, message: BookingStrings.filterPickOne);
       return;
     }
     if (!_hasPass) {
       widget.onClear();
       return;
     }
+    String? categoryName;
+    if (_categoryUuid != null) {
+      for (final c in _categories) {
+        if (c.uuid == _categoryUuid) {
+          categoryName = c.name;
+          break;
+        }
+      }
+    }
+    String? roomName;
+    if (_roomUuid != null) {
+      for (final r in _rooms) {
+        if (r.uuid == _roomUuid) {
+          roomName = r.name;
+          break;
+        }
+      }
+    }
     widget.onApply(
       BookingFilterQuery(
         submittedOnDay: _submittedDay,
         categoryUuid: _categoryUuid,
         roomUuid: _roomUuid,
+        categoryName: categoryName,
+        roomName: roomName,
       ),
     );
   }

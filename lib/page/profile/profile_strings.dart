@@ -1,31 +1,33 @@
-/// Edit profile / change password copy (Android `strings.xml`).
+import '../../l10n/app_l10n.dart';
+
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
 abstract final class ProfileStrings {
-  static const editProfile = 'Edit Profile';
-  static const signOut = 'Sign Out';
-  static const signOutConfirmationMessage = 'Are you sure you want to sign out of your account?';
-  static const cancel = 'Cancel';
-  static const account = 'ACCOUNT';
-  static const name = 'Name';
-  static const changePassword = 'Change Password';
-  static const email = 'Email';
-  static const mobileNumber = 'Mobile number';
-  static const residences = 'RESIDENCES';
-  static const helpSupport = 'HELP & SUPPORT';
-  static const whatsNew = "What's new?";
-  static const offlineData = 'Offline Data';
-  static const emptyOfflineData = 'No offline data';
-  static const profileUpdated = 'Profile updated';
-  static const passwordUpdated = 'Password updated';
-  static const signOutFailed = 'Failed to logout';
-  static const forceLogout = 'Force logout';
-  static const currentPassword = 'Current password';
-  static const currentPasswordHint = 'Enter a current password';
-  static const newPassword = 'New password';
-  static const newPasswordHint = 'Enter a new password';
-  static const confirmPassword = 'Confirm new password';
-  static const confirmPasswordHint = 'Confirm a new password';
-  static const save = 'Save';
-  static const passwordNotSame = 'Password is not the same';
-  static const passwordEmpty = 'Password cannot be empty';
-  static const currentPasswordRequired = 'Current password is required';
+  static String get editProfile => appL10n.profileEditProfile;
+  static String get signOut => appL10n.profileSignOut;
+  static String get signOutConfirmationMessage => appL10n.profileSignOutConfirmationMessage;
+  static String get cancel => appL10n.profileCancel;
+  static String get account => appL10n.profileAccount;
+  static String get name => appL10n.profileName;
+  static String get changePassword => appL10n.profileChangePassword;
+  static String get email => appL10n.profileEmail;
+  static String get mobileNumber => appL10n.profileMobileNumber;
+  static String get residences => appL10n.profileResidences;
+  static String get helpSupport => appL10n.profileHelpSupport;
+  static String get whatsNew => appL10n.profileWhatsNew;
+  static String get offlineData => appL10n.profileOfflineData;
+  static String get emptyOfflineData => appL10n.profileEmptyOfflineData;
+  static String get profileUpdated => appL10n.profileProfileUpdated;
+  static String get passwordUpdated => appL10n.profilePasswordUpdated;
+  static String get signOutFailed => appL10n.profileSignOutFailed;
+  static String get forceLogout => appL10n.profileForceLogout;
+  static String get currentPassword => appL10n.profileCurrentPassword;
+  static String get currentPasswordHint => appL10n.profileCurrentPasswordHint;
+  static String get newPassword => appL10n.profileNewPassword;
+  static String get newPasswordHint => appL10n.profileNewPasswordHint;
+  static String get confirmPassword => appL10n.profileConfirmPassword;
+  static String get confirmPasswordHint => appL10n.profileConfirmPasswordHint;
+  static String get save => appL10n.profileSave;
+  static String get passwordNotSame => appL10n.profilePasswordNotSame;
+  static String get passwordEmpty => appL10n.profilePasswordEmpty;
+  static String get currentPasswordRequired => appL10n.profileCurrentPasswordRequired;
 }

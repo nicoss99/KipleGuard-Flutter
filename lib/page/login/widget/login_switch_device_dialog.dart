@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../widget/app_confirm_dialog.dart';
 import '../../auth/guard_models.dart';
+import '../login_strings.dart';
 
 /// Shows switch-device confirmation; returns `true` if user tapped Proceed.
 Future<bool> showLoginSwitchDeviceDialog(
@@ -12,9 +13,9 @@ Future<bool> showLoginSwitchDeviceDialog(
     context: context,
     barrierDismissible: false,
     builder: (ctx) => AppConfirmDialog(
-      title: 'Sign in',
+      title: LoginStrings.switchDeviceTitle,
       message: info.message,
-      confirmText: 'Proceed',
+      confirmText: LoginStrings.switchDeviceProceed,
       confirmResult: true,
       showCancel: true,
     ),

@@ -48,9 +48,11 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
   Future<void> _ensureCamera() async {
     final s = await Permission.camera.request();
     if (!s.isGranted && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission is required to scan QR codes.')),
+      await showApiFailedDialog(
+        context,
+        message: 'Camera permission is required to scan QR codes.',
       );
+      if (!mounted) return;
       context.pop();
     }
   }
@@ -93,18 +95,14 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
       if (!mounted) return;
       final raw = capture != null ? _firstQr(capture) : null;
       if (raw == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ScanStrings.noQrInImage)),
-        );
+        await showApiFailedDialog(context, message: ScanStrings.noQrInImage);
         return;
       }
       handled = await _handleRaw(raw, fromCamera: false);
     } catch (e, st) {
       AppLog.error('Gallery QR analyze', tag: 'Scan', error: e, stackTrace: st);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ScanStrings.noQrInImage)),
-        );
+        await showApiFailedDialog(context, message: ScanStrings.noQrInImage);
       }
     } finally {
       if (mounted && !handled) await _scanner.start();
@@ -135,10 +133,10 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
       }
       _badScans += 1;
       if (_badScans > 3) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ScanStrings.unableScanQr)),
-        );
+        await showApiFailedDialog(context, message: ScanStrings.unableScanQr);
+        if (!mounted) return false;
         context.pop();
+        return false;
       }
       return false;
     } catch (e, st) {

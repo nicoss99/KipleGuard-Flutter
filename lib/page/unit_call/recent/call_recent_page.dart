@@ -142,7 +142,7 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
               FilledButton(
                 onPressed: () => ref.read(callRecentProvider.notifier).refreshFromNetwork(),
                 style: FilledButton.styleFrom(backgroundColor: AppColor.primary),
-                child: const Text(UnitCallStrings.retry),
+                child: Text(UnitCallStrings.retry),
               ),
             ],
           ),

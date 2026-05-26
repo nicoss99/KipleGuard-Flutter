@@ -1,9 +1,11 @@
-/// UI copy for site picker (`ResidenceActivity` / `select_residence`).
+import '../../l10n/app_l10n.dart';
+
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
 abstract final class SelectSiteStrings {
-  static const pageTitle = 'Select Site';
-  static const searchHint = 'Search site name';
-  static const currentBadge = 'Current';
-  static const emptyTitle = 'No sites available';
-  static const emptySubtitle = 'You do not have access to any site yet.';
-  static const retry = 'Retry';
+  static String get pageTitle => appL10n.selectSitePageTitle;
+  static String get searchHint => appL10n.selectSiteSearchHint;
+  static String get currentBadge => appL10n.selectSiteCurrentBadge;
+  static String get emptyTitle => appL10n.selectSiteEmptyTitle;
+  static String get emptySubtitle => appL10n.selectSiteEmptySubtitle;
+  static String get retry => appL10n.selectSiteRetry;
 }

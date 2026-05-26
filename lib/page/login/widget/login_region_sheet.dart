@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../theme/app_color.dart';
+import '../login_strings.dart';
 import '../login_theme.dart';
 import 'login_region_data.dart';
 import 'login_region_flag.dart';
@@ -38,7 +39,7 @@ class _LoginRegionSheetBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Select your region',
+              LoginStrings.regionSheetTitle,
               style: LoginTheme.label(context).copyWith(
                 color: AppColor.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -47,7 +48,7 @@ class _LoginRegionSheetBody extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'Choose where your account is registered',
+              LoginStrings.regionSheetSubtitle,
               style: LoginTheme.fieldText(context).copyWith(
                 color: AppColor.textSecondary,
                 fontSize: 13.sp,

@@ -99,7 +99,7 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
                   ),
                   indicatorColor: AppColor.primary,
                   indicatorWeight: 5,
-                  tabs: const [
+                  tabs: [
                     Tab(text: AttendanceStrings.tabTaking),
                     Tab(text: AttendanceStrings.tabRecords),
                   ],

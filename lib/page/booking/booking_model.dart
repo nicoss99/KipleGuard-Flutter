@@ -1,56 +1,44 @@
-/// One row in the booking list (`ListBookingObject` / adapter).
+import 'booking_guard_models.dart';
+
+/// One row in the booking list.
 class BookingListItem {
   const BookingListItem({
-    required this.uuid,
-    required this.roomName,
+    required this.id,
+    required this.bookingNumber,
+    required this.name,
+    required this.mobileNumber,
+    required this.unitLabel,
     required this.category,
-    required this.startTimeRaw,
-    required this.endTimeRaw,
     required this.bookingName,
-    required this.bookingUnit,
-    required this.isUpcomingTab,
-    this.lastScan,
+    required this.guardStatus,
+    required this.timeRangeLabel,
+    required this.durationLabel,
+    required this.submittedDate,
   });
 
-  final String uuid;
-  final String roomName;
+  final int id;
+  final String bookingNumber;
+  final String name;
+  final String mobileNumber;
+  final String unitLabel;
   final String category;
-  final String startTimeRaw;
-  final String endTimeRaw;
   final String bookingName;
-  final String bookingUnit;
-  final bool isUpcomingTab;
-  final String? lastScan;
+  final String guardStatus;
+  final String timeRangeLabel;
+  final String durationLabel;
+  final String submittedDate;
 
-  factory BookingListItem.fromResource(
-    Map<String, dynamic> m, {
-    required bool isUpcomingTab,
-  }) {
-    final types = m['types_by_type_uuid'];
-    var category = '';
-    if (types is Map) category = types['name']?.toString() ?? '';
-
-    var name = 'N/A';
-    var unit = 'N/A';
-    final prof = m['user_profiles_by_user_profile_uuid'];
-    if (prof is Map && prof['name'] != null) {
-      name = prof['name'].toString();
-    }
-    final resUnit = m['residence_units_by_unit_uuid'];
-    if (resUnit is Map && resUnit['name'] != null) {
-      unit = resUnit['name'].toString();
-    }
-
-    return BookingListItem(
-      uuid: m['uuid']?.toString() ?? '',
-      roomName: m['room_name']?.toString() ?? '',
-      category: category,
-      startTimeRaw: m['start_time']?.toString() ?? '',
-      endTimeRaw: m['end_time']?.toString() ?? '',
-      bookingName: name,
-      bookingUnit: unit,
-      isUpcomingTab: isUpcomingTab,
-      lastScan: m['last_scan']?.toString(),
-    );
-  }
+  factory BookingListItem.fromGuard(GuardBookingRow row) => BookingListItem(
+        id: row.id,
+        bookingNumber: row.bookingNumber,
+        name: row.name,
+        mobileNumber: row.mobileNumber,
+        unitLabel: row.unitLabel,
+        category: row.category,
+        bookingName: row.bookingName,
+        guardStatus: row.guardStatus,
+        timeRangeLabel: row.timeRangeLabel,
+        durationLabel: row.durationLabel,
+        submittedDate: row.submittedDate,
+      );
 }

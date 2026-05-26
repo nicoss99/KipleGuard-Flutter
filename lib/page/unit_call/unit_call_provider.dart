@@ -7,6 +7,7 @@ import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../core/unit_call_session_prefs.dart';
+import '../../core/api/contracts/guard_unit_call_repository.dart';
 import 'guard_unit_call_repository.dart';
 import 'unit_call_models.dart';
 import 'unit_call_session_restore.dart';

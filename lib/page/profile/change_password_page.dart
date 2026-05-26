@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../theme/app_color.dart';
 import '../../widget/api_failed_dialog.dart';
+import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import '../register/widget/register_gradient_button.dart';
@@ -66,9 +67,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         );
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ProfileStrings.passwordUpdated)),
-      );
+      await showAppSuccessDialog(context, message: ProfileStrings.passwordUpdated);
+      if (!mounted) return;
       context.pop();
       return;
     }

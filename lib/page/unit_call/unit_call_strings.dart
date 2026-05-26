@@ -1,30 +1,32 @@
-/// Android `UnitActivity` / `strings.xml` parity (subset).
+import '../../l10n/app_l10n.dart';
+
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
 abstract final class UnitCallStrings {
-  static const pageTitleCall = 'Call unit';
-  static const selectBlock = 'Select block';
-  static const selectHost = 'Select host';
-  static const selectFloor = 'Select floor';
-  static const recent = 'Recent';
-  static const callRecentSearch = 'Search by name';
-  static const callRecentEmpty = 'No recent calls';
-  static const searchHint = 'Search unit';
-  static const searchBlockHint = 'Search block';
-  static const searchFloorHint = 'Search floor';
-  static const searchNoMatch = 'No matching results';
-  static const owner = 'Owner';
-  static const tenant = 'Tenant';
-  static const member = 'Member';
-  static const retry = 'Retry';
-  static const noResidence = 'No site selected';
-  static const noPhone = 'No phone number for this unit';
-  static const cannotLaunchDialer = 'Unable to open dialer';
-  static const voipComingSoon = 'VoIP call — use the native app for masked calls (Twilio)';
-  static const loadingUnits = 'Loading units…';
-  static const loadingBlocks = 'Loading blocks…';
-  static const loadingFloors = 'Loading floors…';
-  static const loadingHosts = 'Loading hosts…';
-  static const emptyHosts = 'No hosts for this unit';
-  static const emptyBlocks = 'No blocks found';
-  static const emptyFloors = 'No floors found';
-  static const emptyUnits = 'No units found';
+  static String get pageTitleCall => appL10n.unitCallPageTitleCall;
+  static String get selectBlock => appL10n.unitCallSelectBlock;
+  static String get selectHost => appL10n.unitCallSelectHost;
+  static String get selectFloor => appL10n.unitCallSelectFloor;
+  static String get recent => appL10n.unitCallRecent;
+  static String get callRecentSearch => appL10n.unitCallCallRecentSearch;
+  static String get callRecentEmpty => appL10n.unitCallCallRecentEmpty;
+  static String get searchHint => appL10n.unitCallSearchHint;
+  static String get searchBlockHint => appL10n.unitCallSearchBlockHint;
+  static String get searchFloorHint => appL10n.unitCallSearchFloorHint;
+  static String get searchNoMatch => appL10n.unitCallSearchNoMatch;
+  static String get owner => appL10n.unitCallOwner;
+  static String get tenant => appL10n.unitCallTenant;
+  static String get member => appL10n.unitCallMember;
+  static String get retry => appL10n.unitCallRetry;
+  static String get noResidence => appL10n.unitCallNoResidence;
+  static String get noPhone => appL10n.unitCallNoPhone;
+  static String get cannotLaunchDialer => appL10n.unitCallCannotLaunchDialer;
+  static String get voipComingSoon => appL10n.unitCallVoipComingSoon;
+  static String get loadingUnits => appL10n.unitCallLoadingUnits;
+  static String get loadingBlocks => appL10n.unitCallLoadingBlocks;
+  static String get loadingFloors => appL10n.unitCallLoadingFloors;
+  static String get loadingHosts => appL10n.unitCallLoadingHosts;
+  static String get emptyHosts => appL10n.unitCallEmptyHosts;
+  static String get emptyBlocks => appL10n.unitCallEmptyBlocks;
+  static String get emptyFloors => appL10n.unitCallEmptyFloors;
+  static String get emptyUnits => appL10n.unitCallEmptyUnits;
 }

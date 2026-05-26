@@ -27,11 +27,11 @@ class GuardPinDialog extends StatefulWidget {
   const GuardPinDialog({
     super.key,
     required this.onVerify,
-    this.defaultFailureText = ReportingStrings.pinNotFound,
+    this.defaultFailureText,
   });
 
   final Future<GuardPinOutcome> Function(String pin) onVerify;
-  final String defaultFailureText;
+  final String? defaultFailureText;
 
   @override
   State<GuardPinDialog> createState() => _GuardPinDialogState();
@@ -90,7 +90,9 @@ class _GuardPinDialogState extends State<GuardPinDialog> {
     } else {
       _busy = false;
       final msg = outcome.errorMessage?.trim();
-      final text = (msg != null && msg.isNotEmpty) ? msg : widget.defaultFailureText;
+      final text = (msg != null && msg.isNotEmpty)
+          ? msg
+          : (widget.defaultFailureText ?? ReportingStrings.pinNotFound);
       if (!mounted) return;
       await showApiFailedDialog(context, message: text);
       if (!mounted) return;

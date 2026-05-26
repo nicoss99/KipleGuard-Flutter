@@ -3,11 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'register_models.dart';
 import 'register_repository.dart';
@@ -87,10 +87,11 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
   void initState() {
     super.initState();
     _pass.addListener(() => setState(() {}));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       if (widget.residenceUuid.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid residence')));
+        await showApiFailedDialog(context, message: 'Invalid residence');
+        if (!mounted) return;
         context.pop();
       }
     });
@@ -157,7 +158,7 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
       AppLog.error('Unit members failed', tag: 'Register', error: e, stackTrace: st);
       if (mounted) {
         setState(() => _hosts = []);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+        await showApiFailedDialog(context, error: e);
       }
     }
   }
@@ -178,9 +179,7 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
   Future<void> _pickImage(ImageSource source) async {
     if (_photos.length >= RegisterStrings.maxVisitPhotos) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(RegisterStrings.photoMaxReached)),
-        );
+        await showApiFailedDialog(context, message: RegisterStrings.photoMaxReached);
       }
       return;
     }
@@ -220,7 +219,7 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
     final unit = _unit;
     final visitor = _visitor;
     if (type == null || unit == null || visitor == null || !_canSubmit) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(RegisterStrings.errorRequired)));
+      await showApiFailedDialog(context, message: RegisterStrings.errorRequired);
       return;
     }
 

@@ -141,9 +141,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     if (picked == null || !mounted) return;
     if (picked.isAfter(now)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ReportingStrings.errorReportDate)),
-      );
+      await showApiFailedDialog(context, message: ReportingStrings.errorReportDate);
       await _pickDateTime();
       return;
     }
@@ -173,9 +171,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   Future<void> _pickImage(ImageSource source) async {
     if (_files.length >= ReportingPhotoStrip.maxPhotos) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ReportingStrings.imageLimit)),
-        );
+        await showApiFailedDialog(context, message: ReportingStrings.imageLimit);
       }
       return;
     }
@@ -193,9 +189,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     final limit = ReportingPhotoStrip.maxPhotos - _files.length;
     if (limit <= 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ReportingStrings.imageLimit)),
-        );
+        await showApiFailedDialog(context, message: ReportingStrings.imageLimit);
       }
       return;
     }
@@ -213,9 +207,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       _errCat = _selectedKey == null || _selectedKey!.isEmpty;
     });
     if (!_canSubmit) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ReportingStrings.errorBlank)),
-      );
+      await showApiFailedDialog(context, message: ReportingStrings.errorBlank);
       return;
     }
 
@@ -225,9 +217,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     final snap = await DashboardPrefs.loadSnapshot();
     if (snap.residenceId.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(ReportingStrings.errorBlank)),
-        );
+        await showApiFailedDialog(context, message: ReportingStrings.errorBlank);
         setState(() => _submitting = false);
       }
       return;

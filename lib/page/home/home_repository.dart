@@ -1,39 +1,40 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../service/api_service.dart';
+import '../../core/api/client/dio_guard_http_client.dart';
+import '../../core/api/client/guard_http_client.dart';
+import '../../core/api/contracts/legacy_guard_data_repository.dart';
 
-final homeRepositoryProvider = Provider<HomeRepository>(
-  (ref) => HomeRepository(ref.watch(dioProvider)),
+final homeRepositoryProvider = Provider<LegacyGuardDataRepository>(
+  (ref) => HomeRepository(ref.watch(guardHttpClientProvider)),
 );
 
 /// Android `RetrofitListAPI`: guard PIN list (`data/kg_guards`).
-class HomeRepository {
-  HomeRepository(this._dio);
+final class HomeRepository implements LegacyGuardDataRepository {
+  HomeRepository(this._client);
 
-  final Dio _dio;
+  final GuardHttpClient _client;
 
   static const _guardRelated =
       'kg_residence_guards_by_guard_uuid,kg_security_companies_by_security_company_uuid,'
       'residences_by_kg_residence_guards,residences_by_kg_attendances,kg_attendances_by_guard_uuid';
 
+  @override
   Future<String> fetchGuardPinJson(String securityCompanyUuid) async {
     final filter = '((security_company_uuid=$securityCompanyUuid))';
-    final res = await _dio.get<dynamic>(
+    final data = await _client.getRaw(
       'data/kg_guards',
-      queryParameters: <String, dynamic>{
+      query: <String, dynamic>{
         'filter': filter,
         'related': _guardRelated,
       },
     );
-    final data = res.data;
     if (data == null) return '{"resource":[]}';
     return jsonEncode(data);
   }
 
-  /// Matches Android `guardPinAPI` trimmed JSON stored in `securityJson`.
+  @override
   String trimGuardPinPayload(String responseString) {
     final decoded = jsonDecode(responseString);
     if (decoded is! Map<String, dynamic>) return responseString;

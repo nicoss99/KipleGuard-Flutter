@@ -1,38 +1,38 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/guard_api_message.dart';
+import '../../core/api/client/dio_guard_http_client.dart';
+import '../../core/api/client/guard_http_client.dart';
+import '../../core/api/contracts/guard_reporting_repository.dart';
+import '../../core/api/messages/api_message_catalog.dart';
+import '../../core/api/messages/localized_api_message_catalog.dart';
 import '../../core/guard_api_paths.dart';
-import '../../service/api_service.dart';
 import 'reporting_models.dart';
 import 'reporting_parsers.dart';
 
-final reportingRepositoryProvider = Provider<ReportingRepository>(
-  (ref) => ReportingRepository(ref.watch(dioProvider)),
+final reportingRepositoryProvider = Provider<GuardReportingRepository>(
+  (ref) => ReportingRepository(
+    ref.watch(guardHttpClientProvider),
+    ref.watch(apiMessageCatalogProvider),
+  ),
 );
 
-class ReportingRepository {
-  ReportingRepository(this._dio);
+final class ReportingRepository implements GuardReportingRepository {
+  ReportingRepository(this._client, this._messages);
 
-  final Dio _dio;
+  final GuardHttpClient _client;
+  final ApiMessageCatalog _messages;
 
-  /// `GET api/v1/guard/residences/{uuid}/incidents/types`
+  @override
   Future<List<ReportingCategory>> fetchIncidentTypes(String residenceUuid) async {
-    final res = await _dio.get<Map<String, dynamic>>(
+    final data = await _client.getJson(
       GuardApiPaths.incidentTypes(residenceUuid),
+      fallbackMessage: _messages.incidentTypesLoadFailed,
     );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Failed to load incident types',
-      );
-    }
-    return parseIncidentTypesFromApi(body);
+    return parseIncidentTypesFromApi(<String, dynamic>{'success': true, 'data': data});
   }
 
-  /// `POST api/v1/guard/residences/{uuid}/incidents` (multipart).
+  @override
   Future<void> createIncident({
     required String residenceUuid,
     required String incidentType,
@@ -55,18 +55,10 @@ class ReportingRepository {
         ),
       );
     }
-    final res = await _dio.post<Map<String, dynamic>>(
+    await _client.postMultipart(
       GuardApiPaths.incidents(residenceUuid),
       data: form,
-      options: Options(contentType: 'multipart/form-data'),
+      fallbackMessage: _messages.incidentReportFailed,
     );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Incident report failed',
-      );
-    }
   }
 }

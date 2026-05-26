@@ -12,6 +12,7 @@ import '../../core/site_scope_invalidation.dart';
 import '../auth/guard_repository.dart';
 import '../reporting/reporting_sync_service.dart';
 import '../select_site/residence_choice.dart';
+import '../../core/api/contracts/legacy_guard_data_repository.dart';
 import 'home_repository.dart';
 import 'home_state.dart';
 
@@ -30,7 +31,6 @@ class HomeNotifier extends Notifier<HomeState> {
   Future<void> refreshFromRemote() async {
     state = state.copyWith(refreshing: true, loadError: null, triggerNoRoleDialog: false);
     try {
-      final repo = ref.read(homeRepositoryProvider);
       final residences = await ref.read(guardRepositoryProvider).fetchResidences();
       if (residences.isEmpty) {
         state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
@@ -54,7 +54,10 @@ class HomeNotifier extends Notifier<HomeState> {
         state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
         return;
       }
-      await _refreshSiteScopedData(repo, alwaysReloadGuardPin: false);
+      await _refreshSiteScopedData(
+        ref.read(homeRepositoryProvider),
+        alwaysReloadGuardPin: false,
+      );
       await _hydrateFromPrefs();
       unawaited(ref.read(reportingSyncServiceProvider).processQueue());
       state = state.copyWith(refreshing: false);
@@ -114,7 +117,7 @@ class HomeNotifier extends Notifier<HomeState> {
   /// the security company changes, JSON is missing, or [alwaysReloadGuardPin]
   /// (e.g. user picked another site — refresh guard↔residence links).
   Future<void> _refreshSiteScopedData(
-    HomeRepository repo, {
+    LegacyGuardDataRepository repo, {
     String? previousSecurityUuid,
     bool alwaysReloadGuardPin = false,
   }) async {
@@ -132,7 +135,7 @@ class HomeNotifier extends Notifier<HomeState> {
     await _loadGuardPin(repo, securityUuid);
   }
 
-  Future<void> _loadGuardPin(HomeRepository repo, String securityUuid) async {
+  Future<void> _loadGuardPin(LegacyGuardDataRepository repo, String securityUuid) async {
     final raw = await repo.fetchGuardPinJson(securityUuid);
     await DashboardPrefs.setSecurityJson(repo.trimGuardPinPayload(raw));
   }

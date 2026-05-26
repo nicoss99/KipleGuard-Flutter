@@ -10,13 +10,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_error_message.dart';
 import '../../core/app_flavor.dart';
 import '../../core/app_logger.dart';
-import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/app_progress_indicator.dart';
 import '../../widget/api_failed_dialog.dart';
+import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../widget/standard_primary_header.dart';
 import 'visitor_detail_fields.dart';
@@ -48,37 +48,61 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
     });
   }
 
-  Future<void> _performQr(VisitorDetailFields meta) async {
+  /// `true` when the action was check-out; `false` for check-in / scan.
+  Future<bool> _performQr(VisitorDetailFields meta) async {
     final snap = _dash ?? await DashboardPrefs.loadSnapshot();
     final residenceUuid =
         snap.residenceId.isNotEmpty ? snap.residenceId : meta.residenceUuid;
     if (residenceUuid.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No residence selected')),
+        await showApiFailedDialog(
+          context,
+          message: 'No residence selected',
         );
       }
-      return;
+      return false;
     }
 
+    final visitorId = int.tryParse(widget.visitorUuid);
+    if (visitorId == null) throw StateError('Invalid visitor');
+
     final guardRepo = ref.read(guardVisitorRepositoryProvider);
-    if (meta.hasQr && meta.qrCode.trim().isNotEmpty) {
+    final isCheckOut = meta.showCheckOutButton || meta.canCheckOut;
+    if (isCheckOut) {
+      await guardRepo.checkOut(
+        residenceUuid: residenceUuid,
+        visitorId: visitorId,
+      );
+    } else if (meta.hasQr && meta.qrCode.trim().isNotEmpty) {
       await guardRepo.scanVisitor(
         residenceUuid: residenceUuid,
         qrCodeData: meta.qrCode.trim(),
       );
     } else {
-      final visitorId = int.tryParse(widget.visitorUuid);
-      if (visitorId == null) throw StateError('Invalid visitor');
-      await guardRepo.checkIn(residenceUuid: residenceUuid, visitorId: visitorId);
+      await guardRepo.checkIn(
+        residenceUuid: residenceUuid,
+        visitorId: visitorId,
+      );
     }
     ref.invalidate(visitorDetailProvider(widget.visitorUuid));
+    return isCheckOut;
+  }
+
+  Future<void> _showCheckActionSuccess(bool wasCheckOut) async {
+    if (!mounted) return;
+    await showAppSuccessDialog(
+      context,
+      message: wasCheckOut
+          ? VisitorStrings.checkOutSuccess
+          : VisitorStrings.checkInSuccess,
+    );
   }
 
   Future<void> _runQr(VisitorDetailFields meta) async {
     setState(() => _busy = true);
     try {
-      await _performQr(meta);
+      final wasCheckOut = await _performQr(meta);
+      await _showCheckActionSuccess(wasCheckOut);
     } catch (e, st) {
       AppLog.error(
         'Visitor QR failed',
@@ -97,7 +121,8 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
   Future<void> _checkIn(VisitorDetailFields meta) async {
     setState(() => _busy = true);
     try {
-      await _performQr(meta);
+      final wasCheckOut = await _performQr(meta);
+      await _showCheckActionSuccess(wasCheckOut);
     } catch (e, st) {
       AppLog.error(
         'Visitor check-in failed',
@@ -247,24 +272,25 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                             'Submitted date',
                             _fmtDate(f.createdAt),
                           ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              20.w,
-                              40.h,
-                              20.w,
-                              f.showCheckOutButton ? 12.h : 24.h,
-                            ),
-                            child: OutlinedButton(
-                              onPressed: () => _openShareActionSheet(f),
-                              style: _epassOutlinedStyle(),
-                              child: Text(
-                                'Share e-Pass',
-                                style: AppTextStyle.subtitle.copyWith(
-                                  color: AppColor.primary,
+                          if (f.canShareEpass)
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                20.w,
+                                40.h,
+                                20.w,
+                                f.showCheckOutButton ? 12.h : 24.h,
+                              ),
+                              child: OutlinedButton(
+                                onPressed: () => _openShareActionSheet(f),
+                                style: _epassOutlinedStyle(),
+                                child: Text(
+                                  'Share e-Pass',
+                                  style: AppTextStyle.subtitle.copyWith(
+                                    color: AppColor.primary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                           if (f.showCheckOutButton)
                             Padding(
                               padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 24.h),
@@ -491,9 +517,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
       onViewQr: () {
         final q = f.qrCode.trim();
         if (q.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(VisitorStrings.qrRequired)),
-          );
+          showApiFailedDialog(context, message: VisitorStrings.qrRequired);
           return;
         }
         showVisitorQrPreviewDialog(context, q);
@@ -502,9 +526,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
         final qr = f.qrCode.trim();
         if (qr.isEmpty) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text(VisitorStrings.qrRequired)),
-            );
+            await showApiFailedDialog(context, message: VisitorStrings.qrRequired);
           }
           return;
         }
@@ -523,9 +545,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
             stackTrace: st,
           );
           if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+            await showApiFailedDialog(context, error: e);
           }
         }
       },
@@ -536,21 +556,36 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
 
   String _fmtDateTime(String raw) {
     if (raw.trim().isEmpty) return 'N/A';
+    if (_looksLikeApiLabel(raw)) return raw.trim();
     try {
-      final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
+      final dt = DateTime.parse(raw).toLocal();
       return DateFormat('dd MMM yyyy, h:mma').format(dt).toLowerCase();
     } catch (_) {
-      return raw;
+      try {
+        final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
+        return DateFormat('dd MMM yyyy, h:mma').format(dt).toLowerCase();
+      } catch (_) {
+        return raw;
+      }
     }
   }
 
   String _fmtDate(String raw) {
     if (raw.trim().isEmpty) return 'N/A';
+    if (_looksLikeApiLabel(raw)) return raw.trim();
     try {
-      final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
+      final dt = DateTime.parse(raw).toLocal();
       return DateFormat('dd MMM yyyy').format(dt);
     } catch (_) {
-      return raw;
+      try {
+        final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
+        return DateFormat('dd MMM yyyy').format(dt);
+      } catch (_) {
+        return raw;
+      }
     }
   }
+
+  bool _looksLikeApiLabel(String raw) =>
+      RegExp(r'[A-Za-z]{3}').hasMatch(raw) && raw.contains(',');
 }

@@ -12,10 +12,11 @@ import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
-import '../../widget/app_progress_indicator.dart';
 import '../../widget/standard_primary_header.dart';
 import 'booking_provider.dart';
+import 'booking_state.dart';
 import 'booking_strings.dart';
 import 'widget/booking_filter_sheet.dart';
 import 'widget/booking_list_tile.dart';
@@ -115,9 +116,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       } else if (t.length >= 3) {
         await ref.read(bookingListProvider.notifier).setSearchQuery(t);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(BookingStrings.searchMinChars, style: AppTextStyle.body)),
-        );
+        await showApiFailedDialog(context, message: BookingStrings.searchMinChars);
       }
     }
     controller.dispose();
@@ -281,6 +280,24 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                         ),
                 ),
               ),
+              if (isToday)
+                DefaultTabController(
+                  key: ValueKey(s.tab),
+                  length: 2,
+                  initialIndex: s.tab == BookingTab.upcoming ? 1 : 0,
+                  child: TabBar(
+                    labelColor: AppColor.primary,
+                    unselectedLabelColor: AppColor.textSecondary,
+                    indicatorColor: AppColor.primary,
+                    onTap: (i) => n.setTab(
+                      i == 0 ? BookingTab.checkedIn : BookingTab.upcoming,
+                    ),
+                    tabs: [
+                      Tab(text: BookingStrings.tabCheckedIn),
+                      Tab(text: BookingStrings.tabUpcoming),
+                    ],
+                  ),
+                ),
               if (s.error != null)
                 Padding(
                   padding: EdgeInsets.all(AppSpacing.md),
@@ -293,58 +310,45 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 child: RefreshIndicator(
                   color: AppColor.primary,
                   onRefresh: () => n.refresh(),
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (note) {
-                      if (note.metrics.pixels >=
-                          note.metrics.maxScrollExtent - 120) {
-                        n.loadMore();
-                      }
-                      return false;
-                    },
-                    child: s.items.isEmpty && !s.loading
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              SizedBox(height: 80.h),
-                              Center(
-                                child: Text(
-                                  BookingStrings.noBookingListed,
-                                  style: AppTextStyle.bodyMuted,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          )
-                        : ListView.separated(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: EdgeInsets.only(bottom: 24.h),
-                            itemCount: s.items.length + (s.loadingMore ? 1 : 0),
-                            separatorBuilder: (_, _) => Divider(
-                              height: 1,
-                              color: AppColor.greyBorder.withValues(
-                                alpha: 0.35,
+                  child: s.items.isEmpty && !s.loading
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: 80.h),
+                            Center(
+                              child: Text(
+                                s.tab == BookingTab.checkedIn
+                                    ? BookingStrings.emptyCheckedIn
+                                    : BookingStrings.emptyUpcoming,
+                                style: AppTextStyle.bodyMuted,
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            itemBuilder: (ctx, i) {
-                              if (i >= s.items.length) {
-                                return Padding(
-                                  padding: EdgeInsets.all(16.h),
-                                  child: const Center(
-                                    child: AppProgressIndicator.compact(),
-                                  ),
-                                );
-                              }
-                              final item = s.items[i];
-                              return BookingListTile(
-                                item: item,
-                                onTap: () => context.pushNamed(
-                                  AppRoute.bookingDetail.name,
-                                  pathParameters: {'bookingUuid': item.uuid},
-                                ),
-                              );
-                            },
+                          ],
+                        )
+                      : ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: 24.h),
+                          itemCount: s.items.length,
+                          separatorBuilder: (_, _) => Divider(
+                            height: 1,
+                            color: AppColor.greyBorder.withValues(
+                              alpha: 0.35,
+                            ),
                           ),
-                  ),
+                          itemBuilder: (ctx, i) {
+                            final item = s.items[i];
+                            return BookingListTile(
+                              item: item,
+                              onTap: () => context.pushNamed(
+                                AppRoute.bookingDetail.name,
+                                pathParameters: {
+                                  'bookingUuid': '${item.id}',
+                                },
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ),
             ],

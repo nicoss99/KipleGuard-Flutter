@@ -133,7 +133,7 @@ class RegisterVisitorForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const RegisterSectionLabel(RegisterStrings.carPlateField),
+        RegisterSectionLabel(RegisterStrings.carPlateField),
         SizedBox(height: 4.h),
         Text(
           RegisterStrings.carRecurringHint,

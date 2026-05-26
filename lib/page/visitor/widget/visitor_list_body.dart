@@ -5,8 +5,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../router/app_route.dart' show AppPaths;
 import '../../../theme/app_color.dart';
+import '../../../widget/app_success_dialog.dart';
 import '../../auth/guard_visitor_status.dart';
 import '../visitor_provider.dart';
+import '../visitor_strings.dart';
 import '../visitor_state.dart';
 import '../visitor_tab_colors.dart';
 import 'visitor_empty_state.dart';
@@ -75,7 +77,18 @@ class VisitorListBody extends ConsumerWidget {
                         category: row.category,
                       ),
                       onTap: () => context.push(AppPaths.visitorDetails(row.uuid)),
-                      onActionTap: () => ref.read(visitorProvider.notifier).quickAction(row),
+                      onActionTap: () async {
+                        final ok = await ref
+                            .read(visitorProvider.notifier)
+                            .quickAction(row);
+                        if (!context.mounted || !ok) return;
+                        await showAppSuccessDialog(
+                          context,
+                          message: isIn
+                              ? VisitorStrings.checkOutSuccess
+                              : VisitorStrings.checkInSuccess,
+                        );
+                      },
                       actionLabel: isIn ? 'Out' : 'In',
                       isCheckedIn: isIn,
                     );

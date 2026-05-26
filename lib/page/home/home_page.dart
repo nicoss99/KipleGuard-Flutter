@@ -12,6 +12,7 @@ import '../select_site/residence_choice.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
+import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../core/app_bar_title_format.dart';
 import 'dashboard_header_title.dart';
@@ -39,9 +40,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
   }
 
-  void _snack(String message) {
+  Future<void> _featureHint(String message) async {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    await showAppSuccessDialog(
+      context,
+      title: DashboardStrings.appTitle,
+      message: message,
+    );
   }
 
   Future<void> _showNoRoleDialog() async {
@@ -170,7 +175,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           visitorEnabled: state.visitorEnabled,
                           bookingEnabled: state.bookingEnabled,
                           reportEnabled: state.reportEnabled,
-                          onDisabledFeature: _snack,
+                          onDisabledFeature: _featureHint,
                           onVisitorEnabledTap: () {
                             AppLog.track('visitor_grid', screen: 'Home');
                             context.push(AppRoute.visitor.path);
@@ -200,7 +205,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   visitorEnabled: state.visitorEnabled,
                   onCall: () {
                     if (!state.intercomEnabled) {
-                      _snack(DashboardStrings.featureCall);
+                      _featureHint(DashboardStrings.featureCall);
                       return;
                     }
                     AppLog.track('call_main', screen: 'Home');
@@ -208,7 +213,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   },
                   onRegister: () {
                     if (!state.visitorEnabled) {
-                      _snack(DashboardStrings.featureVisitor);
+                      _featureHint(DashboardStrings.featureVisitor);
                       return;
                     }
                     AppLog.track('register_main', screen: 'Home');

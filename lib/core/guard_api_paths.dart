@@ -3,6 +3,7 @@ abstract final class GuardApiPaths {
   static const residences = 'api/v1/guard/residences';
   static const login = 'api/v1/guard/auth/login';
   static const logout = 'api/v1/guard/auth/logout';
+  static const changePassword = 'api/v1/guard/auth/change-password';
   static const me = 'api/v1/guard/me';
 
   static String attendanceStart(String residenceUuid) =>
@@ -30,10 +31,10 @@ abstract final class GuardApiPaths {
       'api/v1/guard/residences/$residenceUuid/visitors/scan';
 
   static String visitorCheckIn(String residenceUuid, int visitorId) =>
-      'api/v1/guard/residences/$residenceUuid/$visitorId/check-in';
+      'api/v1/guard/residences/$residenceUuid/visitors/$visitorId/check-in';
 
   static String visitorCheckOut(String residenceUuid, int visitorId) =>
-      'api/v1/guard/residences/$residenceUuid/$visitorId/check-out';
+      'api/v1/guard/residences/$residenceUuid/visitors/$visitorId/check-out';
 
   static String unitBlocks(String residenceUuid) =>
       'api/v1/guard/residences/$residenceUuid/units/blocks';
@@ -52,4 +53,16 @@ abstract final class GuardApiPaths {
 
   static String incidents(String residenceUuid) =>
       'api/v1/guard/residences/$residenceUuid/incidents';
+
+  static String bookings(String residenceUuid) =>
+      'api/v1/guard/residences/$residenceUuid/bookings';
+
+  static String bookingDetail(String residenceUuid, int bookingId) =>
+      'api/v1/guard/residences/$residenceUuid/bookings/$bookingId';
+
+  static String bookingCheckIn(String residenceUuid, int bookingId) =>
+      'api/v1/guard/residences/$residenceUuid/bookings/$bookingId/check-in';
+
+  static String bookingCheckOut(String residenceUuid, int bookingId) =>
+      'api/v1/guard/residences/$residenceUuid/bookings/$bookingId/check-out';
 }

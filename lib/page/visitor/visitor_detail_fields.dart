@@ -30,6 +30,9 @@ class VisitorDetailFields {
     required this.actualArrivalTime,
     required this.actualExitTime,
     required this.icPassport,
+    this.icPassportMasked = '',
+    this.canCheckOut = false,
+    this.canShareEpass = false,
     this.isLprEnabled = false,
   });
 
@@ -63,28 +66,43 @@ class VisitorDetailFields {
 
     var hostName = '';
     var profileUuid = '';
+    final host = v['host'];
+    if (host is Map<String, dynamic>) {
+      hostName = host['name']?.toString() ?? '';
+      profileUuid = host['id']?.toString() ?? host['uuid']?.toString() ?? '';
+    }
     final guest = v['guest_of'];
-    if (guest is Map<String, dynamic>) {
+    if (hostName.isEmpty && guest is Map<String, dynamic>) {
       hostName = guest['name']?.toString() ?? '';
-      profileUuid = guest['id']?.toString() ?? '';
+      profileUuid = guest['id']?.toString() ?? profileUuid;
     }
 
-    var category = '';
-    final type = v['visitor_type'];
-    if (type is Map<String, dynamic>) {
-      category = type['name']?.toString() ?? type['label']?.toString() ?? '';
+    var category = v['category']?.toString() ?? '';
+    if (category.isEmpty) {
+      final type = v['visitor_type'];
+      if (type is Map<String, dynamic>) {
+        category = type['name']?.toString() ?? type['label']?.toString() ?? '';
+      }
     }
+
+    final qrCode = v['qr_code_data']?.toString() ??
+        v['qr_code']?.toString() ??
+        v['pass_code']?.toString() ??
+        '';
 
     return VisitorDetailFields(
       uuid: (v['id'] ?? '').toString(),
       name: v['name']?.toString() ?? '',
-      phone: v['phone']?.toString() ?? '',
-      carPlate: v['vehicle_number']?.toString() ?? '',
-      passReference: v['pass_reference']?.toString() ?? v['pass_id']?.toString() ?? '',
+      phone: v['mobile_number']?.toString() ?? v['phone']?.toString() ?? '',
+      carPlate: v['car_plate']?.toString() ?? v['vehicle_number']?.toString() ?? '',
+      passReference: v['pass_reference_id']?.toString() ??
+          v['pass_reference']?.toString() ??
+          v['pass_id']?.toString() ??
+          '',
       parkingLot: v['parking_lot']?.toString() ?? '',
       temperature: v['temperature']?.toString() ?? '',
       from: v['purpose']?.toString() ?? '',
-      qrCode: v['pass_code']?.toString() ?? v['qr_code']?.toString() ?? '',
+      qrCode: qrCode,
       residenceUuid: residenceUuid,
       residenceName: residenceName,
       userProfileUuid: profileUuid,
@@ -97,12 +115,23 @@ class VisitorDetailFields {
       hostName: hostName,
       category: category,
       remarks: v['remarks']?.toString() ?? '',
-      createdAt: v['scheduled_at']?.toString() ?? '',
-      startTime: v['scheduled_at']?.toString() ?? v['entry_time']?.toString() ?? '',
-      endTime: v['visit_ends_at']?.toString() ?? '',
-      actualArrivalTime: v['entry_time']?.toString() ?? '',
-      actualExitTime: v['exit_time']?.toString() ?? '',
+      createdAt: v['submitted_date_label']?.toString() ??
+          v['submitted_date']?.toString() ??
+          '',
+      startTime: v['eta_arrival_label']?.toString() ??
+          v['eta_arrival']?.toString() ??
+          '',
+      endTime: v['eta_exit_label']?.toString() ?? v['eta_exit']?.toString() ?? '',
+      actualArrivalTime: v['actual_arrival_time_label']?.toString() ??
+          v['actual_arrival_time']?.toString() ??
+          '',
+      actualExitTime: v['actual_exit_time_label']?.toString() ??
+          v['actual_exit_time']?.toString() ??
+          '',
       icPassport: v['ic_passport_no']?.toString() ?? '',
+      icPassportMasked: v['ic_passport_no_masked']?.toString() ?? '',
+      canCheckOut: v['can_check_out'] == true,
+      canShareEpass: v['can_share_epass'] == true,
     );
   }
 
@@ -226,6 +255,9 @@ class VisitorDetailFields {
   final String actualArrivalTime;
   final String actualExitTime;
   final String icPassport;
+  final String icPassportMasked;
+  final bool canCheckOut;
+  final bool canShareEpass;
 
   bool get hasQr => qrCode.trim().isNotEmpty;
 
@@ -238,9 +270,14 @@ class VisitorDetailFields {
 
   bool get canEditFields => isIncomingUi && !_oneTimeDone;
 
-  bool get showCheckInButton => isIncomingUi && !_oneTimeDone;
+  bool get showCheckInButton {
+    final s = visitStatus.toLowerCase();
+    if (s == 'checked_in' || s == 'checked_out') return false;
+    return isIncomingUi && !_oneTimeDone;
+  }
 
-  bool get showCheckOutButton => !isIncomingUi && !_oneTimeDone;
+  bool get showCheckOutButton =>
+      canCheckOut || (!isIncomingUi && !_oneTimeDone);
 
   String get unitLabel {
     if (blockName.isNotEmpty && unitName.isNotEmpty) return '$blockName-$unitName';
@@ -257,6 +294,7 @@ class VisitorDetailFields {
   }
 
   String get maskedIcPassport {
+    if (icPassportMasked.trim().isNotEmpty) return icPassportMasked.trim();
     if (icPassport.isEmpty) return '';
     if (icPassport.length <= 4) return '****';
     final stars = List<String>.filled(icPassport.length - 4, '*').join();

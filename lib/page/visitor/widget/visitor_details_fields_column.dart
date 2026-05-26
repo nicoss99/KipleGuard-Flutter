@@ -40,7 +40,7 @@ class VisitorDetailsFieldsColumn extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const RegisterSectionLabel(RegisterStrings.visitorNameField),
+          RegisterSectionLabel(RegisterStrings.visitorNameField),
           RegisterUnderlineField(
             controller: name,
             hint: RegisterStrings.nameHint,
@@ -48,10 +48,10 @@ class VisitorDetailsFieldsColumn extends StatelessWidget {
             readOnly: ro,
           ),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(RegisterStrings.icPassport),
+          RegisterSectionLabel(RegisterStrings.icPassport),
           RegisterUnderlineField(controller: ic, hint: RegisterStrings.icHint, readOnly: ro),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(RegisterStrings.mobileField),
+          RegisterSectionLabel(RegisterStrings.mobileField),
           RegisterUnderlineField(
             controller: phone,
             hint: RegisterStrings.mobileHint,
@@ -59,16 +59,16 @@ class VisitorDetailsFieldsColumn extends StatelessWidget {
             readOnly: ro,
           ),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(RegisterStrings.carPlateField),
+          RegisterSectionLabel(RegisterStrings.carPlateField),
           RegisterUnderlineField(controller: car, hint: RegisterStrings.carHint, readOnly: ro),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(RegisterStrings.passIdField),
+          RegisterSectionLabel(RegisterStrings.passIdField),
           RegisterUnderlineField(controller: pass, hint: RegisterStrings.passIdHint, readOnly: ro),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(VisitorStrings.parkingLot),
+          RegisterSectionLabel(VisitorStrings.parkingLot),
           RegisterUnderlineField(controller: parking, hint: RegisterStrings.chooseOne, readOnly: ro),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(RegisterStrings.tempField),
+          RegisterSectionLabel(RegisterStrings.tempField),
           RegisterUnderlineField(
             controller: temp,
             hint: RegisterStrings.tempHint,
@@ -76,7 +76,7 @@ class VisitorDetailsFieldsColumn extends StatelessWidget {
             readOnly: ro,
           ),
           SizedBox(height: 12.h),
-          const RegisterSectionLabel(VisitorStrings.visitorFrom),
+          RegisterSectionLabel(VisitorStrings.visitorFrom),
           RegisterUnderlineField(controller: from, hint: RegisterStrings.companyHint, readOnly: ro),
           if (ro) ...[
             SizedBox(height: 12.h),

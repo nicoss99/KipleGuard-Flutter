@@ -1,11 +1,13 @@
-/// Android `strings.xml` scan / QR copy.
+import '../../l10n/app_l10n.dart';
+
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
 abstract final class ScanStrings {
-  static const scanQrCode = 'Scan QR Code';
-  static const scanAlignHint = 'Align the QR code in the frame';
-  static const scanFromGallery = 'Choose from gallery';
-  static const noQrInImage = 'No QR code found in this image';
-  static const unableScanQr = 'Unable to scan QR code, recheck the details again';
-  static const qrNotBelong = 'QR does not belong to this residence';
-  static const qrNotBelong2 = 'QR does not belong to this building';
-  static const applicationTitle = 'Application';
+  static String get scanQrCode => appL10n.scanScanQrCode;
+  static String get scanAlignHint => appL10n.scanScanAlignHint;
+  static String get scanFromGallery => appL10n.scanScanFromGallery;
+  static String get noQrInImage => appL10n.scanNoQrInImage;
+  static String get unableScanQr => appL10n.scanUnableScanQr;
+  static String get qrNotBelong => appL10n.scanQrNotBelong;
+  static String get qrNotBelong2 => appL10n.scanQrNotBelong2;
+  static String get applicationTitle => appL10n.scanApplicationTitle;
 }

@@ -116,52 +116,31 @@ class VisitorNotifier extends Notifier<VisitorState> {
 
 
 
-  Future<void> quickAction(VisitorListItem item) async {
-
+  Future<bool> quickAction(VisitorListItem item) async {
     state = state.copyWith(loading: true, clearError: true);
-
     try {
-
       final snap = await DashboardPrefs.loadSnapshot();
-
       if (snap.residenceId.isEmpty) {
-
         state = state.copyWith(loading: false, error: 'No residence selected');
-
-        return;
-
+        return false;
       }
-
       final repo = ref.read(guardVisitorRepositoryProvider);
-
       final visitorId = int.tryParse(item.uuid);
-
       if (visitorId == null) {
-
         state = state.copyWith(loading: false, error: 'Invalid visitor');
-
-        return;
-
+        return false;
       }
-
       if (item.visitStatus == GuardVisitorApiStatus.checkedIn) {
-
         await repo.checkOut(residenceUuid: snap.residenceId, visitorId: visitorId);
-
       } else {
-
         await repo.checkIn(residenceUuid: snap.residenceId, visitorId: visitorId);
-
       }
-
       await _loadInitial();
-
+      return true;
     } catch (e) {
-
       state = state.copyWith(loading: false, error: apiErrorMessage(e));
-
+      return false;
     }
-
   }
 
 

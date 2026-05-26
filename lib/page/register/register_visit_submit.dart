@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../widget/api_failed_dialog.dart';
+import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
+import '../../widget/api_failed_dialog.dart';
 import '../../core/dashboard_prefs.dart';
 import 'register_models.dart';
 import 'register_payload.dart';
@@ -79,6 +80,6 @@ Future<void> handleRegisterSubmitError(
   }
   AppLog.error('Register submit failed', tag: 'Register', error: e, stackTrace: st);
   if (context.mounted) {
-    await showApiFailedDialog(context, message: 'Something went wrong');
+    await showApiFailedDialog(context, message: apiErrorMessage(e));
   }
 }

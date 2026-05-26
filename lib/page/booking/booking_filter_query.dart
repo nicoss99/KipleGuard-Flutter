@@ -4,11 +4,15 @@ class BookingFilterQuery {
     this.submittedOnDay,
     this.categoryUuid,
     this.roomUuid,
+    this.categoryName,
+    this.roomName,
   });
 
   final DateTime? submittedOnDay;
   final String? categoryUuid;
   final String? roomUuid;
+  final String? categoryName;
+  final String? roomName;
 
   static const empty = BookingFilterQuery();
 

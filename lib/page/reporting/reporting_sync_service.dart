@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_logger.dart';
 import 'reporting_prefs.dart';
+import '../../core/api/contracts/guard_reporting_repository.dart';
 import 'reporting_repository.dart';
 
 final reportingSyncServiceProvider = Provider<ReportingSyncService>(
@@ -13,7 +14,7 @@ final reportingSyncServiceProvider = Provider<ReportingSyncService>(
 class ReportingSyncService {
   ReportingSyncService(this._repo);
 
-  final ReportingRepository _repo;
+  final GuardReportingRepository _repo;
 
   Future<void> processQueue() async {
     for (;;) {

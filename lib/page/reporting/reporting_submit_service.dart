@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_logger.dart';
 import 'reporting_prefs.dart';
+import '../../core/api/contracts/guard_reporting_repository.dart';
 import 'reporting_repository.dart';
 
 final reportingSubmitServiceProvider = Provider<ReportingSubmitService>(
@@ -13,7 +14,7 @@ enum ReportingSubmitOutcome { synced, queued }
 class ReportingSubmitService {
   ReportingSubmitService(this._repo);
 
-  final ReportingRepository _repo;
+  final GuardReportingRepository _repo;
 
   Future<ReportingSubmitOutcome> submit({
     required String residenceUuid,

@@ -4,11 +4,11 @@ import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
 import 'booking_filter_query.dart';
+import 'booking_list_filters.dart';
 import 'booking_model.dart';
+import 'booking_parsers.dart';
 import 'booking_repository.dart';
 import 'booking_state.dart';
-import 'booking_strings.dart';
-
 final bookingListProvider =
     NotifierProvider<BookingListNotifier, BookingListState>(
       BookingListNotifier.new,
@@ -23,8 +23,6 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       selectedDay: d,
       items: const [],
-      offset: 0,
-      hasMore: false,
       clearError: true,
     );
     await refresh();
@@ -34,9 +32,6 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       filterQuery: query,
       searchQuery: '',
-      items: const [],
-      offset: 0,
-      hasMore: false,
       clearError: true,
     );
     await refresh();
@@ -46,9 +41,6 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       filterQuery: BookingFilterQuery.empty,
       searchQuery: '',
-      items: const [],
-      offset: 0,
-      hasMore: false,
       clearError: true,
     );
     await refresh();
@@ -59,9 +51,6 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       searchQuery: t,
       filterQuery: t.length >= 3 ? BookingFilterQuery.empty : state.filterQuery,
-      items: const [],
-      offset: 0,
-      hasMore: false,
       clearError: true,
     );
     await refresh();
@@ -69,15 +58,14 @@ class BookingListNotifier extends Notifier<BookingListState> {
 
   Future<void> setTab(BookingTab tab) async {
     if (state.tab == tab) return;
-    state = state.copyWith(
-      tab: tab,
-      items: const [],
-      offset: 0,
-      hasMore: false,
-      clearError: true,
-    );
+    state = state.copyWith(tab: tab, items: const [], clearError: true);
     await refresh();
   }
+
+  BookingTabApi _tabApi(BookingTab tab) => switch (tab) {
+        BookingTab.checkedIn => BookingTabApi.checkedIn,
+        BookingTab.upcoming => BookingTabApi.upcoming,
+      };
 
   Future<void> refresh() async {
     final snap = await DashboardPrefs.loadSnapshot();
@@ -88,98 +76,26 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final repo = ref.read(bookingRepositoryProvider);
-      final filter = state.tab == BookingTab.checkedIn
-          ? repo.listFilterCheckedIn(
-              residenceUuid: snap.residenceId,
-              dayLocal: state.selectedDay,
-              query: state.filterQuery,
-              searchQuery: state.searchQuery,
-            )
-          : repo.listFilterUpcoming(
-              residenceUuid: snap.residenceId,
-              dayLocal: state.selectedDay,
-              query: state.filterQuery,
-              searchQuery: state.searchQuery,
-            );
-      final page = await repo.fetchBookingsPage(filter: filter, offset: 0);
-      final items = page.resources
-          .map(
-            (m) => BookingListItem.fromResource(
-              m,
-              isUpcomingTab: state.tab == BookingTab.upcoming,
-            ),
-          )
-          .where((e) => e.uuid.isNotEmpty)
-          .toList();
+      final result = await repo.fetchBookings(
+        residenceUuid: snap.residenceId,
+        date: state.selectedDay,
+        tab: _tabApi(state.tab),
+      );
+      final mapped = result.bookings.map(BookingListItem.fromGuard).toList();
+      final items = applyBookingListFilters(
+        items: mapped,
+        filter: state.filterQuery,
+        searchQuery: state.searchQuery,
+      );
       state = state.copyWith(
         items: items,
-        offset: items.length,
         loading: false,
-        hasMore: page.resources.length >= 10,
-        totalCheckedIn: state.tab == BookingTab.checkedIn
-            ? page.count
-            : state.totalCheckedIn,
-        totalUpcoming: state.tab == BookingTab.upcoming
-            ? page.count
-            : state.totalUpcoming,
+        totalCheckedIn: result.counts.checkedIn,
+        totalUpcoming: result.counts.upcoming,
       );
     } catch (e, st) {
       AppLog.error('Booking list', tag: 'Booking', error: e, stackTrace: st);
       state = state.copyWith(loading: false, error: apiErrorMessage(e));
-    }
-  }
-
-  Future<void> loadMore() async {
-    if (state.loadingMore || state.loading || !state.hasMore) return;
-    if (state.items.isEmpty) return;
-    final snap = await DashboardPrefs.loadSnapshot();
-    if (snap.residenceId.isEmpty) return;
-    state = state.copyWith(loadingMore: true, clearError: true);
-    try {
-      final repo = ref.read(bookingRepositoryProvider);
-      final filter = state.tab == BookingTab.checkedIn
-          ? repo.listFilterCheckedIn(
-              residenceUuid: snap.residenceId,
-              dayLocal: state.selectedDay,
-              query: state.filterQuery,
-              searchQuery: state.searchQuery,
-            )
-          : repo.listFilterUpcoming(
-              residenceUuid: snap.residenceId,
-              dayLocal: state.selectedDay,
-              query: state.filterQuery,
-              searchQuery: state.searchQuery,
-            );
-      final page = await repo.fetchBookingsPage(
-        filter: filter,
-        offset: state.offset,
-      );
-      final more = page.resources
-          .map(
-            (m) => BookingListItem.fromResource(
-              m,
-              isUpcomingTab: state.tab == BookingTab.upcoming,
-            ),
-          )
-          .where((e) => e.uuid.isNotEmpty)
-          .toList();
-      state = state.copyWith(
-        items: [...state.items, ...more],
-        offset: state.offset + more.length,
-        loadingMore: false,
-        hasMore: more.length >= 10,
-      );
-    } catch (e, st) {
-      AppLog.error(
-        'Booking load more',
-        tag: 'Booking',
-        error: e,
-        stackTrace: st,
-      );
-      state = state.copyWith(
-        loadingMore: false,
-        error: BookingStrings.loadFailed,
-      );
     }
   }
 }

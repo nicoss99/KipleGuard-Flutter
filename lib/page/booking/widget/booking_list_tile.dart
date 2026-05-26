@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 
 import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
@@ -15,24 +14,12 @@ class BookingListTile extends StatelessWidget {
   final BookingListItem item;
   final VoidCallback onTap;
 
-  String _rangeLabel() {
-    final inFmt = DateFormat('yyyy-MM-dd HH:mm:ss');
-    final outFmt = DateFormat('dd MMM yyyy, hh:mm a', 'en_US');
-    try {
-      final a = inFmt.parseUtc(item.startTimeRaw).toLocal();
-      final b = inFmt.parseUtc(item.endTimeRaw).toLocal();
-      return '${outFmt.format(a)} to ${outFmt.format(b)}';
-    } catch (_) {
-      return '${item.startTimeRaw} – ${item.endTimeRaw}';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final chipColor = item.isUpcomingTab ? AppColor.orange : AppColor.green;
-    final chipLabel = item.isUpcomingTab
-        ? BookingStrings.checkIn
-        : BookingStrings.checkOut;
+    final isUpcoming = item.guardStatus == 'upcoming';
+    final chipColor = isUpcoming ? AppColor.orange : AppColor.green;
+    final chipLabel =
+        isUpcoming ? BookingStrings.checkIn : BookingStrings.checkOut;
 
     return Material(
       color: AppColor.white,
@@ -52,19 +39,19 @@ class BookingListTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.bookingName,
+                      item.name,
                       style: AppTextStyle.subtitle.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      item.bookingUnit,
+                      item.unitLabel,
                       style: AppTextStyle.bodyMuted.copyWith(fontSize: 12.sp),
                     ),
                     SizedBox(height: 6.h),
                     Text(
-                      item.roomName,
+                      item.bookingName,
                       style: AppTextStyle.body.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -76,35 +63,32 @@ class BookingListTile extends StatelessWidget {
                     ),
                     SizedBox(height: 6.h),
                     Text(
-                      _rangeLabel(),
+                      item.timeRangeLabel,
                       style: AppTextStyle.body.copyWith(fontSize: 13.sp),
                     ),
                   ],
                 ),
               ),
               SizedBox(width: 8.w),
-              Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: chipColor,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(
-                      chipLabel,
-                      style: AppTextStyle.body.copyWith(
-                        color: AppColor.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.sp,
-                      ),
+              if (isUpcoming || item.guardStatus == 'checked_in')
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: chipColor,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Text(
+                    chipLabel,
+                    style: AppTextStyle.body.copyWith(
+                      color: AppColor.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.sp,
                     ),
                   ),
-                ],
-              ),
+                ),
             ],
           ),
         ),

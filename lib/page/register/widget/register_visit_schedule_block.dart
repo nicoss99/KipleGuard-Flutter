@@ -27,11 +27,11 @@ class RegisterVisitScheduleBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const RegisterSectionLabel(RegisterStrings.visitStart),
+        RegisterSectionLabel(RegisterStrings.visitStart),
         SizedBox(height: 10.h),
         RegisterTimeField(label: '', valueText: startText, onPick: onPickStart),
         SizedBox(height: 16.h),
-        const RegisterSectionLabel(RegisterStrings.visitEnd),
+        RegisterSectionLabel(RegisterStrings.visitEnd),
         SizedBox(height: 10.h),
         RegisterTimeField(
           label: '',

@@ -19,7 +19,7 @@ class EditProfileResidencesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const EditProfileSectionTitle(label: ProfileStrings.residences),
+        EditProfileSectionTitle(label: ProfileStrings.residences),
         ...residences.expand((r) sync* {
           yield _ResidenceRow(residence: r);
           yield const EditProfileDivider();

@@ -1,27 +1,33 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/guard_api_message.dart';
+import '../../core/api/client/dio_guard_http_client.dart';
+import '../../core/api/client/guard_http_client.dart';
+import '../../core/api/contracts/guard_register_repository.dart';
+import '../../core/api/contracts/guard_unit_call_repository.dart';
+import '../../core/api/messages/api_message_catalog.dart';
+import '../../core/api/messages/localized_api_message_catalog.dart';
 import '../../core/guard_api_paths.dart';
-import '../../service/api_service.dart';
 import '../unit_call/guard_unit_call_repository.dart';
 import 'register_models.dart';
 import 'register_parsers.dart';
 
-final registerRepositoryProvider = Provider<RegisterRepository>(
+final registerRepositoryProvider = Provider<GuardRegisterRepository>(
   (ref) => RegisterRepository(
-    ref.watch(dioProvider),
+    ref.watch(guardHttpClientProvider),
     ref.watch(guardUnitCallRepositoryProvider),
+    ref.watch(apiMessageCatalogProvider),
   ),
 );
 
-class RegisterRepository {
-  RegisterRepository(this._dio, this._guardUnits);
+final class RegisterRepository implements GuardRegisterRepository {
+  RegisterRepository(this._client, this._guardUnits, this._messages);
 
-  final Dio _dio;
+  final GuardHttpClient _client;
   final GuardUnitCallRepository _guardUnits;
+  final ApiMessageCatalog _messages;
 
-  /// Same unit directory as [UnitCallPage] (Guard blocks/floors/units or office list).
+  @override
   Future<List<RegisterUnitOption>> fetchUnitsForResidence(
     String residenceUuid, {
     required bool officeMode,
@@ -41,7 +47,7 @@ class RegisterRepository {
         .toList();
   }
 
-  /// `GET api/v1/guard/residences/{uuid}/units/{unitUuid}/hosts`
+  @override
   Future<List<RegisterHostOption>> fetchHostsForUnit({
     required String residenceUuid,
     required String unitUuid,
@@ -62,52 +68,37 @@ class RegisterRepository {
         .toList();
   }
 
-  /// Guard API `GET /api/v1/guard/residences/{scopeUuid}/visitor-types`.
+  @override
   Future<List<RegisterVisitorTypeOption>> fetchVisitorTypes(String scopeUuid) async {
-    final res = await _dio.get<Map<String, dynamic>>(
+    final data = await _client.getJson(
       GuardApiPaths.visitorTypes(scopeUuid),
+      fallbackMessage: _messages.visitorTypesLoadFailed,
     );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Failed to load visitor types',
-      );
-    }
-    return parseVisitorTypeOptionsFromApi(body);
+    return parseVisitorTypeOptionsFromApi(<String, dynamic>{'success': true, 'data': data});
   }
 
-  /// Guard API `POST /api/v1/guard/residences/{scopeUuid}/visitors` (multipart).
+  @override
   Future<Map<String, dynamic>?> registerVisitor({
     required String scopeUuid,
     required FormData body,
   }) async {
-    final res = await _dio.post<Map<String, dynamic>>(
+    final data = await _client.postMultipart(
       GuardApiPaths.registerVisitor(scopeUuid),
       data: body,
-      options: Options(contentType: 'multipart/form-data'),
+      fallbackMessage: _messages.requestFailed,
     );
-    final data = res.data;
     if (data == null) return null;
-    if (!guardApiSuccess(data)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: data['message'] as String? ?? 'Visitor registration failed',
-      );
-    }
-    return data;
+    return <String, dynamic>{'success': true, 'data': data};
   }
 
-  /// Android `add_visitor_access_card` after QR register.
+  @override
   Future<void> addVisitorAccessCard({
     required String visitorUuid,
     required String visitorTypeUuid,
     required String residenceUuid,
     required String unitUuid,
   }) async {
-    await _dio.post<dynamic>(
+    await _client.postJson(
       'accesscards/newvisitor',
       data: <String, dynamic>{
         'visitor_uuid': visitorUuid,

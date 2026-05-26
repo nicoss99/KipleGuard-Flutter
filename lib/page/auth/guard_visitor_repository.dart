@@ -1,16 +1,22 @@
-import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/guard_api_message.dart';
-import '../../core/residence_prefs.dart';
+import '../../core/api/client/dio_guard_http_client.dart';
+import '../../core/api/client/guard_http_client.dart';
+import '../../core/api/contracts/guard_visitor_repository.dart' as contract;
+import '../../core/api/messages/api_message_catalog.dart';
+import '../../core/api/messages/localized_api_message_catalog.dart';
 import '../../core/guard_api_paths.dart';
-import '../../service/api_service.dart';
+import '../../core/residence_prefs.dart';
 import '../visitor/visitor_model.dart';
 import 'guard_visitor_day_result.dart';
 import 'guard_visitor_mapper.dart';
-final guardVisitorRepositoryProvider = Provider<GuardVisitorRepository>(
-  (ref) => GuardVisitorRepository(ref.watch(dioProvider)),
+
+final guardVisitorRepositoryProvider = Provider<contract.GuardVisitorRepository>(
+  (ref) => GuardVisitorRepository(
+    ref.watch(guardHttpClientProvider),
+    ref.watch(apiMessageCatalogProvider),
+  ),
 );
 
 class GuardVisitorListResult {
@@ -27,15 +33,16 @@ class GuardVisitorScanResult {
   final Map<String, dynamic>? raw;
 }
 
-class GuardVisitorRepository {
-  GuardVisitorRepository(this._dio);
+final class GuardVisitorRepository implements contract.GuardVisitorRepository {
+  GuardVisitorRepository(this._client, this._messages);
 
-  final Dio _dio;
+  final GuardHttpClient _client;
+  final ApiMessageCatalog _messages;
 
   static String _dateQuery(DateTime day) =>
       DateFormat('yyyy-MM-dd').format(DateTime(day.year, day.month, day.day));
 
-  /// `GET api/v1/guard/residences/{uuid}/visitors?date=` — counts + visitors.
+  @override
   Future<({String date, GuardVisitorCounts counts, List<VisitorListItem> items})>
       fetchVisitorsForDay(
     String residenceUuid, {
@@ -54,29 +61,21 @@ class GuardVisitorRepository {
     return (date: responseDate, counts: counts, items: items);
   }
 
-  /// `GET .../visitors?date=&status=` — same payload shape, filtered list.
-  /// `GET api/v1/guard/residences/{uuid}/visitors/{id}`
+  @override
   Future<Map<String, dynamic>?> fetchVisitorById(
     String residenceUuid, {
     required int visitorId,
   }) async {
-    final res = await _dio.get<Map<String, dynamic>>(
+    final data = await _client.getJson(
       GuardApiPaths.visitorDetail(residenceUuid, visitorId),
+      fallbackMessage: _messages.visitorDetailLoadFailed,
     );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Failed to load visitor',
-      );
-    }
-    final data = guardApiData(body);
     final visitor = data?['visitor'];
     if (visitor is Map<String, dynamic>) return visitor;
     return null;
   }
 
+  @override
   Future<GuardVisitorListResult> fetchVisitors(
     String residenceUuid, {
     required DateTime date,
@@ -92,6 +91,39 @@ class GuardVisitorRepository {
     return GuardVisitorListResult(date: responseDate, items: items);
   }
 
+  @override
+  Future<GuardVisitorScanResult> scanVisitor({
+    required String residenceUuid,
+    required String qrCodeData,
+  }) async {
+    final data = await _client.postJson(
+      GuardApiPaths.visitorScan(residenceUuid),
+      data: <String, dynamic>{'qr_code_data': qrCodeData},
+      fallbackMessage: _messages.scanFailed,
+    );
+    return _parseScanData(data);
+  }
+
+  @override
+  Future<void> checkIn({
+    required String residenceUuid,
+    required int visitorId,
+  }) async {
+    await _postVisitorAction(
+      GuardApiPaths.visitorCheckIn(residenceUuid, visitorId),
+    );
+  }
+
+  @override
+  Future<void> checkOut({
+    required String residenceUuid,
+    required int visitorId,
+  }) async {
+    await _postVisitorAction(
+      GuardApiPaths.visitorCheckOut(residenceUuid, visitorId),
+    );
+  }
+
   Future<Map<String, dynamic>?> _getVisitorsPayload(
     String residenceUuid, {
     required DateTime date,
@@ -99,23 +131,17 @@ class GuardVisitorRepository {
   }) async {
     final query = <String, dynamic>{'date': _dateQuery(date)};
     if (status != null && status.isNotEmpty) query['status'] = status;
-
-    final res = await _dio.get<Map<String, dynamic>>(
+    return _client.getJson(
       GuardApiPaths.visitors(residenceUuid),
-      queryParameters: query,
+      query: query,
+      fallbackMessage: _messages.visitorLoadFailed,
     );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Failed to load visitors',
-      );
-    }
-    return guardApiData(body);
   }
 
-  Future<List<VisitorListItem>> _parseVisitors(Object? raw, String residenceUuid) async {
+  Future<List<VisitorListItem>> _parseVisitors(
+    Object? raw,
+    String residenceUuid,
+  ) async {
     final activeUuid = residenceUuid.isNotEmpty
         ? residenceUuid
         : (await ResidencePrefs.readResidenceUuid()) ?? '';
@@ -126,57 +152,11 @@ class GuardVisitorRepository {
         .toList();
   }
 
-  Future<GuardVisitorScanResult> scanVisitor({
-    required String residenceUuid,
-    required String qrCodeData,
-  }) async {
-    final res = await _dio.post<Map<String, dynamic>>(
-      GuardApiPaths.visitorScan(residenceUuid),
-      data: <String, dynamic>{'qr_code_data': qrCodeData},
-    );
-    return _parseScan(res);
-  }
-
-  Future<void> checkIn({
-    required String residenceUuid,
-    required int visitorId,
-  }) async {
-    await _postVisitorAction(
-      GuardApiPaths.visitorCheckIn(residenceUuid, visitorId),
-    );
-  }
-
-  Future<void> checkOut({
-    required String residenceUuid,
-    required int visitorId,
-  }) async {
-    await _postVisitorAction(
-      GuardApiPaths.visitorCheckOut(residenceUuid, visitorId),
-    );
-  }
-
   Future<void> _postVisitorAction(String path) async {
-    final res = await _dio.post<Map<String, dynamic>>(path);
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Request failed',
-      );
-    }
+    await _client.postJson(path, fallbackMessage: _messages.requestFailed);
   }
 
-  GuardVisitorScanResult _parseScan(Response<Map<String, dynamic>> res) {
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Scan failed',
-      );
-    }
-    final data = guardApiData(body);
+  GuardVisitorScanResult _parseScanData(Map<String, dynamic>? data) {
     final visitor = data?['visitor'];
     if (visitor is Map<String, dynamic>) {
       final id = visitor['id'] as int? ?? visitor['visitor_id'] as int?;
@@ -184,6 +164,6 @@ class GuardVisitorRepository {
     }
     final id = data?['visitor_id'] as int? ?? data?['id'] as int?;
     if (id != null) return GuardVisitorScanResult(visitorId: id, raw: data);
-    throw StateError('Invalid scan payload');
+    throw StateError(_messages.scanFailed);
   }
 }

@@ -1,36 +1,31 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/app_config.dart';
 import '../../core/guard_api_message.dart';
+import '../../core/api/contracts/guard_auth_repository.dart';
 import '../auth/guard_repository.dart';
-import '../../service/api_service.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>(
-  (ref) => ProfileRepository(ref.watch(dioProvider), ref.watch(guardRepositoryProvider)),
+  (ref) => ProfileRepository(ref.watch(guardRepositoryProvider)),
 );
 
 class ProfileRepository {
-  ProfileRepository(this._dio, this._guard);
+  ProfileRepository(this._guard);
 
-  final Dio _dio;
-  final GuardRepository _guard;
+  final GuardAuthRepository _guard;
 
   Future<void> logout() => _guard.logout();
 
   Future<void> changePassword({
-    required String identityUuid,
-    required String oldPassword,
+    required String currentPassword,
     required String newPassword,
-  }) async {
-    await _dio.post<void>(
-      AppConfig.identityChallengePath(identityUuid),
-      data: <String, dynamic>{
-        'old_challenge': oldPassword,
-        'challenge': newPassword,
-      },
-    );
-  }
+    required String newPasswordConfirmation,
+  }) =>
+      _guard.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        newPasswordConfirmation: newPasswordConfirmation,
+      );
 }
 
 String profileApiErrorMessage(DioException e) => guardApiMessage(e);

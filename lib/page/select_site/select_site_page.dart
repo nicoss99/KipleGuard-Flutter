@@ -122,8 +122,9 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
     } catch (_) {
       if (mounted) {
         setState(() => _picking = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not save site selection')),
+        await showApiFailedDialog(
+          context,
+          message: 'Could not save site selection',
         );
       }
     }
@@ -173,7 +174,7 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
       );
     }
     if (_choices.isEmpty) {
-      return const SelectSiteStatusMessage(
+      return SelectSiteStatusMessage(
         icon: Icons.domain_disabled_outlined,
         title: SelectSiteStrings.emptyTitle,
         subtitle: SelectSiteStrings.emptySubtitle,

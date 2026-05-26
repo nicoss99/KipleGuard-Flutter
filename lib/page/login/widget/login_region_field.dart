@@ -10,6 +10,7 @@ import 'login_input_box.dart';
 import 'login_region_data.dart';
 import 'login_region_flag.dart';
 import 'login_region_sheet.dart';
+import '../login_strings.dart';
 import 'login_scaffold.dart';
 
 /// Region selector — flag icon + bottom sheet.
@@ -73,7 +74,7 @@ class _LoginRegionFieldState extends State<LoginRegionField> {
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
-                      selected?.name ?? 'Select your region',
+                      selected?.name ?? LoginStrings.regionPlaceholder,
                       textAlign: TextAlign.start,
                       style: selected == null
                           ? LoginScaffold.fieldHintStyle(context, active: active)

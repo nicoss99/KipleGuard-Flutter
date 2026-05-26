@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/auth_prefs.dart';
 import 'change_password_validator.dart';
 import 'profile_repository.dart';
 
@@ -61,14 +60,10 @@ class ChangePasswordNotifier extends Notifier<ChangePasswordState> {
 
     state = const ChangePasswordState(loading: true);
     try {
-      final identityUuid = await AuthPrefs.readUserIdentityUuid();
-      if (identityUuid == null || identityUuid.isEmpty) {
-        throw ProfileApiException('Missing identity');
-      }
       await ref.read(profileRepositoryProvider).changePassword(
-            identityUuid: identityUuid,
-            oldPassword: current,
+            currentPassword: current,
             newPassword: newPass,
+            newPasswordConfirmation: confirm,
           );
       state = const ChangePasswordState();
       return true;

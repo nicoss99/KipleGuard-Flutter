@@ -1,29 +1,25 @@
-/// Labels mirrored from Android `res/values/strings.xml` (dashboard section).
-abstract final class DashboardStrings {
-  static const appTitle = 'KipleGuard';
-  static const viewQr = 'View QR';
-  static const attendance = 'Attendance';
-  static const kehadiran = 'Kehadiran';
-  static const visitor = 'Visitor';
-  static const pelawat = 'Pelawat';
-  static const booking = 'Booking';
-  static const tempahan = 'Tempahan';
-  static const reporting = 'Reporting';
-  static const laporan = 'Laporan';
-  static const call = 'Call';
-  static const register = 'Register';
-  static const scanQr = 'Scan QR';
-  static const welcomeUser = 'Welcome, Guard';
+import '../../l10n/app_l10n.dart';
 
-  static const noRolesAuthorized = 'User is not authorized as a security guard.';
-  static const featureAttendance =
-      'This feature enable members to log attendance';
-  static const featureVisitor =
-      'This feature enable members to register visitors';
-  static const featureReport =
-      'This feature enable members to report incidents';
-  static const featureBooking =
-      'This feature enable members to check booking';
-  static const featureCall =
-      'This feature enable members to call the other members';
+/// Localized via [appL10n] — keys in `lib/l10n/app_en.arb`.
+abstract final class DashboardStrings {
+  static String get appTitle => appL10n.dashboardAppTitle;
+  static String get viewQr => appL10n.dashboardViewQr;
+  static String get attendance => appL10n.dashboardAttendance;
+  static String get kehadiran => appL10n.dashboardKehadiran;
+  static String get visitor => appL10n.dashboardVisitor;
+  static String get pelawat => appL10n.dashboardPelawat;
+  static String get booking => appL10n.dashboardBooking;
+  static String get tempahan => appL10n.dashboardTempahan;
+  static String get reporting => appL10n.dashboardReporting;
+  static String get laporan => appL10n.dashboardLaporan;
+  static String get call => appL10n.dashboardCall;
+  static String get register => appL10n.dashboardRegister;
+  static String get scanQr => appL10n.dashboardScanQr;
+  static String get welcomeUser => appL10n.dashboardWelcomeUser;
+  static String get noRolesAuthorized => appL10n.dashboardNoRolesAuthorized;
+  static String get featureAttendance => appL10n.dashboardFeatureAttendance;
+  static String get featureVisitor => appL10n.dashboardFeatureVisitor;
+  static String get featureReport => appL10n.dashboardFeatureReport;
+  static String get featureBooking => appL10n.dashboardFeatureBooking;
+  static String get featureCall => appL10n.dashboardFeatureCall;
 }

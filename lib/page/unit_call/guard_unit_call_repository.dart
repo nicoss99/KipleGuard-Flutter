@@ -1,20 +1,27 @@
-import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/guard_api_message.dart';
+import '../../core/api/client/dio_guard_http_client.dart';
+import '../../core/api/client/guard_http_client.dart';
+import '../../core/api/contracts/guard_unit_call_repository.dart';
+import '../../core/api/messages/api_message_catalog.dart';
+import '../../core/api/messages/localized_api_message_catalog.dart';
 import '../../core/guard_api_paths.dart';
-import '../../service/api_service.dart';
 import 'unit_call_models.dart';
 
 final guardUnitCallRepositoryProvider = Provider<GuardUnitCallRepository>(
-  (ref) => GuardUnitCallRepository(ref.watch(dioProvider)),
+  (ref) => GuardUnitCallRepositoryImpl(
+    ref.watch(guardHttpClientProvider),
+    ref.watch(apiMessageCatalogProvider),
+  ),
 );
 
-class GuardUnitCallRepository {
-  GuardUnitCallRepository(this._dio);
+final class GuardUnitCallRepositoryImpl implements GuardUnitCallRepository {
+  GuardUnitCallRepositoryImpl(this._client, this._messages);
 
-  final Dio _dio;
+  final GuardHttpClient _client;
+  final ApiMessageCatalog _messages;
 
+  @override
   Future<List<UnitLabelValue>> fetchBlocks(String residenceUuid) async {
     final data = await _getData(GuardApiPaths.unitBlocks(residenceUuid));
     final raw = data?['blocks'];
@@ -26,6 +33,7 @@ class GuardUnitCallRepository {
         .toList();
   }
 
+  @override
   Future<List<UnitFloorOption>> fetchFloors(
     String residenceUuid, {
     required String block,
@@ -43,6 +51,7 @@ class GuardUnitCallRepository {
         .toList();
   }
 
+  @override
   Future<List<CallUnitRow>> fetchUnits(
     String residenceUuid, {
     String? block,
@@ -66,14 +75,12 @@ class GuardUnitCallRepository {
   static String _blockFloorKey(String block, String floor) =>
       '${block.toUpperCase()}|${floor.toUpperCase()}';
 
-  /// All units for a site — office: single list; residence: blocks → floors → units.
+  @override
   Future<List<CallUnitRow>> fetchAllUnitsForResidence(
     String residenceUuid, {
     required bool officeMode,
   }) async {
-    if (officeMode) {
-      return fetchUnits(residenceUuid);
-    }
+    if (officeMode) return fetchUnits(residenceUuid);
 
     final blocks = await fetchBlocks(residenceUuid);
     final blockLabels = blocks.map((e) => e.label).where((l) => l.isNotEmpty).toList();
@@ -122,6 +129,7 @@ class GuardUnitCallRepository {
     return unique.values.toList();
   }
 
+  @override
   Future<List<UnitMemberLine>> fetchHosts(
     String residenceUuid, {
     required String unitUuid,
@@ -139,19 +147,6 @@ class GuardUnitCallRepository {
   Future<Map<String, dynamic>?> _getData(
     String path, {
     Map<String, dynamic>? query,
-  }) async {
-    final res = await _dio.get<Map<String, dynamic>>(
-      path,
-      queryParameters: query,
-    );
-    final body = res.data;
-    if (!guardApiSuccess(body)) {
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: body?['message'] as String? ?? 'Request failed',
-      );
-    }
-    return guardApiData(body);
-  }
+  }) =>
+      _client.getJson(path, query: query, fallbackMessage: _messages.requestFailed);
 }

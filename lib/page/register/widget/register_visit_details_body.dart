@@ -92,7 +92,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           Text(RegisterStrings.typeNotAllowedToday, style: AppTextStyle.body.copyWith(color: AppColor.red)),
           SizedBox(height: 12.h),
         ],
-        const RegisterSectionLabel(RegisterStrings.typeOfVisit),
+        RegisterSectionLabel(RegisterStrings.typeOfVisit),
         SizedBox(height: 10.h),
         RegisterDropdownCard<RegisterVisitorTypeOption>(
           value: selectedType,
@@ -113,7 +113,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           onClearEnd: onClearVisitEnd,
         ),
         SizedBox(height: 24.h),
-        const RegisterSectionLabel(RegisterStrings.unitField),
+        RegisterSectionLabel(RegisterStrings.unitField),
         SizedBox(height: 10.h),
         RegisterDropdownCard<RegisterUnitOption>(
           value: selectedUnit,
@@ -126,7 +126,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           emptyText: RegisterStrings.unitEmpty,
         ),
         SizedBox(height: 24.h),
-        const RegisterSectionLabel(RegisterStrings.hostField),
+        RegisterSectionLabel(RegisterStrings.hostField),
         SizedBox(height: 10.h),
         RegisterDropdownCard<RegisterHostOption>(
           value: selectedHost,
@@ -139,14 +139,14 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           emptyText: RegisterStrings.hostEmpty,
         ),
         SizedBox(height: 24.h),
-        const RegisterSectionLabel(RegisterStrings.visitorSection),
+        RegisterSectionLabel(RegisterStrings.visitorSection),
         SizedBox(height: 10.h),
         if (visitor case final v? when v.name.isNotEmpty)
           RegisterVisitorSummaryCard(visitor: v, onClear: onClearVisitor)
         else
           RegisterAddVisitorButton(onTap: onAddVisitor),
         SizedBox(height: 24.h),
-        const RegisterSectionLabel(RegisterStrings.photoSection),
+        RegisterSectionLabel(RegisterStrings.photoSection),
         SizedBox(height: 10.h),
         RegisterPhotoStrip(
           photos: visitPhotos,
@@ -155,7 +155,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           onRemoveAt: onRemovePhoto,
         ),
         SizedBox(height: 24.h),
-        const RegisterSectionLabel(RegisterStrings.passIdField),
+        RegisterSectionLabel(RegisterStrings.passIdField),
         SizedBox(height: 4.h),
         RegisterUnderlineField(controller: passController, hint: RegisterStrings.passIdHint),
         SizedBox(height: 24.h),

@@ -5,6 +5,7 @@ import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_style.dart';
+import '../login_strings.dart';
 
 /// Sign-in CTA — white background, primary label (kipleHomev2 login form).
 class LoginSignInButton extends StatelessWidget {
@@ -13,13 +14,13 @@ class LoginSignInButton extends StatelessWidget {
     required this.onPressed,
     required this.enabled,
     this.absorbing = false,
-    this.label = 'Sign In',
+    this.label,
   });
 
   final VoidCallback onPressed;
   final bool enabled;
   final bool absorbing;
-  final String label;
+  final String? label;
 
   static ButtonStyle _style() => FilledButton.styleFrom(
         backgroundColor: AppColor.white,
@@ -53,7 +54,7 @@ class LoginSignInButton extends StatelessWidget {
         child: FilledButton(
           onPressed: onPressed,
           style: _style(),
-          child: Text(label, style: _labelStyle()),
+          child: Text(label ?? LoginStrings.signIn, style: _labelStyle()),
         ),
       ),
     );

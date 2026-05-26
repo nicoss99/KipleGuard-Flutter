@@ -13,6 +13,7 @@ import '../../theme/app_color.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import 'login_provider.dart';
+import 'login_strings.dart';
 import 'login_theme.dart';
 import 'widget/login_sign_in_button.dart';
 import 'widget/login_switch_device_dialog.dart';
@@ -87,8 +88,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (result == null) {
       await showApiFailedDialog(
         context,
-        title: 'Sign in failed',
-        message: 'Invalid username / password',
+        title: LoginStrings.signInFailedTitle,
+        message: LoginStrings.invalidCredentials,
       );
       notifier.clearFieldErrors();
       return;
@@ -102,28 +103,37 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         await notifier.cancelPendingSwitchDevice();
         return;
       }
-      // TEMPORARY: Proceed re-login (`is_proceed`) disabled — use first login session.
-      // result = await notifier.confirmSwitchDevice(
-      //   identifier: identifier,
-      //   password: password,
-      // );
-      // if (!mounted) return;
-      // if (result == null) {
-      //   final msg = ref.read(loginNotifierProvider).apiError;
-      //   if (msg != null) {
-      //     await showApiFailedDialog(context, message: msg, title: 'Sign in failed');
-      //   }
-      //   return;
-      // }
-      // if (result.switchDevice != null) {
-      //   await showApiFailedDialog(
-      //     context,
-      //     message: 'Unable to continue login on this device.',
-      //     title: 'Sign in failed',
-      //   );
-      //   await notifier.cancelPendingSwitchDevice();
-      //   return;
-      // }
+      result = await notifier.confirmSwitchDevice(
+        identifier: identifier,
+        password: password,
+      );
+      if (!mounted) return;
+      if (result == null) {
+        final msg = ref.read(loginNotifierProvider).apiError;
+        if (msg != null) {
+          await showApiFailedDialog(
+            context,
+            message: msg,
+            title: LoginStrings.signInFailedTitle,
+          );
+        } else {
+          await showApiFailedDialog(
+            context,
+            title: LoginStrings.signInFailedTitle,
+            message: LoginStrings.invalidCredentials,
+          );
+        }
+        return;
+      }
+      if (result.switchDevice != null) {
+        await showApiFailedDialog(
+          context,
+          message: 'Unable to continue login on this device.',
+          title: LoginStrings.signInFailedTitle,
+        );
+        await notifier.cancelPendingSwitchDevice();
+        return;
+      }
     }
 
     await _goHome();
@@ -149,25 +159,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Email or Phone Number', style: LoginTheme.label(context)),
+                Text(LoginStrings.emailOrPhoneLabel, style: LoginTheme.label(context)),
                 SizedBox(height: 10.h),
                 SizedBox(
                   height: fieldHeight,
                   child: LoginTextField(
                     controller: _idController,
-                    hint: 'Email or phone number',
+                    hint: LoginStrings.emailOrPhoneHint,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                   ),
                 ),
                 SizedBox(height: 15.h),
-                Text('Password', style: LoginTheme.label(context)),
+                Text(LoginStrings.passwordLabel, style: LoginTheme.label(context)),
                 SizedBox(height: 10.h),
                 SizedBox(
                   height: fieldHeight,
                   child: LoginTextField(
                     controller: _passwordController,
-                    hint: 'Password',
+                    hint: LoginStrings.passwordHint,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) {
@@ -185,7 +195,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 TextButton(
                   onPressed: _openForgot,
-                  child: Text('Forgot Password?', style: LoginTheme.link(context)),
+                  child: Text(LoginStrings.forgotPassword, style: LoginTheme.link(context)),
                 ),
                 SizedBox(height: 30.h),
                 LoginSignInButton(
