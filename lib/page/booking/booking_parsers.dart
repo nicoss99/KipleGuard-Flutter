@@ -9,8 +9,12 @@ String bookingTabApiValue(BookingTabApi tab) => switch (tab) {
 
 enum BookingTabApi { allBookings, checkedIn, upcoming }
 
+/// [GuardHttpClient] already unwraps `data`; accept full body for cache/tests.
+Map<String, dynamic>? bookingApiPayload(Map<String, dynamic>? body) =>
+    guardApiData(body) ?? body;
+
 GuardBookingListResult parseBookingListFromApi(Map<String, dynamic>? body) {
-  final data = guardApiData(body);
+  final data = bookingApiPayload(body);
   final raw = data?['bookings'];
   final list = raw is List
       ? raw
@@ -30,7 +34,7 @@ GuardBookingListResult parseBookingListFromApi(Map<String, dynamic>? body) {
 }
 
 GuardBookingRow parseBookingDetailFromApi(Map<String, dynamic>? body) {
-  final data = guardApiData(body);
+  final data = bookingApiPayload(body);
   final raw = data?['booking'];
   if (raw is! Map<String, dynamic>) {
     throw StateError('Invalid booking payload');

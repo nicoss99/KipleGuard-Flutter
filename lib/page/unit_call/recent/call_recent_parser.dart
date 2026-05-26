@@ -32,6 +32,10 @@ CallHistoryRow? _parseOne(Map<String, dynamic> m) {
 
   final receiverUuid = profile['uuid']?.toString() ?? '';
   final receiverName = profile['name']?.toString() ?? '';
+  final profilePhone = profile['phone']?.toString() ??
+      profile['contact_number']?.toString() ??
+      profile['mobile']?.toString() ??
+      '';
 
   final receiverTypeLabel = ownerUuid.isNotEmpty && ownerUuid == receiverUuid ? 'Owner' : 'Member';
 
@@ -51,5 +55,6 @@ CallHistoryRow? _parseOne(Map<String, dynamic> m) {
     receiverProfileUuid: receiverProfileUuid,
     callAtRaw: callAt,
     callStatus: callStatus,
+    receiverPhone: profilePhone.trim(),
   );
 }

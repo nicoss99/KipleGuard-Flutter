@@ -7,7 +7,7 @@
   "apiInvalidLoginPayload": "Invalid login payload",
   "apiLoginFailed": "Login failed",
   "apiLogoutFailed": "Logout failed",
-  "apiNetworkError": "Network error",
+  "apiNetworkError": "No internet connection. Check your Wi‑Fi or mobile data and try again.",
   "apiProfileLoadFailed": "Failed to load profile",
   "apiRequestFailed": "Request failed",
   "apiResidencesLoadFailed": "Failed to load residences",
@@ -58,6 +58,7 @@
   "bookingConfirmCheckOut": "End this booking now?",
   "bookingDetailsTitle": "Booking details",
   "bookingDuration": "Duration",
+  "bookingEmptyAllBookings": "No bookings for this day.",
   "bookingEmptyCheckedIn": "No checked-in bookings for this day.",
   "bookingEmptyUpcoming": "No upcoming bookings for this day.",
   "bookingEndTime": "End",
@@ -80,6 +81,7 @@
   "bookingStartTime": "Start",
   "bookingSubmitted": "Submitted",
   "bookingSubmittedOn": "Booking submitted on",
+  "bookingTabAllBookings": "Booking(s)",
   "bookingTabCheckedIn": "Checked in",
   "bookingTabUpcoming": "Upcoming",
   "bookingTitle": "Booking",
@@ -153,6 +155,32 @@
   "profileNewPassword": "New password",
   "profileNewPasswordHint": "Enter a new password",
   "profileOfflineData": "Offline Data",
+  "offlineCachedSection": "Cached on this device",
+  "offlineNoPending": "No pending items to sync.",
+  "offlinePendingIncidents": "{count, plural, =1{1 incident report waiting to sync} other{{count} incident reports waiting to sync}}",
+  "@offlinePendingIncidents": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "offlinePendingSection": "Pending sync",
+  "offlineSavedAt": "Saved {time}",
+  "@offlineSavedAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "offlineDataMessage": "You are offline.",
+  "offlineNoConnection": "No internet connection. Check your Wi‑Fi or mobile data and try again.",
+  "offlineNoCachedData": "No internet connection and no saved data on this device. Connect to the internet to load.",
+  "offlineShowingCached": "Showing saved data from {savedAt}",
+  "@offlineShowingCached": {
+    "placeholders": {
+      "savedAt": { "type": "String" }
+    }
+  },
+  "offlineSyncDone": "Sync finished.",
+  "offlineSyncNow": "Sync now",
   "profilePasswordEmpty": "Password cannot be empty",
   "profilePasswordNotSame": "Password is not the same",
   "profilePasswordUpdated": "Password updated",

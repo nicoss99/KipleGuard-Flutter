@@ -38,6 +38,22 @@ class UnitMemberLine {
       userId: userId,
     );
   }
+
+  factory UnitMemberLine.fromCacheJson(Map<String, dynamic> json) => UnitMemberLine(
+        membershipUuid: json['membershipUuid']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        phone: json['phone']?.toString() ?? '',
+        membershipType: json['membershipType']?.toString() ?? '',
+        userId: _intOrNull(json['userId']),
+      );
+
+  Map<String, dynamic> toCacheJson() => {
+        'membershipUuid': membershipUuid,
+        'name': name,
+        'phone': phone,
+        'membershipType': membershipType,
+        if (userId != null) 'userId': userId,
+      };
 }
 
 int? _intOrNull(dynamic v) {
@@ -89,6 +105,41 @@ class CallUnitRow {
         expanded: expanded ?? this.expanded,
         hostsLoaded: hostsLoaded ?? this.hostsLoaded,
       );
+
+  factory CallUnitRow.fromCacheJson(
+    Map<String, dynamic> json, {
+    required String residenceUuid,
+  }) {
+    final membersRaw = json['members'];
+    final members = membersRaw is List
+        ? membersRaw
+            .whereType<Map>()
+            .map((e) => UnitMemberLine.fromCacheJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <UnitMemberLine>[];
+    return CallUnitRow(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      residenceUuid: residenceUuid,
+      ownerUuid: json['ownerUuid']?.toString() ?? '',
+      ownerName: json['ownerName']?.toString() ?? '—',
+      block: json['block']?.toString() ?? '',
+      floor: json['floor']?.toString() ?? '',
+      members: members,
+      hostsLoaded: json['hostsLoaded'] == true,
+    );
+  }
+
+  Map<String, dynamic> toCacheJson() => {
+        'id': id,
+        'name': name,
+        'ownerUuid': ownerUuid,
+        'ownerName': ownerName,
+        'block': block,
+        'floor': floor,
+        'hostsLoaded': hostsLoaded,
+        'members': members.map((m) => m.toCacheJson()).toList(),
+      };
 
   factory CallUnitRow.fromGuardUnitJson(
     Map<String, dynamic> json, {

@@ -5,14 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
 import '../../widget/api_failed_dialog.dart';
-import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../widget/offline_cache_banner.dart';
 import 'widget/sign_out_dialog.dart';
 import '../../widget/standard_primary_header.dart';
 import 'profile_provider.dart';
 import 'profile_text_style.dart';
-import 'profile_state.dart';
 import '../register/widget/register_gradient_button.dart';
 import 'profile_strings.dart';
 import 'widget/edit_profile_divider.dart';
@@ -21,7 +21,7 @@ import 'widget/edit_profile_menu_row.dart';
 import 'widget/edit_profile_residences_section.dart';
 import 'widget/edit_profile_section_title.dart';
 
-/// Android `EditProfileActivity` — local prefs + PUT profile / sign-out APIs.
+/// Android `EditProfileActivity` — local prefs + sign-out APIs (name read-only).
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
@@ -30,38 +30,6 @@ class EditProfilePage extends ConsumerStatefulWidget {
 }
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
-  late final TextEditingController _nameCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameCtrl = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(profileProvider.notifier).load();
-      final s = ref.read(profileProvider);
-      _nameCtrl.text = s.savedName;
-    });
-  }
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveName() async {
-    final ok = await ref.read(profileProvider.notifier).saveName(_nameCtrl.text);
-    if (!mounted) return;
-    if (ok) {
-      await showAppSuccessDialog(context, message: ProfileStrings.profileUpdated);
-      if (!mounted) return;
-      context.pop(true);
-    } else {
-      final err = ref.read(profileProvider).error;
-      if (err != null) await showApiFailedDialog(context, message: err);
-    }
-  }
-
   void _confirmSignOut() {
     showSignOutDialog(
       context,
@@ -89,6 +57,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     final s = ref.watch(profileProvider);
     final versionAsync = ref.watch(appVersionLabelProvider);
+    listenConnectivityRefresh(
+      ref,
+      () => ref.read(profileProvider.notifier).load(),
+    );
     ref.listen(profileProvider, (prev, next) {
       final err = next.error;
       if (err == null || err == prev?.error || next.loading || !mounted) return;
@@ -111,17 +83,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               StandardPrimaryHeader(
                 title: ProfileStrings.editProfile,
                 onBack: () => context.pop(false),
-                actions: s.showSave
-                    ? [
-                        TextButton(
-                          onPressed: _saveName,
-                          child: Text(
-                            ProfileStrings.save,
-                            style: ProfileTextStyle.headerAction,
-                          ),
-                        ),
-                      ]
-                    : const [],
+              ),
+              OfflineCacheBanner(
+                fromCache: s.fromCache,
+                savedAt: s.cacheSavedAt,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -130,7 +95,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     children: [
                       EditProfileHeader(initials: s.initials),
                       EditProfileSectionTitle(label: ProfileStrings.account),
-                      _nameRow(s),
+                      _readOnlyRow(ProfileStrings.name, s.savedName),
                       const EditProfileDivider(),
                       EditProfileMenuRow(
                         label: ProfileStrings.changePassword,
@@ -188,32 +153,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _nameRow(ProfileState s) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(ProfileStrings.name, style: ProfileTextStyle.rowLabel),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: TextField(
-              controller: _nameCtrl,
-              textAlign: TextAlign.end,
-              style: ProfileTextStyle.rowValue,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              onChanged: ref.read(profileProvider.notifier).onNameChanged,
-            ),
-          ),
-        ],
       ),
     );
   }

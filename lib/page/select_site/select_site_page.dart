@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/api_error_message.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
@@ -82,10 +83,9 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
       }
     } on DioException catch (e) {
       if (mounted) {
-        final msg = e.message ?? 'Network error';
         setState(() {
           _loading = false;
-          _error = msg;
+          _error = userFacingErrorMessage(e);
         });
         await showApiFailedDialog(context, error: e);
       }

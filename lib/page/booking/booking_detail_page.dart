@@ -1,31 +1,35 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_error_message.dart';
+import '../../core/offline/offline_messages.dart';
+import '../../core/cache/guard_detail_cache.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
+import '../../core/connectivity/network_connectivity.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/network/dio_network.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
-import '../../widget/app_success_dialog.dart';
 import '../../widget/app_progress_indicator.dart';
+import '../../widget/app_success_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'booking_guard_models.dart';
 import 'booking_repository.dart';
 import 'booking_strings.dart';
 import 'guard_booking_repository.dart';
+import 'widget/booking_detail_scroll.dart';
 
 class BookingDetailPage extends ConsumerStatefulWidget {
   const BookingDetailPage({super.key, required this.bookingUuid});
 
-  /// Route param — numeric booking id as string.
   final String bookingUuid;
 
   int get bookingId => int.tryParse(bookingUuid) ?? 0;
@@ -39,11 +43,28 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
   bool _loading = true;
   bool _submitting = false;
   String? _error;
+  bool _fromCache = false;
+  DateTime? _cacheSavedAt;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _applyCached(String residenceId) async {
+    final cached = await GuardDetailCache.readBookingDetail(
+      residenceUuid: residenceId,
+      bookingId: widget.bookingId,
+    );
+    if (cached == null) return;
+    setState(() {
+      _booking = cached.row;
+      _loading = false;
+      _fromCache = true;
+      _cacheSavedAt = cached.savedAt;
+      _error = null;
+    });
   }
 
   Future<void> _load() async {
@@ -57,6 +78,8 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
     setState(() {
       _loading = true;
       _error = null;
+      _fromCache = false;
+      _cacheSavedAt = null;
     });
     final snap = await DashboardPrefs.loadSnapshot();
     if (snap.residenceId.isEmpty) {
@@ -66,31 +89,47 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
       });
       return;
     }
+
+    final online = await ref.read(connectivityServiceProvider).checkOnline();
+    if (!online) {
+      await _applyCached(snap.residenceId);
+      setState(() {
+        _loading = false;
+        if (_booking == null) _error = offlineNoCachedDataMessage();
+      });
+      return;
+    }
+
     try {
       final row = await ref.read(bookingRepositoryProvider).fetchBookingDetail(
             residenceUuid: snap.residenceId,
             bookingId: widget.bookingId,
           );
+      await GuardDetailCache.saveBookingDetail(
+        residenceUuid: snap.residenceId,
+        bookingId: widget.bookingId,
+        bookingJson: row.toJson(),
+      );
       setState(() {
         _booking = row;
         _loading = false;
+        _fromCache = false;
+        _cacheSavedAt = null;
+      });
+    } on DioException catch (e) {
+      if (isNetworkError(e)) {
+        await _applyCached(snap.residenceId);
+        if (_booking != null) return;
+      }
+      setState(() {
+        _loading = false;
+        _error = userFacingErrorMessage(e);
       });
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = apiErrorMessage(e);
+        _error = userFacingErrorMessage(e);
       });
-    }
-  }
-
-  String _displayTime(String? iso, String? label) {
-    if (label != null && label.isNotEmpty) return label;
-    if (iso == null || iso.isEmpty) return '—';
-    try {
-      return DateFormat('dd MMM yyyy, hh:mm a', 'en_US')
-          .format(DateTime.parse(iso).toLocal());
-    } catch (_) {
-      return iso;
     }
   }
 
@@ -99,9 +138,7 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          checkIn
-              ? BookingStrings.confirmCheckIn
-              : BookingStrings.confirmCheckOut,
+          checkIn ? BookingStrings.confirmCheckIn : BookingStrings.confirmCheckOut,
           style: AppTextStyle.subtitle,
         ),
         actions: [
@@ -134,13 +171,20 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
               bookingId: widget.bookingId,
               currentTime: now,
             );
+      await GuardDetailCache.saveBookingDetail(
+        residenceUuid: snap.residenceId,
+        bookingId: widget.bookingId,
+        bookingJson: row.toJson(),
+      );
       if (!mounted) return;
-      setState(() => _booking = row);
+      setState(() {
+        _booking = row;
+        _fromCache = false;
+        _cacheSavedAt = null;
+      });
       await showAppSuccessDialog(
         context,
-        message: checkIn
-            ? BookingStrings.checkInSuccess
-            : BookingStrings.checkOutSuccess,
+        message: checkIn ? BookingStrings.checkInSuccess : BookingStrings.checkOutSuccess,
       );
     } catch (e) {
       if (mounted) await showApiFailedDialog(context, error: e);
@@ -149,160 +193,127 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
     }
   }
 
-  Future<void> _dial(String raw) async {
-    var n = raw.trim();
-    if (n.isEmpty) return;
-    if (!n.startsWith('0') && !n.startsWith('+')) n = '+$n';
-    final u = Uri.parse('tel:$n');
-    if (await canLaunchUrl(u)) await launchUrl(u);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: standardPrimaryOverlayStyle(),
-      child: ModalProgressHud(
-        inAsyncCall: _submitting,
-        child: Scaffold(
-          backgroundColor: AppColor.white,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              StandardPrimaryHeader(
-                title: BookingStrings.detailsTitle,
-                onBack: () => context.pop(),
-              ),
-              Expanded(child: _body()),
-            ],
+  Widget? _checkInBar(GuardBookingRow b) {
+    if (!b.canCheckIn) return null;
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(AppSpacing.md, 8.h, AppSpacing.md, 12.h),
+        child: FilledButton(
+          onPressed: _submitting ? null : () => _confirmAndSubmit(checkIn: true),
+          style: FilledButton.styleFrom(
+            minimumSize: Size.fromHeight(52.h),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+            backgroundColor: AppColor.primary,
+            padding: EdgeInsets.symmetric(vertical: 20.h),
+          ),
+          child: Text(
+            BookingStrings.checkIn,
+            style: AppTextStyle.subtitle.copyWith(color: AppColor.white),
           ),
         ),
       ),
     );
   }
 
-  Widget _body() {
+  @override
+  Widget build(BuildContext context) {
+    listenConnectivityRefresh(ref, _load);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: standardPrimaryOverlayStyle(),
+      child: ModalProgressHud(
+        inAsyncCall: _submitting,
+        child: _scaffoldForState(),
+      ),
+    );
+  }
+
+  Widget _scaffoldForState() {
     if (_loading) {
-      return const Center(child: AppProgressIndicator());
+      return Scaffold(
+        backgroundColor: AppColor.white,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardPrimaryHeader(
+              title: BookingStrings.detailsTitle,
+              onBack: () => context.pop(),
+            ),
+            const Expanded(child: Center(child: AppProgressIndicator())),
+          ],
+        ),
+      );
     }
     if (_error != null) {
-      return Center(
-        child: Text(
-          _error!,
-          style: AppTextStyle.body.copyWith(color: AppColor.red),
+      return Scaffold(
+        backgroundColor: AppColor.white,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardPrimaryHeader(
+              title: BookingStrings.detailsTitle,
+              onBack: () => context.pop(),
+            ),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyle.body,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
     final b = _booking;
     if (b == null) {
-      return const Center(child: Text('Not found'));
-    }
-
-    final qr = (b.qrCodeData?.isNotEmpty ?? false)
-        ? b.qrCodeData!
-        : b.bookingNumber;
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: SizedBox(
-              width: 200.w,
-              height: 200.w,
-              child: QrImageView(
-                data: qr,
-                version: QrVersions.auto,
-                gapless: true,
-                backgroundColor: AppColor.white,
-                padding: EdgeInsets.all(8.w),
-              ),
+      final offline = ref.watch(isOnlineProvider).value == false;
+      return Scaffold(
+        backgroundColor: AppColor.white,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardPrimaryHeader(
+              title: BookingStrings.detailsTitle,
+              onBack: () => context.pop(),
             ),
-          ),
-          SizedBox(height: 16.h),
-          _kv(BookingStrings.guest, b.name),
-          _kv(BookingStrings.mobile, b.mobileNumber.isEmpty ? '—' : b.mobileNumber),
-          if (b.dialPhone.isNotEmpty)
-            TextButton.icon(
-              onPressed: () => _dial(b.dialPhone),
-              icon: const Icon(Icons.call_outlined, color: AppColor.primary),
-              label: Text(
-                BookingStrings.callGuest,
-                style: AppTextStyle.subtitle,
+            if (offline) const OfflineCacheBanner(fromCache: false),
+            Expanded(
+              child: Center(
+                child: Text(
+                  offline ? offlineNoCachedDataMessage() : 'Booking not found',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyle.body,
+                ),
               ),
-            ),
-          _kv(BookingStrings.unit, b.unitLabel),
-          _kv(BookingStrings.category, b.category.isEmpty ? '—' : b.category),
-          _kv(BookingStrings.room, b.bookingName),
-          _kv(BookingStrings.duration, b.durationLabel),
-          _kv(
-            BookingStrings.startTime,
-            b.etaArrivalLabel ?? '—',
-          ),
-          _kv(
-            BookingStrings.endTime,
-            b.etaExitLabel ?? '—',
-          ),
-          _kv(BookingStrings.submitted, b.submittedDate),
-          _kv(
-            BookingStrings.attendees,
-            b.attendeeCount?.toString() ?? '—',
-          ),
-          _kv(
-            BookingStrings.arrival,
-            _displayTime(b.actualArrivalTime, null),
-          ),
-          _kv(
-            BookingStrings.exit,
-            _displayTime(b.actualExitTime, null),
-          ),
-          SizedBox(height: 20.h),
-          if (b.canCheckIn)
-            FilledButton(
-              onPressed: _submitting
-                  ? null
-                  : () => _confirmAndSubmit(checkIn: true),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColor.primary,
-                minimumSize: Size.fromHeight(48.h),
-              ),
-              child: Text(BookingStrings.checkIn),
-            ),
-          if (b.canCheckOut) ...[
-            SizedBox(height: 10.h),
-            FilledButton(
-              onPressed: _submitting
-                  ? null
-                  : () => _confirmAndSubmit(checkIn: false),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColor.green,
-                minimumSize: Size.fromHeight(48.h),
-              ),
-              child: Text(BookingStrings.checkOut),
             ),
           ],
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    }
 
-  Widget _kv(String k, String v) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 10.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: AppColor.white,
+      bottomNavigationBar: _checkInBar(b),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: 120.w,
-            child: Text(
-              k,
-              style: AppTextStyle.bodyMuted.copyWith(fontSize: 13.sp),
-            ),
+          StandardPrimaryHeader(
+            title: BookingStrings.detailsTitle,
+            onBack: () => context.pop(),
           ),
+          OfflineCacheBanner(fromCache: _fromCache, savedAt: _cacheSavedAt),
           Expanded(
-            child: Text(
-              v,
-              style: AppTextStyle.body.copyWith(fontWeight: FontWeight.w600),
+            child: BookingDetailScroll(
+              booking: b,
+              submitting: _submitting,
+              onCheckOut: () => _confirmAndSubmit(checkIn: false),
+              onRefresh: _load,
             ),
           ),
         ],

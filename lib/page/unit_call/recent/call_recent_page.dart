@@ -5,13 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../core/app_bar_title_format.dart';
+import '../../../core/connectivity/connectivity_refresh.dart';
+import '../../../widget/api_failed_dialog.dart';
 import '../../../widget/app_progress_indicator.dart';
+import '../../../widget/offline_cache_banner.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_style.dart';
 import '../unit_call_phone.dart';
 import '../unit_call_strings.dart';
+import 'call_recent_models.dart';
 import 'call_recent_provider.dart';
 import 'call_recent_state.dart';
 import 'widget/call_recent_tile.dart';
@@ -45,6 +49,11 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(callRecentProvider);
     final top = MediaQuery.paddingOf(context).top;
+
+    listenConnectivityRefresh(
+      ref,
+      () => ref.read(callRecentProvider.notifier).refreshFromNetwork(),
+    );
 
     ref.listen(callRecentProvider.select((s) => s.searchQuery), (prev, next) {
       if (_search.text != next) _search.text = next;
@@ -96,6 +105,10 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
                 color: AppColor.primary,
                 backgroundColor: AppColor.primary.withValues(alpha: 0.12),
               ),
+            OfflineCacheBanner(
+              fromCache: state.fromCache,
+              savedAt: state.cacheSavedAt,
+            ),
             Padding(
               padding: EdgeInsets.fromLTRB(AppSpacing.md, 10.h, AppSpacing.md, 6.h),
               child: TextField(
@@ -124,6 +137,16 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _dialRecent(BuildContext context, CallHistoryRow row) async {
+    final phone = await ref.read(callRecentProvider.notifier).phoneForRow(row);
+    if (!context.mounted) return;
+    if (phone == null) {
+      await showApiFailedDialog(context, message: UnitCallStrings.noPhone);
+      return;
+    }
+    await dialMembershipPhone(context, phone);
   }
 
   Widget _body(BuildContext context, CallRecentState state) {
@@ -178,7 +201,7 @@ class _CallRecentPageState extends ConsumerState<CallRecentPage> {
             key: ValueKey<String>(row.uuid),
             row: row,
             residenceDisplayName: state.residenceName.isEmpty ? '—' : state.residenceName,
-            onTap: () => showVoipPlaceholder(context),
+            onTap: () => _dialRecent(context, row),
           );
         },
       ),

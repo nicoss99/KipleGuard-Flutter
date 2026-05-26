@@ -212,11 +212,7 @@ class _ScanQrPageState extends ConsumerState<ScanQrPage> {
                     style: AppTextStyle.subtitle.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                IconButton(
-                  onPressed: _busy ? null : _pickFromGallery,
-                  icon: Icon(Icons.photo_library_outlined, size: 24.sp, color: AppColor.primary),
-                  tooltip: ScanStrings.scanFromGallery,
-                ),
+                SizedBox(width: 48.w),
               ],
             ),
           ),

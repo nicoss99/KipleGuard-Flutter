@@ -10,6 +10,8 @@ class AttendanceState {
     this.loading = false,
     this.error,
     this.shiftFlow = AttendanceShiftFlow.none,
+    this.fromCache = false,
+    this.cacheSavedAt,
   });
 
   final int tabIndex;
@@ -18,6 +20,8 @@ class AttendanceState {
   final bool loading;
   final String? error;
   final AttendanceShiftFlow shiftFlow;
+  final bool fromCache;
+  final DateTime? cacheSavedAt;
 
   AttendanceState copyWith({
     int? tabIndex,
@@ -27,6 +31,9 @@ class AttendanceState {
     String? error,
     bool clearError = false,
     AttendanceShiftFlow? shiftFlow,
+    bool? fromCache,
+    DateTime? cacheSavedAt,
+    bool clearCacheMeta = false,
   }) {
     return AttendanceState(
       tabIndex: tabIndex ?? this.tabIndex,
@@ -35,6 +42,8 @@ class AttendanceState {
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       shiftFlow: shiftFlow ?? this.shiftFlow,
+      fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
+      cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );
   }
 }

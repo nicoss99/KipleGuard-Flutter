@@ -33,7 +33,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apiLogoutFailed => 'Logout failed';
 
   @override
-  String get apiNetworkError => 'Network error';
+  String get apiNetworkError =>
+      'No internet connection. Check your Wi‑Fi or mobile data and try again.';
 
   @override
   String get apiProfileLoadFailed => 'Failed to load profile';
@@ -190,6 +191,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingDuration => 'Duration';
 
   @override
+  String get bookingEmptyAllBookings => 'No bookings for this day.';
+
+  @override
   String get bookingEmptyCheckedIn => 'No checked-in bookings for this day.';
 
   @override
@@ -255,6 +259,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingSubmittedOn => 'Booking submitted on';
+
+  @override
+  String get bookingTabAllBookings => 'Booking(s)';
 
   @override
   String get bookingTabCheckedIn => 'Checked in';
@@ -481,6 +488,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileOfflineData => 'Offline Data';
+
+  @override
+  String get offlineCachedSection => 'Cached on this device';
+
+  @override
+  String get offlineNoPending => 'No pending items to sync.';
+
+  @override
+  String offlinePendingIncidents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count incident reports waiting to sync',
+      one: '1 incident report waiting to sync',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get offlinePendingSection => 'Pending sync';
+
+  @override
+  String offlineSavedAt(String time) {
+    return 'Saved $time';
+  }
+
+  @override
+  String get offlineDataMessage => 'You are offline.';
+
+  @override
+  String get offlineNoConnection =>
+      'No internet connection. Check your Wi‑Fi or mobile data and try again.';
+
+  @override
+  String get offlineNoCachedData =>
+      'No internet connection and no saved data on this device. Connect to the internet to load.';
+
+  @override
+  String offlineShowingCached(String savedAt) {
+    return 'Showing saved data from $savedAt';
+  }
+
+  @override
+  String get offlineSyncDone => 'Sync finished.';
+
+  @override
+  String get offlineSyncNow => 'Sync now';
 
   @override
   String get profilePasswordEmpty => 'Password cannot be empty';

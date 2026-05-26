@@ -20,6 +20,8 @@ class VisitorState {
     this.loadingMore = false,
     this.loading = false,
     this.error,
+    this.fromCache = false,
+    this.cacheSavedAt,
   });
 
   final DateTime selectedDay;
@@ -37,6 +39,8 @@ class VisitorState {
   final bool loadingMore;
   final bool loading;
   final String? error;
+  final bool fromCache;
+  final DateTime? cacheSavedAt;
 
   VisitorState copyWith({
     DateTime? selectedDay,
@@ -55,6 +59,9 @@ class VisitorState {
     bool? loading,
     String? error,
     bool clearError = false,
+    bool? fromCache,
+    DateTime? cacheSavedAt,
+    bool clearCacheMeta = false,
   }) {
     return VisitorState(
       selectedDay: selectedDay ?? this.selectedDay,
@@ -72,6 +79,8 @@ class VisitorState {
       loadingMore: loadingMore ?? this.loadingMore,
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
+      fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
+      cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );
   }
 }

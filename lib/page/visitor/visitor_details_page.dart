@@ -8,9 +8,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_error_message.dart';
+import '../../core/connectivity/network_connectivity.dart';
+import '../../core/offline/offline_messages.dart';
 import '../../core/app_flavor.dart';
 import '../../core/app_logger.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../widget/offline_cache_banner.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
@@ -143,6 +147,10 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
     final async = ref.watch(visitorDetailProvider(widget.visitorUuid));
     final strictBuilding = _dash?.isStrictBuildingOffice ?? false;
 
+    listenConnectivityRefresh(ref, () {
+      ref.invalidate(visitorDetailProvider(widget.visitorUuid));
+    });
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: standardPrimaryOverlayStyle(),
       child: ModalProgressHud(
@@ -176,14 +184,19 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                 ),
                 Expanded(
                   child: Center(
-                    child: Text(apiErrorMessage(e), style: AppTextStyle.body),
+                    child: Text(
+                      userFacingErrorMessage(e),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyle.body,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          data: (f) {
-            if (f == null) {
+          data: (snap) {
+            if (snap == null) {
+              final offline = ref.watch(isOnlineProvider).value == false;
               return Scaffold(
                 backgroundColor: AppColor.white,
                 body: Column(
@@ -193,11 +206,19 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                       title: VisitorStrings.detailsTitle,
                       onBack: () => context.pop(),
                     ),
+                    if (offline)
+                      OfflineCacheBanner(fromCache: false),
                     Expanded(
                       child: Center(
-                        child: Text(
-                          'Visitor not found',
-                          style: AppTextStyle.body,
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.lg),
+                          child: Text(
+                            offline
+                                ? offlineNoCachedDataMessage()
+                                : 'Visitor not found',
+                            textAlign: TextAlign.center,
+                            style: AppTextStyle.body,
+                          ),
                         ),
                       ),
                     ),
@@ -205,6 +226,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                 ),
               );
             }
+            final f = snap.fields;
             return Scaffold(
               backgroundColor: AppColor.white,
               bottomNavigationBar: _checkInBar(f),
@@ -214,6 +236,10 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                   StandardPrimaryHeader(
                     title: VisitorStrings.detailsTitle,
                     onBack: () => context.pop(),
+                  ),
+                  OfflineCacheBanner(
+                    fromCache: snap.fromCache,
+                    savedAt: snap.cacheSavedAt,
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -272,7 +298,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
                             'Submitted date',
                             _fmtDate(f.createdAt),
                           ),
-                          if (f.canShareEpass)
+                          if (f.showShareEpassButton)
                             Padding(
                               padding: EdgeInsets.fromLTRB(
                                 20.w,

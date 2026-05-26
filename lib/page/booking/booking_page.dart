@@ -1,25 +1,24 @@
-import '../../widget/app_calendar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/dashboard_prefs.dart';
-import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
-import '../../theme/app_spacing.dart';
-import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
+import '../../widget/app_calendar_picker.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
+import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'booking_provider.dart';
-import 'booking_state.dart';
 import 'booking_strings.dart';
+import 'widget/booking_date_toolbar.dart';
 import 'widget/booking_filter_sheet.dart';
-import 'widget/booking_list_tile.dart';
+import 'widget/booking_list_body.dart';
+import 'widget/booking_summary_row.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({super.key});
@@ -29,31 +28,75 @@ class BookingPage extends ConsumerStatefulWidget {
 }
 
 class _BookingPageState extends ConsumerState<BookingPage> {
-  bool _isCalendarToday(DateTime d) {
-    final n = DateTime.now();
-    return d.year == n.year && d.month == n.month && d.day == n.day;
-  }
-
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  Widget build(BuildContext context) {
+    final s = ref.watch(bookingListProvider);
+    listenConnectivityRefresh(ref, () {
       ref.read(bookingListProvider.notifier).refresh();
     });
+    ref.listen(bookingListProvider, (prev, next) {
+      final err = next.error;
+      if (err == null || err == prev?.error || !mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await showApiFailedDialog(context, message: err);
+        ref.read(bookingListProvider.notifier).clearError();
+      });
+    });
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: standardPrimaryOverlayStyle(),
+      child: ModalProgressHud(
+        inAsyncCall: s.loading,
+        child: Scaffold(
+          backgroundColor: AppColor.lightGreyBar,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              StandardPrimaryHeader(
+                title: BookingStrings.title,
+                onBack: () => context.pop(),
+                actions: [
+                  IconButton(
+                    onPressed: () => _openSearch(s.searchQuery),
+                    icon: Icon(Icons.search_rounded, size: 24.sp, color: AppColor.primary),
+                  ),
+                  IconButton(
+                    onPressed: _openFilter,
+                    icon: Icon(Icons.filter_list_rounded, size: 24.sp, color: AppColor.primary),
+                  ),
+                ],
+              ),
+              BookingDateToolbar(
+                state: s,
+                onPickDate: () => _pickDateWithDialog(s.selectedDay),
+              ),
+              OfflineCacheBanner(
+                fromCache: s.fromCache,
+                savedAt: s.cacheSavedAt,
+              ),
+              BookingSummaryRow(state: s),
+              Expanded(child: BookingListBody(state: s)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  Future<void> _pickDate(DateTime current) async {
-    final picked = await AppCalendarPicker.showDay(context: context, initial: current);
-    if (!mounted) return;
-    if (picked != null) {
-      await ref.read(bookingListProvider.notifier).setDay(picked);
-    }
+  Future<void> _pickDateWithDialog(DateTime selected) async {
+    final picked = await AppCalendarPicker.showDay(
+      context: context,
+      initial: selected,
+      okLabel: BookingStrings.apply,
+    );
+    if (!mounted || picked == null) return;
+    await ref.read(bookingListProvider.notifier).setDay(picked);
   }
 
   Future<void> _openFilter() async {
     final snap = await DashboardPrefs.loadSnapshot();
-    if (!mounted) return;
-    if (snap.residenceId.isEmpty) return;
+    if (!mounted || snap.residenceId.isEmpty) return;
     final s = ref.read(bookingListProvider);
     await showModalBottomSheet<void>(
       context: context,
@@ -80,30 +123,25 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     );
   }
 
-  Future<void> _openSearch() async {
-    final s = ref.read(bookingListProvider);
-    final controller = TextEditingController(text: s.searchQuery);
+  Future<void> _openSearch(String initialQuery) async {
+    final controller = TextEditingController(text: initialQuery);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(BookingStrings.searchTitle, style: AppTextStyle.subtitle),
+        title: Text(BookingStrings.searchTitle),
         content: TextField(
           controller: controller,
           decoration: InputDecoration(hintText: BookingStrings.searchHint),
-          style: AppTextStyle.body,
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(BookingStrings.cancel, style: AppTextStyle.bodyMuted),
+            child: Text(BookingStrings.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              BookingStrings.searchAction,
-              style: AppTextStyle.subtitle.copyWith(color: AppColor.white),
-            ),
+            child: Text(BookingStrings.searchAction),
           ),
         ],
       ),
@@ -120,241 +158,5 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       }
     }
     controller.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = ref.watch(bookingListProvider);
-    final n = ref.read(bookingListProvider.notifier);
-    final isToday = _isCalendarToday(s.selectedDay);
-    final dayLabel = isToday
-        ? BookingStrings.today
-        : DateFormat('d MMM yyyy', 'en_US').format(s.selectedDay);
-    final appBarTitle = isToday ? BookingStrings.title : BookingStrings.pastBookingTitle;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: standardPrimaryOverlayStyle(),
-      child: ModalProgressHud(
-        inAsyncCall: s.loading,
-        child: Scaffold(
-          backgroundColor: AppColor.white,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              StandardPrimaryHeader(
-                title: appBarTitle,
-                onBack: () => context.pop(),
-                actions: isToday
-                    ? <Widget>[
-                        IconButton(
-                          onPressed: _openSearch,
-                          icon: Icon(Icons.search_rounded, color: AppColor.black, size: 24.sp),
-                        ),
-                        IconButton(
-                          onPressed: _openFilter,
-                          icon: Icon(Icons.filter_list_rounded, color: AppColor.black, size: 24.sp),
-                        ),
-                      ]
-                    : const [],
-              ),
-              Material(
-                color: AppColor.white,
-                child: SizedBox(
-                  height: 52.h,
-                  child: isToday
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              onPressed: () => n.setDay(
-                                s.selectedDay.subtract(const Duration(days: 1)),
-                              ),
-                              icon: Icon(
-                                Icons.chevron_left_rounded,
-                                color: AppColor.primary,
-                                size: 28.sp,
-                              ),
-                            ),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _pickDate(s.selectedDay),
-                                borderRadius: BorderRadius.circular(AppRadius.sm),
-                                child: Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                                    child: Text(
-                                      dayLabel,
-                                      textAlign: TextAlign.center,
-                                      style: AppTextStyle.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () =>
-                                  n.setDay(s.selectedDay.add(const Duration(days: 1))),
-                              icon: Icon(
-                                Icons.chevron_right_rounded,
-                                color: AppColor.primary,
-                                size: 28.sp,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => _pickDate(s.selectedDay),
-                              icon: Icon(
-                                Icons.calendar_today_rounded,
-                                color: AppColor.primary,
-                                size: 18.sp,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  onPressed: () => n.setDay(
-                                    s.selectedDay.subtract(const Duration(days: 1)),
-                                  ),
-                                  icon: Icon(
-                                    Icons.chevron_left_rounded,
-                                    color: AppColor.primary,
-                                    size: 28.sp,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () => _pickDate(s.selectedDay),
-                                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                                    child: Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                                        child: Text(
-                                          dayLabel,
-                                          textAlign: TextAlign.center,
-                                          style: AppTextStyle.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 48.w),
-                              ],
-                            ),
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              bottom: 0,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    onPressed: () =>
-                                        n.setDay(s.selectedDay.add(const Duration(days: 1))),
-                                    icon: Icon(
-                                      Icons.chevron_right_rounded,
-                                      color: AppColor.primary,
-                                      size: 28.sp,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => _pickDate(s.selectedDay),
-                                    icon: Icon(
-                                      Icons.calendar_today_rounded,
-                                      color: AppColor.primary,
-                                      size: 18.sp,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-              if (isToday)
-                DefaultTabController(
-                  key: ValueKey(s.tab),
-                  length: 2,
-                  initialIndex: s.tab == BookingTab.upcoming ? 1 : 0,
-                  child: TabBar(
-                    labelColor: AppColor.primary,
-                    unselectedLabelColor: AppColor.textSecondary,
-                    indicatorColor: AppColor.primary,
-                    onTap: (i) => n.setTab(
-                      i == 0 ? BookingTab.checkedIn : BookingTab.upcoming,
-                    ),
-                    tabs: [
-                      Tab(text: BookingStrings.tabCheckedIn),
-                      Tab(text: BookingStrings.tabUpcoming),
-                    ],
-                  ),
-                ),
-              if (s.error != null)
-                Padding(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  child: Text(
-                    s.error!,
-                    style: AppTextStyle.body.copyWith(color: AppColor.red),
-                  ),
-                ),
-              Expanded(
-                child: RefreshIndicator(
-                  color: AppColor.primary,
-                  onRefresh: () => n.refresh(),
-                  child: s.items.isEmpty && !s.loading
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            SizedBox(height: 80.h),
-                            Center(
-                              child: Text(
-                                s.tab == BookingTab.checkedIn
-                                    ? BookingStrings.emptyCheckedIn
-                                    : BookingStrings.emptyUpcoming,
-                                style: AppTextStyle.bodyMuted,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.separated(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.only(bottom: 24.h),
-                          itemCount: s.items.length,
-                          separatorBuilder: (_, _) => Divider(
-                            height: 1,
-                            color: AppColor.greyBorder.withValues(
-                              alpha: 0.35,
-                            ),
-                          ),
-                          itemBuilder: (ctx, i) {
-                            final item = s.items[i];
-                            return BookingListTile(
-                              item: item,
-                              onTap: () => context.pushNamed(
-                                AppRoute.bookingDetail.name,
-                                pathParameters: {
-                                  'bookingUuid': '${item.id}',
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

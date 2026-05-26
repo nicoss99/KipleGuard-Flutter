@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart';
@@ -166,8 +167,4 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 }
 
-String _dioMessage(DioException e) {
-  final data = e.response?.data;
-  if (data is Map && data['message'] is String) return data['message']! as String;
-  return e.message ?? 'Network error';
-}
+String _dioMessage(DioException e) => userFacingErrorMessage(e);

@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/app_logger.dart';
+import '../../core/cache/app_cache_store.dart';
+import '../../core/cache/guard_cache_keys.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
@@ -104,6 +106,12 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       await ReportingPrefs.writeIncidentCategories(
         snap.residenceId,
         encodeIncidentTypesCache(types),
+      );
+      await AppCacheStore.write(
+        GuardCacheKeys.incidentTypes(snap.residenceId),
+        <String, dynamic>{
+          'items': types.map((t) => <String, dynamic>{'key': t.key, 'label': t.label}).toList(),
+        },
       );
       if (!mounted) return;
       setState(() {

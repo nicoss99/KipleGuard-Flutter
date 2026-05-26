@@ -24,6 +24,15 @@ class GuardProfile {
         profileImageUrl: json['profile_image_url'] as String?,
         role: json['role'] as String? ?? '',
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        if (profileImageUrl != null) 'profile_image_url': profileImageUrl,
+        'role': role,
+      };
 }
 
 class GuardResidence {

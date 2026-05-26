@@ -21,8 +21,10 @@ abstract final class BookingStrings {
   static String get searchAction => appL10n.bookingSearchAction;
   static String get cancel => appL10n.bookingCancel;
   static String get filterPickOne => appL10n.bookingFilterPickOne;
+  static String get tabAllBookings => appL10n.bookingTabAllBookings;
   static String get tabCheckedIn => appL10n.bookingTabCheckedIn;
   static String get tabUpcoming => appL10n.bookingTabUpcoming;
+  static String get emptyAllBookings => appL10n.bookingEmptyAllBookings;
   static String get emptyCheckedIn => appL10n.bookingEmptyCheckedIn;
   static String get emptyUpcoming => appL10n.bookingEmptyUpcoming;
   static String get loadFailed => appL10n.bookingLoadFailed;

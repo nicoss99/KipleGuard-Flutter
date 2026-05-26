@@ -14,6 +14,8 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
+import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'attendance_model.dart';
 import 'attendance_provider.dart';
@@ -59,6 +61,10 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(attendanceProvider);
+    listenConnectivityRefresh(
+      ref,
+      () => ref.read(attendanceProvider.notifier).refreshRecords(),
+    );
     ref.listen(attendanceProvider, (prev, next) {
       final err = next.error;
       if (err == null || err == prev?.error || !mounted) return;
@@ -116,6 +122,8 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
                     _RecordsTab(
                       selectedDay: s.selectedDay,
                       records: s.records,
+                      fromCache: s.fromCache,
+                      cacheSavedAt: s.cacheSavedAt,
                       error: s.error,
                       onRefresh: () => ref
                           .read(attendanceProvider.notifier)
@@ -319,6 +327,8 @@ class _RecordsTab extends StatelessWidget {
   const _RecordsTab({
     required this.selectedDay,
     required this.records,
+    required this.fromCache,
+    required this.cacheSavedAt,
     required this.error,
     required this.onRefresh,
     required this.onPickDate,
@@ -328,6 +338,8 @@ class _RecordsTab extends StatelessWidget {
 
   final DateTime selectedDay;
   final List<AttendanceRecordRow> records;
+  final bool fromCache;
+  final DateTime? cacheSavedAt;
   final String? error;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onPickDate;
@@ -344,6 +356,12 @@ class _RecordsTab extends StatelessWidget {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            SliverToBoxAdapter(
+              child: OfflineCacheBanner(
+                fromCache: fromCache,
+                savedAt: cacheSavedAt,
+              ),
+            ),
             SliverToBoxAdapter(
               child: AttendanceRecordsDateHeader(
                 selectedDay: selectedDay,

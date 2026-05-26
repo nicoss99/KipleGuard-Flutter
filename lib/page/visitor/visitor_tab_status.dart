@@ -16,8 +16,8 @@ abstract final class VisitorTabStatus {
         tabCheckedIn => GuardVisitorApiStatus.checkedIn,
         tabUpcoming => GuardVisitorApiStatus.pending,
         tabOvertime => GuardVisitorApiStatus.checkedOut,
-        tabAllVisitors => GuardVisitorApiStatus.pending,
-        _ => GuardVisitorApiStatus.pending,
+        tabAllVisitors => '',
+        _ => '',
       };
 
   static bool usesAllApiStatuses(int tab) => tab == tabAllVisitors;

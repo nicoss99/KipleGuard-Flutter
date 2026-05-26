@@ -145,7 +145,7 @@ abstract class AppLocalizations {
   /// No description provided for @apiNetworkError.
   ///
   /// In en, this message translates to:
-  /// **'Network error'**
+  /// **'No internet connection. Check your Wi‑Fi or mobile data and try again.'**
   String get apiNetworkError;
 
   /// No description provided for @apiProfileLoadFailed.
@@ -448,6 +448,12 @@ abstract class AppLocalizations {
   /// **'Duration'**
   String get bookingDuration;
 
+  /// No description provided for @bookingEmptyAllBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings for this day.'**
+  String get bookingEmptyAllBookings;
+
   /// No description provided for @bookingEmptyCheckedIn.
   ///
   /// In en, this message translates to:
@@ -579,6 +585,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booking submitted on'**
   String get bookingSubmittedOn;
+
+  /// No description provided for @bookingTabAllBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking(s)'**
+  String get bookingTabAllBookings;
 
   /// No description provided for @bookingTabCheckedIn.
   ///
@@ -1017,6 +1029,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline Data'**
   String get profileOfflineData;
+
+  /// No description provided for @offlineCachedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached on this device'**
+  String get offlineCachedSection;
+
+  /// No description provided for @offlineNoPending.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending items to sync.'**
+  String get offlineNoPending;
+
+  /// No description provided for @offlinePendingIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 incident report waiting to sync} other{{count} incident reports waiting to sync}}'**
+  String offlinePendingIncidents(int count);
+
+  /// No description provided for @offlinePendingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get offlinePendingSection;
+
+  /// No description provided for @offlineSavedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {time}'**
+  String offlineSavedAt(String time);
+
+  /// No description provided for @offlineDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline.'**
+  String get offlineDataMessage;
+
+  /// No description provided for @offlineNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your Wi‑Fi or mobile data and try again.'**
+  String get offlineNoConnection;
+
+  /// No description provided for @offlineNoCachedData.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection and no saved data on this device. Connect to the internet to load.'**
+  String get offlineNoCachedData;
+
+  /// No description provided for @offlineShowingCached.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing saved data from {savedAt}'**
+  String offlineShowingCached(String savedAt);
+
+  /// No description provided for @offlineSyncDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync finished.'**
+  String get offlineSyncDone;
+
+  /// No description provided for @offlineSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get offlineSyncNow;
 
   /// No description provided for @profilePasswordEmpty.
   ///

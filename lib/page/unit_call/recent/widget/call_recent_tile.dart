@@ -66,6 +66,16 @@ class CallRecentTile extends StatelessWidget {
                         row.receiverTypeLabel,
                         style: AppTextStyle.bodyMuted.copyWith(fontSize: 12.sp),
                       ),
+                      if (row.receiverPhone.isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          row.receiverPhone,
+                          style: AppTextStyle.body.copyWith(
+                            color: AppColor.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                       if (row.callStatus.isNotEmpty) ...[
                         SizedBox(height: 4.h),
                         Text(

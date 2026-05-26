@@ -10,6 +10,7 @@ class CallHistoryRow {
     required this.receiverProfileUuid,
     required this.callAtRaw,
     required this.callStatus,
+    this.receiverPhone = '',
   });
 
   final String uuid;
@@ -21,4 +22,18 @@ class CallHistoryRow {
   final String receiverProfileUuid;
   final String callAtRaw;
   final String callStatus;
+  final String receiverPhone;
+
+  CallHistoryRow copyWith({String? receiverPhone}) => CallHistoryRow(
+        uuid: uuid,
+        residenceUuid: residenceUuid,
+        receiverName: receiverName,
+        receiverTypeLabel: receiverTypeLabel,
+        unitId: unitId,
+        unitName: unitName,
+        receiverProfileUuid: receiverProfileUuid,
+        callAtRaw: callAtRaw,
+        callStatus: callStatus,
+        receiverPhone: receiverPhone ?? this.receiverPhone,
+      );
 }

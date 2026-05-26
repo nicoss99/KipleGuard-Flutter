@@ -9,6 +9,8 @@ class CallRecentState {
     this.searchQuery = '',
     this.residenceName = '',
     this.residenceUuid = '',
+    this.fromCache = false,
+    this.cacheSavedAt,
   });
 
   final bool loading;
@@ -18,6 +20,8 @@ class CallRecentState {
   final String searchQuery;
   final String residenceName;
   final String residenceUuid;
+  final bool fromCache;
+  final DateTime? cacheSavedAt;
 
   List<CallHistoryRow> get visibleRows {
     final q = searchQuery.trim().toUpperCase();
@@ -34,6 +38,9 @@ class CallRecentState {
     String? searchQuery,
     String? residenceName,
     String? residenceUuid,
+    bool? fromCache,
+    DateTime? cacheSavedAt,
+    bool clearCacheMeta = false,
   }) {
     return CallRecentState(
       loading: loading ?? this.loading,
@@ -43,6 +50,8 @@ class CallRecentState {
       searchQuery: searchQuery ?? this.searchQuery,
       residenceName: residenceName ?? this.residenceName,
       residenceUuid: residenceUuid ?? this.residenceUuid,
+      fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
+      cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );
   }
 }

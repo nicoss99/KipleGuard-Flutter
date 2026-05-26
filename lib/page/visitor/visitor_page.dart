@@ -7,6 +7,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../theme/app_color.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
+import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'visitor_provider.dart';
 import 'visitor_search_delegate.dart';
@@ -36,6 +38,9 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(visitorProvider);
+    listenConnectivityRefresh(ref, () {
+      ref.read(visitorProvider.notifier).refresh();
+    });
     ref.listen(visitorProvider, (prev, next) {
       final err = next.error;
       if (err == null || err == prev?.error || !mounted) return;
@@ -74,6 +79,10 @@ class _VisitorPageState extends ConsumerState<VisitorPage> {
                 VisitorDateToolbar(
                   state: s,
                   onPickDate: () => _pickDateWithDialog(context, s.selectedDay),
+                ),
+                OfflineCacheBanner(
+                  fromCache: s.fromCache,
+                  savedAt: s.cacheSavedAt,
                 ),
                 if (!s.allOvertimeSection) VisitorSummaryRow(state: s),
                 Expanded(child: VisitorListBody(state: s)),

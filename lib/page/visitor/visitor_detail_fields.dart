@@ -261,6 +261,10 @@ class VisitorDetailFields {
 
   bool get hasQr => qrCode.trim().isNotEmpty;
 
+  /// Android `VisitorDetailsActivity`: share button is always in layout when QR exists;
+  /// native does not gate on `can_share_epass` (uses `qr_code` / pass payload only).
+  bool get showShareEpassButton => hasQr;
+
   bool get checkedIn => latestScanType.toUpperCase() == 'IN';
 
   bool get _oneTimeDone =>

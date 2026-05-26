@@ -20,7 +20,8 @@ Future<void> showApiFailedDialog(
           message.toLowerCase().contains('logged in on another device'))) {
     return Future<void>.value();
   }
-  final text = message ?? (error != null ? apiErrorMessage(error) : 'Something went wrong');
+  final text = message ??
+      (error != null ? userFacingErrorMessage(error) : 'Something went wrong');
   return showDialog<void>(
     context: context,
     barrierDismissible: false,

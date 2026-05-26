@@ -1,10 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-
-
 import '../../core/api_error_message.dart';
-
+import '../../core/offline/offline_messages.dart';
+import '../../core/cache/guard_list_cache.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/network/dio_network.dart';
 
 import '../auth/guard_visitor_repository.dart';
 
@@ -167,6 +169,29 @@ class VisitorNotifier extends Notifier<VisitorState> {
 
     final overtimeSection = allOvertimeSection ?? state.allOvertimeSection;
 
+    if (!await isDeviceOnline(ref)) {
+      final snap = await DashboardPrefs.loadSnapshot();
+      if (snap.residenceId.isNotEmpty) {
+        final cached = await _loadVisitorsFromCache(
+          residenceUuid: snap.residenceId,
+          day: day,
+          tab: tab,
+          search: search,
+          query: query,
+          allOvertimeSection: overtimeSection,
+        );
+        if (cached != null) {
+          state = cached;
+          return;
+        }
+      }
+      state = state.copyWith(
+        loading: false,
+        error: offlineNoCachedDataMessage(),
+      );
+      return;
+    }
+
     try {
 
       final data = await _fetchPageData(
@@ -184,43 +209,93 @@ class VisitorNotifier extends Notifier<VisitorState> {
       );
 
       state = VisitorState(
-
         selectedDay: day,
-
         tabIndex: tab,
-
         items: data.items,
-
         page: 1,
-
         hasMore: false,
-
         loadingMore: false,
-
         allOvertimeSection: overtimeSection,
-
         searchActive: search && query.trim().isNotEmpty,
-
         searchQuery: search && query.trim().isNotEmpty ? query : '',
-
         totalCheckIn: data.totalCheckIn,
-
         totalIncoming: data.totalIncoming,
-
         totalOvertime: data.totalOvertime,
-
         totalVisitors: data.totalVisitors,
-
         loading: false,
-
+        fromCache: false,
+        cacheSavedAt: null,
       );
-
-    } catch (e) {
-
+    } on DioException catch (e) {
+      final snap = await DashboardPrefs.loadSnapshot();
+      if (isNetworkError(e) && snap.residenceId.isNotEmpty) {
+        final cached = await _loadVisitorsFromCache(
+          residenceUuid: snap.residenceId,
+          day: day,
+          tab: tab,
+          search: search,
+          query: query,
+          allOvertimeSection: overtimeSection,
+        );
+        if (cached != null) {
+          state = cached;
+          return;
+        }
+      }
       state = state.copyWith(loading: false, error: apiErrorMessage(e));
-
+    } catch (e) {
+      state = state.copyWith(loading: false, error: apiErrorMessage(e));
     }
+  }
 
+  Future<VisitorState?> _loadVisitorsFromCache({
+    required String residenceUuid,
+    required DateTime day,
+    required int tab,
+    required bool search,
+    required String query,
+    required bool allOvertimeSection,
+  }) async {
+    final cached = await GuardListCache.readVisitors(
+      residenceUuid: residenceUuid,
+      day: day,
+    );
+    if (cached == null) return null;
+    var items = cached.items;
+    if (!VisitorTabStatus.usesAllApiStatuses(tab)) {
+      final status = VisitorTabStatus.apiStatusForTab(tab);
+      items = items.where((e) => e.visitStatus == status).toList();
+    }
+    if (search && query.trim().isNotEmpty) {
+      final q = query.trim().toLowerCase();
+      items = items
+          .where(
+            (e) =>
+                e.name.toLowerCase().contains(q) ||
+                e.unitLabel.toLowerCase().contains(q) ||
+                e.carPlate.toLowerCase().contains(q) ||
+                e.passId.toLowerCase().contains(q),
+          )
+          .toList();
+    }
+    return VisitorState(
+      selectedDay: day,
+      tabIndex: tab,
+      items: items,
+      page: 1,
+      hasMore: false,
+      loadingMore: false,
+      allOvertimeSection: allOvertimeSection,
+      searchActive: search && query.trim().isNotEmpty,
+      searchQuery: search && query.trim().isNotEmpty ? query : '',
+      totalCheckIn: cached.totalCheckIn,
+      totalIncoming: cached.totalIncoming,
+      totalOvertime: cached.totalOvertime,
+      totalVisitors: cached.totalVisitors,
+      loading: false,
+      fromCache: true,
+      cacheSavedAt: cached.savedAt,
+    );
   }
 
 
@@ -253,16 +328,18 @@ class VisitorNotifier extends Notifier<VisitorState> {
 
     final dayResult = await repo.fetchVisitorsForDay(snap.residenceId, date: day);
 
-
-
     var items = dayResult.items;
 
-    if (!VisitorTabStatus.usesAllApiStatuses(tab)) {
-
+    if (tab == VisitorTabStatus.tabUpcoming) {
+      final pending = await repo.fetchVisitors(
+        snap.residenceId,
+        date: day,
+        status: GuardVisitorApiStatus.pending,
+      );
+      items = pending.items;
+    } else if (!VisitorTabStatus.usesAllApiStatuses(tab)) {
       final status = VisitorTabStatus.apiStatusForTab(tab);
-
       items = items.where((e) => e.visitStatus == status).toList();
-
     }
 
 
@@ -295,24 +372,26 @@ class VisitorNotifier extends Notifier<VisitorState> {
 
     final c = dayResult.counts;
 
-    return _VisitorFetchData(
-
-      items: items,
-
-      hasMore: false,
-
+    await GuardListCache.saveVisitors(
+      residenceUuid: snap.residenceId,
+      day: day,
+      responseDate: dayResult.date,
       totalCheckIn: c.checkedIn,
-
       totalIncoming: c.pending,
-
       totalOvertime: c.checkedOut,
-
       totalVisitors: c.total,
-
+      items: dayResult.items,
     );
 
+    return _VisitorFetchData(
+      items: items,
+      hasMore: false,
+      totalCheckIn: c.checkedIn,
+      totalIncoming: c.pending,
+      totalOvertime: c.checkedOut,
+      totalVisitors: c.total,
+    );
   }
-
 }
 
 

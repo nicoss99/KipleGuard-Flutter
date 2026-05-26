@@ -59,7 +59,7 @@ class GuardBookingRow {
     final bookingTime = json['booking_time'];
     final time = bookingTime is Map<String, dynamic> ? bookingTime : null;
     return GuardBookingRow(
-      id: json['id'] as int? ?? int.tryParse('${json['id']}') ?? 0,
+      id: _jsonInt(json['id']),
       bookingNumber: json['booking_number']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       mobileNumber: json['mobile_number']?.toString() ?? '',
@@ -72,17 +72,38 @@ class GuardBookingRow {
       submittedDate: json['submitted_date']?.toString() ?? '',
       etaArrivalLabel: json['eta_arrival_label']?.toString(),
       etaExitLabel: json['eta_exit_label']?.toString(),
-      qrCodeData: json['qr_code_data']?.toString(),
+      qrCodeData: json['qr_code_data']?.toString() ?? json['pass_code']?.toString(),
       callPhone: json['call_phone']?.toString(),
-      attendeeCount: json['attendee_count'] as int?,
+      attendeeCount: _jsonIntOrNull(json['attendee_count']),
       actualArrivalTime: json['actual_arrival_time']?.toString() ??
           time?['actual_arrival_time']?.toString(),
       actualExitTime: json['actual_exit_time']?.toString() ??
           time?['actual_exit_time']?.toString(),
-      actualArrivalLabel: time?['eta_arrival_label']?.toString(),
-      actualExitLabel: time?['eta_exit_label']?.toString(),
+      actualArrivalLabel: json['actual_arrival_label']?.toString(),
+      actualExitLabel: json['actual_exit_label']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'booking_number': bookingNumber,
+        'name': name,
+        'mobile_number': mobileNumber,
+        'unit': <String, dynamic>{'display_label': unitLabel},
+        'category': category,
+        'booking_name': bookingName,
+        'guard_status': guardStatus,
+        'time_range_label': timeRangeLabel,
+        'duration_label': durationLabel,
+        'submitted_date': submittedDate,
+        if (etaArrivalLabel != null) 'eta_arrival_label': etaArrivalLabel,
+        if (etaExitLabel != null) 'eta_exit_label': etaExitLabel,
+        if (qrCodeData != null) 'qr_code_data': qrCodeData,
+        if (callPhone != null) 'call_phone': callPhone,
+        if (attendeeCount != null) 'attendee_count': attendeeCount,
+        if (actualArrivalTime != null) 'actual_arrival_time': actualArrivalTime,
+        if (actualExitTime != null) 'actual_exit_time': actualExitTime,
+      };
 }
 
 class GuardBookingListResult {
@@ -111,11 +132,24 @@ class GuardBookingCounts {
   final int upcoming;
 
   factory GuardBookingCounts.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const GuardBookingCounts(allBookings: 0, checkedIn: 0, upcoming: 0);
+    if (json == null) {
+      return const GuardBookingCounts(allBookings: 0, checkedIn: 0, upcoming: 0);
+    }
     return GuardBookingCounts(
-      allBookings: json['all_bookings'] as int? ?? 0,
-      checkedIn: json['checked_in'] as int? ?? 0,
-      upcoming: json['upcoming'] as int? ?? 0,
+      allBookings: _jsonInt(json['all_bookings']),
+      checkedIn: _jsonInt(json['checked_in']),
+      upcoming: _jsonInt(json['upcoming']),
     );
   }
+}
+
+int _jsonInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse('$value') ?? 0;
+}
+
+int? _jsonIntOrNull(dynamic value) {
+  if (value == null) return null;
+  return _jsonInt(value);
 }

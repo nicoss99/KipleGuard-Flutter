@@ -5,7 +5,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
+import '../../core/cache/app_cache_persistence.dart';
+import '../../core/cache/guard_unit_call_cache.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/network/dio_network.dart';
 import '../../core/unit_call_session_prefs.dart';
 import '../../core/api/contracts/guard_unit_call_repository.dart';
 import 'guard_unit_call_repository.dart';
@@ -17,11 +21,17 @@ import 'unit_call_strings.dart';
 final unitCallProvider = NotifierProvider<UnitCallNotifier, UnitCallState>(UnitCallNotifier.new);
 
 class UnitCallNotifier extends Notifier<UnitCallState> {
-  @override
-  UnitCallState build() => const UnitCallState();
-
   final Map<String, List<UnitFloorOption>> _floorsByBlock = {};
   final Map<String, List<CallUnitRow>> _unitsByBlockFloor = {};
+
+  late final Future<void> Function() _backgroundPersistHandler = persistDirectoryCache;
+
+  @override
+  UnitCallState build() {
+    AppCachePersistence.register(_backgroundPersistHandler);
+    ref.onDispose(() => AppCachePersistence.unregister(_backgroundPersistHandler));
+    return const UnitCallState();
+  }
 
   GuardUnitCallRepository get _repo => ref.read(guardUnitCallRepositoryProvider);
 
@@ -51,12 +61,51 @@ class UnitCallNotifier extends Notifier<UnitCallState> {
       clearError: true,
     );
 
+    if (!await isDeviceOnline(ref)) {
+      final cached = await GuardUnitCallCache.read(snap.residenceId);
+      if (cached != null) {
+        _applyDirectoryCache(cached);
+        state = state.copyWith(
+          loading: false,
+          step: cached.officeMode ? UnitCallStep.units : UnitCallStep.blocks,
+          blocks: cached.blocks,
+          units: cached.officeMode ? cached.officeUnits : const [],
+          clearError: true,
+        );
+        return;
+      }
+    }
+
     final session = await readUnitCallSessionRestore(snap.residenceId);
     if (office) {
       await _loadOfficeUnits(session);
     } else {
       await _loadBlocks(session);
     }
+  }
+
+  void _applyDirectoryCache(UnitCallDirectoryCache cached) {
+    _floorsByBlock
+      ..clear()
+      ..addAll(cached.floorsByBlock);
+    _unitsByBlockFloor
+      ..clear()
+      ..addAll(cached.unitsByBlockFloor);
+  }
+
+  Future<void> persistDirectoryCache() async {
+    final id = state.residenceUuid;
+    if (id.isEmpty) return;
+    if (state.officeMode && state.units.isEmpty) return;
+    if (!state.officeMode && state.blocks.isEmpty) return;
+    await GuardUnitCallCache.save(
+      residenceUuid: id,
+      officeMode: state.officeMode,
+      blocks: state.blocks,
+      floorsByBlock: _floorsByBlock,
+      unitsByBlockFloor: _unitsByBlockFloor,
+      officeUnits: state.officeMode ? state.units : const [],
+    );
   }
 
   Future<void> refreshFromNetwork() async {
@@ -174,8 +223,10 @@ class UnitCallNotifier extends Notifier<UnitCallState> {
         searchQuery: '',
       );
       await _continueSession(session);
+      await persistDirectoryCache();
     } on DioException catch (e, st) {
       AppLog.error('Unit blocks failed', tag: 'UnitCall', error: e, stackTrace: st);
+      if (await _restoreDirectoryFromCacheOnNetworkError(id, e)) return;
       state = state.copyWith(
         loading: false,
         refreshing: false,
@@ -215,8 +266,10 @@ class UnitCallNotifier extends Notifier<UnitCallState> {
         expandedUnitIds: session?.expandedIds ?? {},
       );
       _persistSession();
+      await persistDirectoryCache();
     } on DioException catch (e, st) {
       AppLog.error('Unit list failed', tag: 'UnitCall', error: e, stackTrace: st);
+      if (await _restoreDirectoryFromCacheOnNetworkError(id, e)) return;
       state = state.copyWith(
         loading: false,
         refreshing: false,
@@ -232,6 +285,26 @@ class UnitCallNotifier extends Notifier<UnitCallState> {
         error: 'Something went wrong',
       );
     }
+  }
+
+  Future<bool> _restoreDirectoryFromCacheOnNetworkError(
+    String residenceId,
+    DioException e,
+  ) async {
+    if (!isNetworkError(e)) return false;
+    final cached = await GuardUnitCallCache.read(residenceId);
+    if (cached == null) return false;
+    _applyDirectoryCache(cached);
+    state = state.copyWith(
+      loading: false,
+      refreshing: false,
+      stepLoading: false,
+      step: cached.officeMode ? UnitCallStep.units : UnitCallStep.blocks,
+      blocks: cached.blocks,
+      units: cached.officeMode ? cached.officeUnits : const [],
+      clearError: true,
+    );
+    return true;
   }
 
   Future<void> _continueSession(UnitCallSessionRestore? session) async {

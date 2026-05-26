@@ -1,11 +1,16 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/api_error_message.dart';
+import '../../core/offline/offline_messages.dart';
 import '../../core/app_logger.dart';
+import '../../core/cache/guard_list_cache.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
+import '../../core/network/dio_network.dart';
 import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart' show DashboardPrefs, DashboardSnapshot;
 import '../auth/guard_attendance_repository.dart';
@@ -70,6 +75,28 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
     }
     _logResidenceValidation('refreshRecords', snap: snap);
     if (showLoading) state = state.copyWith(loading: true, clearError: true);
+
+    if (!await isDeviceOnline(ref)) {
+      final cached = await GuardListCache.readAttendance(
+        residenceUuid: snap.residenceId,
+        day: state.selectedDay,
+      );
+      if (cached != null) {
+        state = state.copyWith(
+          records: cached.records,
+          loading: false,
+          fromCache: true,
+          cacheSavedAt: cached.savedAt,
+        );
+        return;
+      }
+      state = state.copyWith(
+        loading: false,
+        error: offlineNoCachedDataMessage(),
+      );
+      return;
+    }
+
     try {
       final repo = ref.read(guardAttendanceRepositoryProvider);
       final guardName = (await AuthPrefs.readUserName()) ?? '';
@@ -78,10 +105,35 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
         fromDay: state.selectedDay,
         toDay: state.selectedDay,
       );
-      state = state.copyWith(
-        records: repo.toRecordRows(list, guardName: guardName),
-        loading: false,
+      final records = repo.toRecordRows(list, guardName: guardName);
+      await GuardListCache.saveAttendance(
+        residenceUuid: snap.residenceId,
+        day: state.selectedDay,
+        records: records,
       );
+      state = state.copyWith(
+        records: records,
+        loading: false,
+        clearCacheMeta: true,
+      );
+    } on DioException catch (e, st) {
+      AppLog.error('Attendance list failed', tag: 'Attendance', error: e, stackTrace: st);
+      if (isNetworkError(e)) {
+        final cached = await GuardListCache.readAttendance(
+          residenceUuid: snap.residenceId,
+          day: state.selectedDay,
+        );
+        if (cached != null) {
+          state = state.copyWith(
+            records: cached.records,
+            loading: false,
+            fromCache: true,
+            cacheSavedAt: cached.savedAt,
+          );
+          return;
+        }
+      }
+      state = state.copyWith(loading: false, error: apiErrorMessage(e));
     } catch (e, st) {
       AppLog.error('Attendance list failed', tag: 'Attendance', error: e, stackTrace: st);
       state = state.copyWith(loading: false, error: apiErrorMessage(e));

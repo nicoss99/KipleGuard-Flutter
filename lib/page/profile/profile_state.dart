@@ -12,6 +12,8 @@ class ProfileState {
     this.residences = const [],
     this.showSave = false,
     this.error,
+    this.fromCache = false,
+    this.cacheSavedAt,
   });
 
   final bool loading;
@@ -23,6 +25,8 @@ class ProfileState {
   final List<GuardResidence> residences;
   final bool showSave;
   final String? error;
+  final bool fromCache;
+  final DateTime? cacheSavedAt;
 
   ProfileState copyWith({
     bool? loading,
@@ -34,7 +38,10 @@ class ProfileState {
     List<GuardResidence>? residences,
     bool? showSave,
     String? error,
+    bool? fromCache,
+    DateTime? cacheSavedAt,
     bool clearError = false,
+    bool clearCacheMeta = false,
   }) {
     return ProfileState(
       loading: loading ?? this.loading,
@@ -46,6 +53,8 @@ class ProfileState {
       residences: residences ?? this.residences,
       showSave: showSave ?? this.showSave,
       error: clearError ? null : (error ?? this.error),
+      fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
+      cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );
   }
 }

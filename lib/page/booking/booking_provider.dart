@@ -1,8 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/api_error_message.dart';
+import '../../core/offline/offline_messages.dart';
 import '../../core/app_logger.dart';
+import '../../core/cache/guard_list_cache.dart';
+import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/network/dio_network.dart';
 import 'booking_filter_query.dart';
 import 'booking_list_filters.dart';
 import 'booking_model.dart';
@@ -16,7 +21,21 @@ final bookingListProvider =
 
 class BookingListNotifier extends Notifier<BookingListState> {
   @override
-  BookingListState build() => BookingListState.initial();
+  BookingListState build() {
+    Future<void>.microtask(refresh);
+    return BookingListState.initial();
+  }
+
+  void clearError() {
+    if (state.error != null) {
+      state = state.copyWith(clearError: true);
+    }
+  }
+
+  Future<void> previousDay() =>
+      setDay(state.selectedDay.subtract(const Duration(days: 1)));
+
+  Future<void> nextDay() => setDay(state.selectedDay.add(const Duration(days: 1)));
 
   Future<void> setDay(DateTime day) async {
     final d = DateTime(day.year, day.month, day.day);
@@ -63,6 +82,7 @@ class BookingListNotifier extends Notifier<BookingListState> {
   }
 
   BookingTabApi _tabApi(BookingTab tab) => switch (tab) {
+        BookingTab.allBookings => BookingTabApi.allBookings,
         BookingTab.checkedIn => BookingTabApi.checkedIn,
         BookingTab.upcoming => BookingTabApi.upcoming,
       };
@@ -74,6 +94,38 @@ class BookingListNotifier extends Notifier<BookingListState> {
       return;
     }
     state = state.copyWith(loading: true, clearError: true);
+
+    if (!await isDeviceOnline(ref)) {
+      final cached = await GuardListCache.readBookings(
+        residenceUuid: snap.residenceId,
+        day: state.selectedDay,
+        tab: bookingTabApiValue(_tabApi(state.tab)),
+      );
+      if (cached != null) {
+        final mapped = cached.result.bookings.map(BookingListItem.fromGuard).toList();
+        final items = applyBookingListFilters(
+          items: mapped,
+          filter: state.filterQuery,
+          searchQuery: state.searchQuery,
+        );
+        state = state.copyWith(
+          items: items,
+          loading: false,
+          totalAllBookings: cached.result.counts.allBookings,
+          totalCheckedIn: cached.result.counts.checkedIn,
+          totalUpcoming: cached.result.counts.upcoming,
+          fromCache: true,
+          cacheSavedAt: cached.savedAt,
+        );
+        return;
+      }
+      state = state.copyWith(
+        loading: false,
+        error: offlineNoCachedDataMessage(),
+      );
+      return;
+    }
+
     try {
       final repo = ref.read(bookingRepositoryProvider);
       final result = await repo.fetchBookings(
@@ -87,12 +139,49 @@ class BookingListNotifier extends Notifier<BookingListState> {
         filter: state.filterQuery,
         searchQuery: state.searchQuery,
       );
+      await GuardListCache.saveBookings(
+        residenceUuid: snap.residenceId,
+        day: state.selectedDay,
+        tab: bookingTabApiValue(_tabApi(state.tab)),
+        result: result,
+      );
       state = state.copyWith(
         items: items,
         loading: false,
+        totalAllBookings: result.counts.allBookings,
         totalCheckedIn: result.counts.checkedIn,
         totalUpcoming: result.counts.upcoming,
+        clearCacheMeta: true,
       );
+    } on DioException catch (e, st) {
+      AppLog.error('Booking list', tag: 'Booking', error: e, stackTrace: st);
+      if (isNetworkError(e)) {
+        final cached = await GuardListCache.readBookings(
+          residenceUuid: snap.residenceId,
+          day: state.selectedDay,
+          tab: bookingTabApiValue(_tabApi(state.tab)),
+        );
+        if (cached != null) {
+          final mapped =
+              cached.result.bookings.map(BookingListItem.fromGuard).toList();
+          final items = applyBookingListFilters(
+            items: mapped,
+            filter: state.filterQuery,
+            searchQuery: state.searchQuery,
+          );
+          state = state.copyWith(
+            items: items,
+            loading: false,
+            totalAllBookings: cached.result.counts.allBookings,
+            totalCheckedIn: cached.result.counts.checkedIn,
+            totalUpcoming: cached.result.counts.upcoming,
+            fromCache: true,
+            cacheSavedAt: cached.savedAt,
+          );
+          return;
+        }
+      }
+      state = state.copyWith(loading: false, error: apiErrorMessage(e));
     } catch (e, st) {
       AppLog.error('Booking list', tag: 'Booking', error: e, stackTrace: st);
       state = state.copyWith(loading: false, error: apiErrorMessage(e));
