@@ -390,6 +390,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardWelcomeUser => 'Welcome, Guard';
 
   @override
+  String get listEmptyMessage => 'There is nothing to show at the moment.';
+
+  @override
+  String get listEmptyTitle => 'No data';
+
+  @override
   String get loginEmailOrPhoneHint => 'Email or phone number';
 
   @override

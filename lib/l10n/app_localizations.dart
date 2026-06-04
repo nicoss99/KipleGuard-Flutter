@@ -832,6 +832,18 @@ abstract class AppLocalizations {
   /// **'Welcome, Guard'**
   String get dashboardWelcomeUser;
 
+  /// No description provided for @listEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing to show at the moment.'**
+  String get listEmptyMessage;
+
+  /// No description provided for @listEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get listEmptyTitle;
+
   /// No description provided for @loginEmailOrPhoneHint.
   ///
   /// In en, this message translates to:

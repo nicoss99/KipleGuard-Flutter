@@ -1,5 +1,4 @@
-import 'package:intl/intl.dart';
-
+import '../../core/guard_time_format.dart';
 import '../register/register_ic_encrypt.dart';
 import 'visitor_repository.dart';
 
@@ -28,7 +27,8 @@ Future<void> patchVisitorFromForm({
   }
   if (temp.trim().isNotEmpty) {
     body['visitor_temp'] = temp.trim();
-    body['visitor_temp_updated_at'] = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toUtc());
+    body['visitor_temp_updated_at'] =
+        GuardTimeFormat.apiDateTimeSeconds.format(DateTime.now().toUtc());
   }
   if (from.trim().isNotEmpty) {
     body['visitor_from'] = from.trim();

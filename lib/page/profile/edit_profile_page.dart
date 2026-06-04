@@ -99,6 +99,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       const EditProfileDivider(),
                       EditProfileMenuRow(
                         label: ProfileStrings.changePassword,
+                        bold: true,
                         onTap: () => context.push(AppRoute.changePassword.path),
                       ),
                       const EditProfileDivider(),
@@ -163,13 +164,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: ProfileTextStyle.rowValueMuted.copyWith(fontWeight: FontWeight.w600)),
+          Text(label, style: ProfileTextStyle.rowFieldLabel),
           SizedBox(width: 12.w),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: ProfileTextStyle.rowValueMuted,
+              style: ProfileTextStyle.rowValue,
             ),
           ),
         ],

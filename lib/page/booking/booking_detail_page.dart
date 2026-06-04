@@ -25,6 +25,7 @@ import 'booking_guard_models.dart';
 import 'booking_repository.dart';
 import 'booking_strings.dart';
 import 'guard_booking_repository.dart';
+import 'widget/booking_action_confirm_dialog.dart';
 import 'widget/booking_detail_scroll.dart';
 
 class BookingDetailPage extends ConsumerStatefulWidget {
@@ -134,25 +135,7 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
   }
 
   Future<void> _confirmAndSubmit({required bool checkIn}) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          checkIn ? BookingStrings.confirmCheckIn : BookingStrings.confirmCheckOut,
-          style: AppTextStyle.subtitle,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(BookingStrings.no, style: AppTextStyle.body),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(BookingStrings.yes),
-          ),
-        ],
-      ),
-    );
+    final ok = await showBookingActionConfirmDialog(context, checkIn: checkIn);
     if (ok != true || !mounted) return;
     final snap = await DashboardPrefs.loadSnapshot();
     if (snap.residenceId.isEmpty) return;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
-
+import '../../../core/guard_time_format.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_radius.dart';
 import '../../../theme/app_spacing.dart';
@@ -36,7 +35,7 @@ class _AttendanceShiftSuccessDialog extends StatelessWidget {
         isStart ? AttendanceStrings.startShiftTitle : AttendanceStrings.endShiftTitle;
     final actionSubtitle =
         isStart ? AttendanceStrings.startShiftSubtitle : AttendanceStrings.endShiftSubtitle;
-    final timeLabel = DateFormat('dd MMM yyyy · HH:mm').format(DateTime.now());
+    final timeLabel = GuardTimeFormat.displayDateTimeDot.format(DateTime.now());
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 28.w),

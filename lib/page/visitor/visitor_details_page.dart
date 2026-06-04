@@ -14,6 +14,8 @@ import '../../core/app_flavor.dart';
 import '../../core/app_logger.dart';
 import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/guard_api_time_display.dart';
+import '../../core/guard_time_format.dart';
 import '../../widget/offline_cache_banner.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
@@ -583,17 +585,8 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
   String _fmtDateTime(String raw) {
     if (raw.trim().isEmpty) return 'N/A';
     if (_looksLikeApiLabel(raw)) return raw.trim();
-    try {
-      final dt = DateTime.parse(raw).toLocal();
-      return DateFormat('dd MMM yyyy, h:mma').format(dt).toLowerCase();
-    } catch (_) {
-      try {
-        final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
-        return DateFormat('dd MMM yyyy, h:mma').format(dt).toLowerCase();
-      } catch (_) {
-        return raw;
-      }
-    }
+    final formatted = GuardApiTimeDisplay.formatMedium(raw);
+    return formatted.isEmpty ? raw : formatted;
   }
 
   String _fmtDate(String raw) {
@@ -601,11 +594,11 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
     if (_looksLikeApiLabel(raw)) return raw.trim();
     try {
       final dt = DateTime.parse(raw).toLocal();
-      return DateFormat('dd MMM yyyy').format(dt);
+      return GuardTimeFormat.displayDateOnly.format(dt);
     } catch (_) {
       try {
         final dt = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(raw).toLocal();
-        return DateFormat('dd MMM yyyy').format(dt);
+        return GuardTimeFormat.displayDateOnly.format(dt);
       } catch (_) {
         return raw;
       }

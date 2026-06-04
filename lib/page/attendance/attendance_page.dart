@@ -15,6 +15,7 @@ import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../core/connectivity/connectivity_refresh.dart';
+import '../../core/guard_time_format.dart';
 import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'attendance_model.dart';
@@ -25,7 +26,7 @@ import 'widget/attendance_day_strip.dart';
 import 'widget/attendance_shift_dialog.dart';
 import 'widget/attendance_record_tile.dart';
 import 'widget/attendance_records_date_header.dart';
-import 'widget/attendance_records_empty_state.dart';
+import '../../widget/guard_list_empty_state.dart';
 
 class AttendancePage extends ConsumerStatefulWidget {
   const AttendancePage({super.key});
@@ -204,8 +205,7 @@ class _TakingTabState extends State<_TakingTab> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final timeFmt = DateFormat('hh:mm', 'en_US');
-    final ampm = DateFormat('a', 'en_US').format(now);
+    final timeLine = GuardTimeFormat.displayTime.format(now);
     final dateLine = DateFormat('EEEE, dd MMM yyyy', 'en_US').format(now);
 
     return SingleChildScrollView(
@@ -221,29 +221,15 @@ class _TakingTabState extends State<_TakingTab> {
             ),
           ),
           SizedBox(height: 8.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                timeFmt.format(now),
-                style: AppTextStyle.body.copyWith(
-                  fontSize: 42.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppColor.textPrimary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                ampm,
-                style: AppTextStyle.subtitle.copyWith(
-                  fontSize: 18.sp,
-                  color: AppColor.textPrimary,
-                ),
-              ),
-            ],
+          Text(
+            timeLine,
+            textAlign: TextAlign.center,
+            style: AppTextStyle.body.copyWith(
+              fontSize: 42.sp,
+              fontWeight: FontWeight.w500,
+              color: AppColor.textPrimary,
+              letterSpacing: 0.5,
+            ),
           ),
           SizedBox(height: 36.h),
           _BilingualShiftButton(
@@ -348,13 +334,17 @@ class _RecordsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEmpty = records.isEmpty;
+
     return ColoredBox(
       color: AppColor.lightGreyBar,
       child: RefreshIndicator(
         color: AppColor.primary,
         onRefresh: onRefresh,
         child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: isEmpty
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: OfflineCacheBanner(
@@ -390,8 +380,16 @@ class _RecordsTab extends StatelessWidget {
                   ),
                 ),
               ),
-            if (records.isEmpty)
-              const SliverToBoxAdapter(child: AttendanceRecordsEmptyState())
+            if (isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 32.h),
+                    child: const GuardListEmptyState(),
+                  ),
+                ),
+              )
             else
               SliverPadding(
                 padding: EdgeInsets.only(top: 4.h, bottom: 80.h),

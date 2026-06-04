@@ -9,10 +9,12 @@ class EditProfileMenuRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.onTap,
+    this.bold = false,
   });
 
   final String label;
   final VoidCallback onTap;
+  final bool bold;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,12 @@ class EditProfileMenuRow extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           child: Row(
             children: [
-              Expanded(child: Text(label, style: ProfileTextStyle.rowLabel)),
+              Expanded(
+                child: Text(
+                  label,
+                  style: bold ? ProfileTextStyle.rowLabel : ProfileTextStyle.menuRowLabel,
+                ),
+              ),
               Icon(Icons.chevron_right, color: AppColor.textSecondary, size: 22.sp),
             ],
           ),

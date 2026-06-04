@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../../core/guard_time_format.dart';
+
 /// Android `VoipCallHistoryAdapter`: input GMT `yyyy-MM-dd HH:mm:ss`.
 DateTime? parseCallAtGmt(String raw) {
   try {
@@ -19,6 +21,4 @@ String formatRecentDateLabel(DateTime local) {
   return DateFormat('dd MMM yyyy').format(local);
 }
 
-String formatRecentTime(DateTime local) {
-  return DateFormat('hh:mm a').format(local).toLowerCase();
-}
+String formatRecentTime(DateTime local) => GuardTimeFormat.displayTime.format(local);

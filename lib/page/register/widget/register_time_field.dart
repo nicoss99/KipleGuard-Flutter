@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 
+import '../../../core/guard_time_format.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_text_style.dart';
 
@@ -71,4 +71,4 @@ class RegisterTimeField extends StatelessWidget {
   }
 }
 
-String formatUtcApi(DateTime dt) => DateFormat('yyyy-MM-dd HH:mm:ss').format(dt.toUtc());
+String formatUtcApi(DateTime dt) => GuardTimeFormat.apiDateTimeSeconds.format(dt.toUtc());

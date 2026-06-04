@@ -1,5 +1,4 @@
-import 'package:intl/intl.dart';
-
+import '../guard_time_format.dart';
 import '../../page/attendance/attendance_model.dart';
 import '../../page/booking/booking_guard_models.dart';
 import '../../page/visitor/visitor_model.dart';
@@ -150,7 +149,7 @@ abstract final class GuardListCache {
   }
 
   static String formatSavedAt(DateTime at) =>
-      DateFormat('d MMM yyyy, HH:mm').format(at.toLocal());
+      GuardTimeFormat.displaySavedAt.format(at.toLocal());
 
   static Map<String, dynamic> _visitorToJson(VisitorListItem i) => <String, dynamic>{
         'uuid': i.uuid,
@@ -192,8 +191,8 @@ abstract final class GuardListCache {
         'guardName': r.guardName,
         'imageUrl': r.imageUrl,
         'guardCode': r.guardCode,
-        'checkInLabel': r.checkInLabel,
-        'checkOutLabel': r.checkOutLabel,
+        'checkInAt': r.checkInAt,
+        'checkOutAt': r.checkOutAt,
         'isCheckedInOnly': r.isCheckedInOnly,
       };
 
@@ -203,8 +202,8 @@ abstract final class GuardListCache {
         guardName: m['guardName']?.toString() ?? '',
         imageUrl: m['imageUrl']?.toString() ?? '',
         guardCode: m['guardCode']?.toString() ?? '',
-        checkInLabel: m['checkInLabel']?.toString() ?? '',
-        checkOutLabel: m['checkOutLabel']?.toString(),
+        checkInAt: m['checkInAt']?.toString() ?? m['startedAt']?.toString() ?? '',
+        checkOutAt: m['checkOutAt']?.toString() ?? m['endedAt']?.toString(),
         isCheckedInOnly: m['isCheckedInOnly'] == true,
       );
 }

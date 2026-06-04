@@ -18,7 +18,9 @@ class AttendanceRecordTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photo = 100.w;
-    final hasOut = row.checkOutLabel != null && row.checkOutLabel!.isNotEmpty;
+    final hasOut = row.checkOutDisplay != null;
+    final checkIn = row.checkInDisplay;
+    final checkOut = row.checkOutDisplay;
     final code = row.guardCode.trim();
 
     return Padding(
@@ -75,12 +77,12 @@ class AttendanceRecordTile extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (row.checkInLabel.trim().isNotEmpty) ...[
+                      if (checkIn.trim().isNotEmpty) ...[
                         SizedBox(height: 10.h),
                         _TimeRow(
                           asset: AppAssets.icVisitorCheckin,
                           label: AttendanceStrings.recordCheckIn,
-                          value: row.checkInLabel,
+                          value: checkIn,
                         ),
                       ],
                       if (hasOut) ...[
@@ -88,7 +90,7 @@ class AttendanceRecordTile extends StatelessWidget {
                         _TimeRow(
                           asset: AppAssets.icVisitorCheckout,
                           label: AttendanceStrings.recordCheckOut,
-                          value: row.checkOutLabel!,
+                          value: checkOut!,
                         ),
                       ],
                     ],

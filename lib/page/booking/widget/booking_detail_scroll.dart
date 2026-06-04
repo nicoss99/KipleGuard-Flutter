@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/app_logger.dart';
+import '../../../core/guard_api_time_display.dart';
+import '../../../core/guard_time_format.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_text_style.dart';
 import '../../visitor/widget/visitor_details_qr_header.dart';
@@ -228,20 +229,15 @@ class BookingDetailScroll extends StatelessWidget {
     if (label != null && label.trim().isNotEmpty) return label.trim();
     if (iso == null || iso.trim().isEmpty) return 'N/A';
     if (_looksLikeApiLabel(iso)) return iso.trim();
-    try {
-      return DateFormat('dd MMM yyyy, h:mma')
-          .format(DateTime.parse(iso).toLocal())
-          .toLowerCase();
-    } catch (_) {
-      return iso;
-    }
+    final formatted = GuardApiTimeDisplay.formatMedium(iso);
+    return formatted.isEmpty ? iso : formatted;
   }
 
   String _fmtDate(String raw) {
     if (raw.trim().isEmpty) return 'N/A';
     if (_looksLikeApiLabel(raw)) return raw.trim();
     try {
-      return DateFormat('dd MMM yyyy').format(DateTime.parse(raw).toLocal());
+      return GuardTimeFormat.displayDateOnly.format(DateTime.parse(raw).toLocal());
     } catch (_) {
       return raw;
     }

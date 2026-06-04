@@ -4,13 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/app_logger.dart';
 import '../../core/cache/app_cache_store.dart';
 import '../../core/cache/guard_cache_keys.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../core/guard_time_format.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_text_style.dart';
@@ -154,8 +154,8 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       return;
     }
     setState(() {
-      _dateLabel = DateFormat('dd MMM yyyy - hh:mm aa', 'en_US').format(picked);
-      _incidentAt = DateFormat('yyyy-MM-dd hh:mm aa', 'en_US').format(picked);
+      _dateLabel = GuardTimeFormat.displayDateTimePicker.format(picked);
+      _incidentAt = GuardTimeFormat.apiDateTime.format(picked);
       _errDate = false;
     });
   }

@@ -11,7 +11,6 @@ import '../../core/api/messages/localized_api_message_catalog.dart';
 import '../../core/guard_api_paths.dart';
 import '../../core/guard_time_format.dart';
 import '../attendance/attendance_model.dart';
-import '../attendance/attendance_record_format.dart';
 import 'guard_attendance_models.dart';
 
 final guardAttendanceRepositoryProvider = Provider<GuardAttendanceRepository>(
@@ -60,8 +59,8 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
     final data = await _client.getJson(
       GuardApiPaths.attendanceList(residenceUuid),
       query: <String, dynamic>{
-        'from': GuardTimeFormat.apiDate(fromDay),
-        'to': GuardTimeFormat.apiDate(toDay),
+        'from': GuardTimeFormat.formatApiDate(fromDay),
+        'to': GuardTimeFormat.formatApiDate(toDay),
       },
       fallbackMessage: _messages.attendanceLoadFailed,
     );
@@ -106,9 +105,8 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
         guardName: guardName,
         imageUrl: (hasEnd ? r.endPhotoUrl : r.startPhotoUrl) ?? '',
         guardCode: '',
-        checkInLabel: AttendanceRecordFormat.timeLabel(r.startedAt),
-        checkOutLabel:
-            hasEnd ? AttendanceRecordFormat.timeLabel(r.endedAt) : null,
+        checkInAt: r.startedAt,
+        checkOutAt: hasEnd ? r.endedAt : null,
         isCheckedInOnly: r.isOpen,
       );
     }).toList();

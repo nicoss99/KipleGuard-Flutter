@@ -122,6 +122,8 @@
   "dashboardViewQr": "View QR",
   "dashboardVisitor": "Visitor",
   "dashboardWelcomeUser": "Welcome, Guard",
+  "listEmptyMessage": "There is nothing to show at the moment.",
+  "listEmptyTitle": "No data",
   "loginEmailOrPhoneHint": "Email or phone number",
   "loginEmailOrPhoneLabel": "Email or Phone Number",
   "loginForgotPassword": "Forgot Password?",

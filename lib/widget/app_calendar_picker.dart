@@ -65,17 +65,27 @@ abstract final class AppCalendarPicker {
       helpText: helpText,
       cancelText: cancelText,
       confirmText: confirmText,
-      builder: (ctx, child) => Theme(data: _materialPickerTheme(ctx), child: child!),
+      builder: (ctx, child) => _materialPickerTheme(ctx, child),
     );
     if (t == null || !context.mounted) return null;
     return DateTime(day.year, day.month, day.day, t.hour, t.minute);
   }
 
-  static ThemeData _materialPickerTheme(BuildContext context) {
+  static Widget _materialPickerTheme(BuildContext context, Widget? child) {
+    if (child == null) return const SizedBox.shrink();
     final base = Theme.of(context);
-    return base.copyWith(
-      colorScheme: base.colorScheme.copyWith(primary: AppColor.primary, onPrimary: AppColor.white),
-      dialogTheme: DialogThemeData(backgroundColor: AppColor.white),
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+      child: Theme(
+        data: base.copyWith(
+          colorScheme: base.colorScheme.copyWith(
+            primary: AppColor.primary,
+            onPrimary: AppColor.white,
+          ),
+          dialogTheme: const DialogThemeData(backgroundColor: AppColor.white),
+        ),
+        child: child,
+      ),
     );
   }
 

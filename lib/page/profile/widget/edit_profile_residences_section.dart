@@ -57,7 +57,7 @@ class _ResidenceRow extends StatelessWidget {
                 Text(residence.name, style: ProfileTextStyle.rowValue),
                 if (location.isNotEmpty) ...[
                   SizedBox(height: 4.h),
-                  Text(location, style: ProfileTextStyle.rowValueMuted),
+                  Text(location, style: ProfileTextStyle.rowValue),
                 ],
               ],
             ),

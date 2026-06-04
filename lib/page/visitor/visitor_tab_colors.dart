@@ -24,4 +24,5 @@ abstract final class VisitorTabColors {
     if (tabIndex == 3) return stripeForCategory(category);
     return stripeForTab(tabIndex);
   }
+
 }

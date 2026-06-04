@@ -54,9 +54,12 @@ class KipleGuardApp extends ConsumerWidget {
           locale: const Locale('en'),
           builder: (ctx, routerChild) {
             appL10n = AppLocalizations.of(ctx);
-            return CacheLifecycleHost(
-              child: OfflineSyncHost(
-                child: routerChild ?? const SizedBox.shrink(),
+            return MediaQuery(
+              data: MediaQuery.of(ctx).copyWith(alwaysUse24HourFormat: true),
+              child: CacheLifecycleHost(
+                child: OfflineSyncHost(
+                  child: routerChild ?? const SizedBox.shrink(),
+                ),
               ),
             );
           },
