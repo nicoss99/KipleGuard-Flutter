@@ -35,7 +35,10 @@ class _AttendanceShiftSuccessDialog extends StatelessWidget {
         isStart ? AttendanceStrings.startShiftTitle : AttendanceStrings.endShiftTitle;
     final actionSubtitle =
         isStart ? AttendanceStrings.startShiftSubtitle : AttendanceStrings.endShiftSubtitle;
-    final timeLabel = GuardTimeFormat.displayDateTimeDot.format(DateTime.now());
+    final timeLabel = GuardTimeFormat.format12h(
+      DateTime.now(),
+      GuardTimeFormat.displayDateTimeDot,
+    );
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 28.w),

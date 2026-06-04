@@ -21,4 +21,5 @@ String formatRecentDateLabel(DateTime local) {
   return DateFormat('dd MMM yyyy').format(local);
 }
 
-String formatRecentTime(DateTime local) => GuardTimeFormat.displayTime.format(local);
+String formatRecentTime(DateTime local) =>
+    GuardTimeFormat.format12h(local, GuardTimeFormat.displayTime);

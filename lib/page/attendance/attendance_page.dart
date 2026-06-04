@@ -15,7 +15,6 @@ import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/modal_progress_hud.dart';
 import '../../core/connectivity/connectivity_refresh.dart';
-import '../../core/guard_time_format.dart';
 import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'attendance_model.dart';
@@ -205,7 +204,8 @@ class _TakingTabState extends State<_TakingTab> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final timeLine = GuardTimeFormat.displayTime.format(now);
+    final timeFmt = DateFormat('hh:mm', 'en_US');
+    final ampm = DateFormat('a', 'en_US').format(now).toLowerCase();
     final dateLine = DateFormat('EEEE, dd MMM yyyy', 'en_US').format(now);
 
     return SingleChildScrollView(
@@ -221,15 +221,29 @@ class _TakingTabState extends State<_TakingTab> {
             ),
           ),
           SizedBox(height: 8.h),
-          Text(
-            timeLine,
-            textAlign: TextAlign.center,
-            style: AppTextStyle.body.copyWith(
-              fontSize: 42.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColor.textPrimary,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                timeFmt.format(now),
+                style: AppTextStyle.body.copyWith(
+                  fontSize: 42.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.textPrimary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                ampm,
+                style: AppTextStyle.subtitle.copyWith(
+                  fontSize: 18.sp,
+                  color: AppColor.textPrimary,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 36.h),
           _BilingualShiftButton(

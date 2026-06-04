@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'guard_time_format.dart';
 import 'guard_timezone.dart';
 
-/// Parses guard API timestamp strings and formats for UI (MYT wall clock, 24-hour).
+/// Parses guard API timestamp strings and formats for UI (MYT wall clock, 12-hour).
 abstract final class GuardApiTimeDisplay {
   static final _legacyPatterns = [
     DateFormat('EEE dd MMM yyyy, hh:mm a', 'en_US'),
@@ -22,13 +22,24 @@ abstract final class GuardApiTimeDisplay {
     if (t.isEmpty || t.toLowerCase() == 'null') return '';
 
     final legacy = _parseLegacy12hLabel(t);
-    if (legacy != null) return pattern.format(legacy);
+    if (legacy != null) {
+      // Cached UI labels already include weekday — do not reformat.
+      if (!RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(t)) {
+        return _lowercaseAmPm(t);
+      }
+      return GuardTimeFormat.format12h(legacy, pattern);
+    }
 
     final myt = _wallClockFromApi(t);
     if (myt == null) return t;
 
-    return pattern.format(myt);
+    return GuardTimeFormat.format12h(myt, pattern);
   }
+
+  static String _lowercaseAmPm(String raw) => raw.replaceAllMapped(
+    RegExp(r'\b(AM|PM)\b'),
+    (m) => m.group(0)!.toLowerCase(),
+  );
 
   static DateTime? _parseLegacy12hLabel(String raw) {
     if (!RegExp(r'am|pm', caseSensitive: false).hasMatch(raw)) return null;

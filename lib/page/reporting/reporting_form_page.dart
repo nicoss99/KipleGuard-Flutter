@@ -154,8 +154,8 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
       return;
     }
     setState(() {
-      _dateLabel = GuardTimeFormat.displayDateTimePicker.format(picked);
-      _incidentAt = GuardTimeFormat.apiDateTime.format(picked);
+      _dateLabel = GuardTimeFormat.format12h(picked, GuardTimeFormat.displayDateTimePicker);
+      _incidentAt = GuardTimeFormat.format12h(picked, GuardTimeFormat.apiDateTime);
       _errDate = false;
     });
   }

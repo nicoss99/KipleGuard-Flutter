@@ -149,7 +149,7 @@ abstract final class GuardListCache {
   }
 
   static String formatSavedAt(DateTime at) =>
-      GuardTimeFormat.displaySavedAt.format(at.toLocal());
+      GuardTimeFormat.format12h(at.toLocal(), GuardTimeFormat.displaySavedAt);
 
   static Map<String, dynamic> _visitorToJson(VisitorListItem i) => <String, dynamic>{
         'uuid': i.uuid,

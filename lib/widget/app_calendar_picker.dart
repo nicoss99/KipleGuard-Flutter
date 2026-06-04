@@ -74,18 +74,15 @@ abstract final class AppCalendarPicker {
   static Widget _materialPickerTheme(BuildContext context, Widget? child) {
     if (child == null) return const SizedBox.shrink();
     final base = Theme.of(context);
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-      child: Theme(
-        data: base.copyWith(
-          colorScheme: base.colorScheme.copyWith(
-            primary: AppColor.primary,
-            onPrimary: AppColor.white,
-          ),
-          dialogTheme: const DialogThemeData(backgroundColor: AppColor.white),
+    return Theme(
+      data: base.copyWith(
+        colorScheme: base.colorScheme.copyWith(
+          primary: AppColor.primary,
+          onPrimary: AppColor.white,
         ),
-        child: child,
+        dialogTheme: const DialogThemeData(backgroundColor: AppColor.white),
       ),
+      child: child,
     );
   }
 
