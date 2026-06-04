@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../theme/app_color.dart';
+import '../../../theme/app_radius.dart';
 import '../../../theme/app_text_style.dart';
 import 'reporting_section_label.dart';
 
@@ -25,37 +26,49 @@ class ReportingDescriptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = error
+        ? AppColor.red
+        : AppColor.greyBorder.withValues(alpha: 0.35);
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ReportingSectionLabel(text: label, error: error),
-        Container(
-          width: double.infinity,
-          color: AppColor.white,
-          padding: EdgeInsets.symmetric(horizontal: 5.w),
+        SizedBox(height: 8.h),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColor.white,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: borderColor, width: error ? 1.5 : 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: TextField(
             controller: controller,
             focusNode: focusNode,
             maxLines: 5,
             minLines: 4,
-            style: AppTextStyle.subtitle.copyWith(color: AppColor.textPrimary),
+            style: AppTextStyle.body.copyWith(color: AppColor.textPrimary),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: AppTextStyle.subtitle.copyWith(color: AppColor.textSecondary),
+              hintStyle: AppTextStyle.body.copyWith(color: AppColor.textSecondary),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              contentPadding: EdgeInsets.all(10.w),
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               filled: true,
               fillColor: AppColor.white,
+              alignLabelWithHint: true,
             ),
             onChanged: onChanged,
           ),
-        ),
-        Container(
-          height: 1,
-          margin: EdgeInsets.symmetric(horizontal: 5.w),
-          color: error ? AppColor.red : AppColor.greyBorder,
         ),
       ],
     );

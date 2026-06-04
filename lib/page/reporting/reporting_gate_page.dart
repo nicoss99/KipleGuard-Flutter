@@ -10,7 +10,7 @@ import 'reporting_models.dart';
 import 'reporting_pin_verifier.dart';
 import 'reporting_strings.dart';
 import '../../widget/guard_pin_dialog.dart';
-import 'widget/reporting_page_header.dart';
+import '../../widget/standard_primary_header.dart';
 
 /// Android `ReportingStep1Activity` — header + guard PIN dialog.
 class ReportingGatePage extends ConsumerStatefulWidget {
@@ -65,15 +65,15 @@ class _ReportingGatePageState extends ConsumerState<ReportingGatePage> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
+      value: standardPrimaryOverlayStyle(),
       child: Scaffold(
         backgroundColor: AppColor.white,
         body: Column(
           children: [
-            ReportingPageHeader(title: ReportingStrings.reportIncident),
+            StandardPrimaryHeader(
+              title: ReportingStrings.reportIncident,
+              onBack: () => context.pop(),
+            ),
             const Expanded(child: SizedBox.expand()),
           ],
         ),

@@ -17,6 +17,7 @@ import '../../theme/app_text_style.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/app_calendar_picker.dart';
 import '../../widget/modal_progress_hud.dart';
+import '../../widget/standard_primary_header.dart';
 import 'reporting_models.dart';
 import 'reporting_parsers.dart';
 import 'reporting_prefs.dart';
@@ -27,7 +28,6 @@ import 'widget/reporting_category_field.dart';
 import 'widget/reporting_category_sheet.dart';
 import 'widget/reporting_datetime_field.dart';
 import 'widget/reporting_description_field.dart';
-import 'widget/reporting_page_header.dart';
 import 'widget/reporting_photo_strip.dart';
 import 'widget/reporting_success_dialog.dart';
 
@@ -270,17 +270,17 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
+      value: standardPrimaryOverlayStyle(),
       child: ModalProgressHud(
         inAsyncCall: _submitting,
         child: Scaffold(
           backgroundColor: AppColor.white,
           body: Column(
             children: [
-              ReportingPageHeader(title: ReportingStrings.reportIncident),
+              StandardPrimaryHeader(
+                title: ReportingStrings.reportIncident,
+                onBack: () => context.pop(),
+              ),
               Expanded(
                 child: RefreshIndicator(
                   color: AppColor.primary,
