@@ -18,7 +18,11 @@ class DashboardTileIcon extends StatelessWidget {
     return SizedBox(
       width: side,
       height: side,
-      child: Image.asset(asset, fit: BoxFit.contain),
+      child: Image.asset(
+        asset,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(Icons.image_not_supported_outlined, size: side * 0.5),
+      ),
     );
   }
 }

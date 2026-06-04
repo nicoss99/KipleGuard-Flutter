@@ -1,18 +1,15 @@
 import '../../../widget/app_calendar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../theme/app_color.dart';
 import '../../../theme/app_spacing.dart';
-import '../../../widget/app_progress_indicator.dart';
 import '../../../theme/app_text_style.dart';
 import '../../../widget/api_failed_dialog.dart';
 import '../booking_filter_query.dart';
-import '../booking_repository.dart';
 import '../booking_strings.dart';
 
-class BookingFilterSheet extends ConsumerStatefulWidget {
+class BookingFilterSheet extends StatefulWidget {
   const BookingFilterSheet({
     super.key,
     required this.residenceUuid,
@@ -27,72 +24,17 @@ class BookingFilterSheet extends ConsumerStatefulWidget {
   final VoidCallback onClear;
 
   @override
-  ConsumerState<BookingFilterSheet> createState() => _BookingFilterSheetState();
+  State<BookingFilterSheet> createState() => _BookingFilterSheetState();
 }
 
-class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
+class _BookingFilterSheetState extends State<BookingFilterSheet> {
   DateTime? _submittedDay;
-  String? _categoryUuid;
-  String? _roomUuid;
   bool _pastChip = false;
-  List<({String uuid, String name})> _categories = const [];
-  List<({String uuid, String name})> _rooms = const [];
-  bool _loadingCat = true;
-  bool _loadingRooms = false;
-  String? _loadError;
 
   @override
   void initState() {
     super.initState();
     _submittedDay = widget.initial.submittedOnDay;
-    _categoryUuid = widget.initial.categoryUuid;
-    _roomUuid = widget.initial.roomUuid;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCategories());
-  }
-
-  Future<void> _loadCategories() async {
-    try {
-      final repo = ref.read(bookingRepositoryProvider);
-      final list = await repo.fetchBookingCategories(widget.residenceUuid);
-      if (!mounted) return;
-      setState(() {
-        _categories = list;
-        _loadingCat = false;
-        _loadError = null;
-      });
-      final cu = _categoryUuid;
-      if (cu != null && cu.isNotEmpty) {
-        await _loadRooms(cu);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _loadingCat = false;
-        _loadError = BookingStrings.loadFailed;
-      });
-    }
-  }
-
-  Future<void> _loadRooms(String typeUuid) async {
-    setState(() {
-      _loadingRooms = true;
-      _rooms = const [];
-    });
-    try {
-      final repo = ref.read(bookingRepositoryProvider);
-      final list = await repo.fetchRoomsForBookingType(
-        residenceUuid: widget.residenceUuid,
-        typeUuid: typeUuid,
-      );
-      if (!mounted) return;
-      setState(() {
-        _rooms = list;
-        _loadingRooms = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loadingRooms = false);
-    }
   }
 
   Future<void> _pickSubmitted() async {
@@ -104,10 +46,7 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
     if (picked != null) setState(() => _submittedDay = picked);
   }
 
-  bool get _hasPass =>
-      _submittedDay != null ||
-      (_categoryUuid != null && _categoryUuid!.isNotEmpty) ||
-      (_roomUuid != null && _roomUuid!.isNotEmpty);
+  bool get _hasPass => _submittedDay != null;
 
   Future<void> _onApplyTap() async {
     if (_pastChip && !_hasPass) {
@@ -118,33 +57,7 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
       widget.onClear();
       return;
     }
-    String? categoryName;
-    if (_categoryUuid != null) {
-      for (final c in _categories) {
-        if (c.uuid == _categoryUuid) {
-          categoryName = c.name;
-          break;
-        }
-      }
-    }
-    String? roomName;
-    if (_roomUuid != null) {
-      for (final r in _rooms) {
-        if (r.uuid == _roomUuid) {
-          roomName = r.name;
-          break;
-        }
-      }
-    }
-    widget.onApply(
-      BookingFilterQuery(
-        submittedOnDay: _submittedDay,
-        categoryUuid: _categoryUuid,
-        roomUuid: _roomUuid,
-        categoryName: categoryName,
-        roomName: roomName,
-      ),
-    );
+    widget.onApply(BookingFilterQuery(submittedOnDay: _submittedDay));
   }
 
   @override
@@ -187,59 +100,6 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
                 ),
               ],
             ),
-            Text(BookingStrings.category, style: AppTextStyle.subtitle),
-            SizedBox(height: 8.h),
-            if (_loadingCat)
-              const Center(child: AppProgressIndicator())
-            else if (_loadError != null)
-              Text(_loadError!, style: AppTextStyle.body.copyWith(color: AppColor.red))
-            else
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: _categories.map((c) {
-                  final sel = _categoryUuid == c.uuid;
-                  return ChoiceChip(
-                    label: Text(c.name, style: AppTextStyle.body),
-                    selected: sel,
-                    onSelected: (_) async {
-                      setState(() {
-                        if (sel) {
-                          _categoryUuid = null;
-                          _roomUuid = null;
-                          _rooms = const [];
-                        } else {
-                          _categoryUuid = c.uuid;
-                          _roomUuid = null;
-                        }
-                      });
-                      if (!sel && c.uuid.isNotEmpty) await _loadRooms(c.uuid);
-                    },
-                    selectedColor: AppColor.primary.withValues(alpha: 0.25),
-                  );
-                }).toList(),
-              ),
-            SizedBox(height: 16.h),
-            Text(BookingStrings.bookingType, style: AppTextStyle.subtitle),
-            SizedBox(height: 8.h),
-            if (_loadingRooms)
-              const Center(child: AppProgressIndicator())
-            else
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: _rooms.map((r) {
-                  final sel = _roomUuid == r.uuid;
-                  return ChoiceChip(
-                    label: Text(r.name, style: AppTextStyle.body),
-                    selected: sel,
-                    onSelected: (_) => setState(() {
-                      _roomUuid = sel ? null : r.uuid;
-                    }),
-                    selectedColor: AppColor.primary.withValues(alpha: 0.25),
-                  );
-                }).toList(),
-              ),
             SizedBox(height: 24.h),
             Row(
               children: [
@@ -258,7 +118,10 @@ class _BookingFilterSheetState extends ConsumerState<BookingFilterSheet> {
                   child: FilledButton(
                     onPressed: _onApplyTap,
                     style: FilledButton.styleFrom(backgroundColor: AppColor.primary),
-                    child: Text(BookingStrings.apply, style: AppTextStyle.subtitle.copyWith(color: AppColor.white)),
+                    child: Text(
+                      BookingStrings.apply,
+                      style: AppTextStyle.subtitle.copyWith(color: AppColor.white),
+                    ),
                   ),
                 ),
               ],

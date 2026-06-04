@@ -25,14 +25,4 @@ abstract interface class GuardBookingRepository {
     required int bookingId,
     required String currentTime,
   });
-
-  /// Legacy filter metadata (`data/types`, `bookings/available`).
-  Future<List<({String uuid, String name})>> fetchBookingCategories(
-    String residenceUuid,
-  );
-
-  Future<List<({String uuid, String name})>> fetchRoomsForBookingType({
-    required String residenceUuid,
-    required String typeUuid,
-  });
 }

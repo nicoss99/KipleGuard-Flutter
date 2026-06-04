@@ -466,6 +466,12 @@ abstract class AppLocalizations {
   /// **'No upcoming bookings for this day.'**
   String get bookingEmptyUpcoming;
 
+  /// No description provided for @bookingEmptyRefreshHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down to refresh'**
+  String get bookingEmptyRefreshHint;
+
   /// No description provided for @bookingEndTime.
   ///
   /// In en, this message translates to:

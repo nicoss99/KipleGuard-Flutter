@@ -20,8 +20,13 @@ class GuardProfile {
         id: json['id'] as int? ?? 0,
         name: json['name'] as String? ?? '',
         email: json['email'] as String? ?? '',
-        phone: json['phone'] as String? ?? '',
-        profileImageUrl: json['profile_image_url'] as String?,
+        phone: json['phone']?.toString() ??
+            json['mobile_number']?.toString() ??
+            json['mobile']?.toString() ??
+            '',
+        profileImageUrl: json['profile_image_url']?.toString() ??
+            json['profile_image']?.toString() ??
+            json['avatar_url']?.toString(),
         role: json['role'] as String? ?? '',
       );
 
@@ -69,7 +74,7 @@ class GuardResidence {
         city: json['city'] as String? ?? '',
         state: json['state'] as String? ?? '',
         postcode: json['postcode'] as String? ?? '',
-        imageUrl: json['image_url'] as String?,
+        imageUrl: _readImageUrl(json),
         role: json['role'] as String? ?? '',
         securityCompanyUuid: json['security_company_uuid'] as String? ??
             json['securityCompanyUuid'] as String?,
@@ -88,6 +93,17 @@ class GuardResidence {
         if (securityCompanyUuid != null && securityCompanyUuid!.isNotEmpty)
           'security_company_uuid': securityCompanyUuid,
       };
+}
+
+String? _readImageUrl(Map<String, dynamic> json) {
+  final direct = json['image_url'] ?? json['imageUrl'] ?? json['logo_url'];
+  if (direct is String && direct.trim().isNotEmpty) return direct.trim();
+  final image = json['image'];
+  if (image is Map) {
+    final nested = image['url'] ?? image['image_url'];
+    if (nested is String && nested.trim().isNotEmpty) return nested.trim();
+  }
+  return null;
 }
 
 class GuardSwitchDevice {

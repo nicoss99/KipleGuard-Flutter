@@ -22,6 +22,7 @@ class DashboardSvgIcon extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       colorFilter: colorFilter,
+      placeholderBuilder: (_) => SizedBox(width: size, height: size),
     );
   }
 }

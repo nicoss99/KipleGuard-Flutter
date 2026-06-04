@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../theme/app_color.dart';
+import '../../../widget/cached_authorized_network_image.dart';
 import '../../auth/guard_models.dart';
 import '../profile_strings.dart';
 import '../profile_text_style.dart';
@@ -46,7 +48,7 @@ class _ResidenceRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _thumb(),
+          _ResidenceThumb(imageUrl: residence.imageUrl),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -64,9 +66,16 @@ class _ResidenceRow extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _thumb() {
-    final url = residence.imageUrl?.trim() ?? '';
+class _ResidenceThumb extends ConsumerWidget {
+  const _ResidenceThumb({required this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final url = imageUrl?.trim() ?? '';
     if (url.isEmpty) {
       return Container(
         width: 48.w,
@@ -80,13 +89,17 @@ class _ResidenceRow extends StatelessWidget {
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
-      child: Image.network(
-        url,
+      child: CachedAuthorizedNetworkImage(
+        imageUrl: url,
         width: 48.w,
         height: 48.w,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) =>
-            Icon(Icons.broken_image_outlined, size: 24.sp),
+        errorFallback: Container(
+          width: 48.w,
+          height: 48.w,
+          color: AppColor.grey,
+          child: Icon(Icons.broken_image_outlined, size: 24.sp, color: AppColor.textSecondary),
+        ),
       ),
     );
   }

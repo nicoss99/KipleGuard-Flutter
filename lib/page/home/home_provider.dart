@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../core/api_error_message.dart';
 import '../../core/app_logger.dart';
 import '../../core/auth_prefs.dart';
+import '../../core/cache/guard_detail_cache.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../core/profile_initials.dart';
 import '../../core/residence_prefs.dart';
@@ -32,6 +33,7 @@ class HomeNotifier extends Notifier<HomeState> {
   Future<void> refreshFromRemote() async {
     state = state.copyWith(refreshing: true, loadError: null, triggerNoRoleDialog: false);
     try {
+      await _refreshGuardProfile();
       final residences = await ref.read(guardRepositoryProvider).fetchResidences();
       if (residences.isEmpty) {
         state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
@@ -147,6 +149,18 @@ class HomeNotifier extends Notifier<HomeState> {
 
   /// After edit profile saves name (Android `updateProfile` → dashboard refresh).
   Future<void> reloadUserFromPrefs() => _hydrateFromPrefs();
+
+  Future<void> _refreshGuardProfile() async {
+    try {
+      final me = await ref.read(guardRepositoryProvider).fetchMe();
+      await GuardDetailCache.saveGuardProfile(
+        guard: me.guard,
+        residences: me.residences,
+      );
+    } catch (e, st) {
+      AppLog.error('Guard profile refresh failed', tag: 'Home', error: e, stackTrace: st);
+    }
+  }
 
   Future<void> _hydrateFromPrefs() async {
     final snap = await DashboardPrefs.loadSnapshot();

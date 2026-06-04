@@ -22,7 +22,10 @@ final appVersionLabelProvider = FutureProvider<String>((ref) async {
 
 class ProfileNotifier extends Notifier<ProfileState> {
   @override
-  ProfileState build() => const ProfileState();
+  ProfileState build() {
+    Future<void>.microtask(load);
+    return const ProfileState(loading: true);
+  }
 
   Future<void> load() async {
     state = state.copyWith(loading: true, clearError: true, clearCacheMeta: true);

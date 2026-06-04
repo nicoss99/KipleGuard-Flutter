@@ -27,6 +27,7 @@ abstract final class BookingStrings {
   static String get emptyAllBookings => appL10n.bookingEmptyAllBookings;
   static String get emptyCheckedIn => appL10n.bookingEmptyCheckedIn;
   static String get emptyUpcoming => appL10n.bookingEmptyUpcoming;
+  static String get emptyRefreshHint => appL10n.bookingEmptyRefreshHint;
   static String get loadFailed => appL10n.bookingLoadFailed;
   static String get detailsTitle => appL10n.bookingDetailsTitle;
   static String get checkIn => appL10n.bookingCheckIn;

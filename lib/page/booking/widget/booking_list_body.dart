@@ -44,8 +44,13 @@ class BookingListBody extends ConsumerWidget {
                 key: ValueKey('empty_${state.tab}_${state.selectedDay.toIso8601String()}'),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
+                  SizedBox(height: 32.h),
+                  BookingEmptyState(
+                    tab: state.tab,
+                    selectedDay: state.selectedDay,
+                    message: _emptyMessage(state.tab),
+                  ),
                   SizedBox(height: 24.h),
-                  BookingEmptyState(message: _emptyMessage(state.tab)),
                 ],
               )
             : ListView.separated(

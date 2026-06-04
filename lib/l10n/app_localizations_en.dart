@@ -200,6 +200,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingEmptyUpcoming => 'No upcoming bookings for this day.';
 
   @override
+  String get bookingEmptyRefreshHint => 'Pull down to refresh';
+
+  @override
   String get bookingEndTime => 'End';
 
   @override

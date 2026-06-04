@@ -61,6 +61,7 @@
   "bookingEmptyAllBookings": "No bookings for this day.",
   "bookingEmptyCheckedIn": "No checked-in bookings for this day.",
   "bookingEmptyUpcoming": "No upcoming bookings for this day.",
+  "bookingEmptyRefreshHint": "Pull down to refresh",
   "bookingEndTime": "End",
   "bookingExit": "Exit",
   "bookingFilter": "Filter",
