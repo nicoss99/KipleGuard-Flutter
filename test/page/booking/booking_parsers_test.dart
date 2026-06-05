@@ -59,4 +59,24 @@ void main() {
     expect(result.bookings, hasLength(1));
     expect(result.counts.checkedIn, 0);
   });
+
+  test('parseBookingFiltersFromApi reads statuses and facilities', () {
+    final filters = parseBookingFiltersFromApi(<String, dynamic>{
+      'success': true,
+      'data': <String, dynamic>{
+        'statuses': <Map<String, dynamic>>[
+          <String, dynamic>{'label': 'All Bookings', 'value': 'all_bookings'},
+        ],
+        'facilities': <Map<String, dynamic>>[
+          <String, dynamic>{'label': 'hot desk 1', 'value': 32},
+        ],
+      },
+    });
+
+    expect(filters.statuses, hasLength(1));
+    expect(filters.statuses.first.value, 'all_bookings');
+    expect(filters.facilities, hasLength(1));
+    expect(filters.facilities.first.id, 32);
+    expect(filters.facilities.first.label, 'hot desk 1');
+  });
 }

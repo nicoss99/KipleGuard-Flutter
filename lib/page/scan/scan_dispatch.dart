@@ -109,11 +109,6 @@ class ScanDispatcher {
               return ScanDispatchHealth(_studentPayload(raw, list.first));
             }
           }
-          final filter2 = '((deleted_at is null) AND (school_uuid=$r) AND (parent_uuid=$p))';
-          final g = await repo.fetchGuardianParent(filter: filter2);
-          if (g.isNotEmpty) {
-            return ScanDispatchHealth(_guardianParentPayload(raw));
-          }
         } catch (e, st) {
           AppLog.error('ScanQR guardian', tag: 'Scan', error: e, stackTrace: st);
         }
@@ -155,19 +150,6 @@ class ScanDispatcher {
 
     return null;
   }
-}
-
-Map<String, dynamic> _guardianParentPayload(String qr) {
-  return <String, dynamic>{
-    'parent_student_qr': true,
-    'qr_code_string': qr,
-    'body_temperature': 0.0,
-    'check_time': '',
-    'staff_fr_id': null,
-    'student_name': null,
-    'student_year': null,
-    'student_class': null,
-  };
 }
 
 Map<String, dynamic> _studentPayload(String qr, Map<String, dynamic> row) {

@@ -1,3 +1,4 @@
+import '../../../page/booking/booking_filter_models.dart';
 import '../../../page/booking/booking_guard_models.dart';
 import '../../../page/booking/booking_parsers.dart';
 
@@ -7,6 +8,12 @@ abstract interface class GuardBookingRepository {
     required String residenceUuid,
     required DateTime date,
     required BookingTabApi tab,
+    int? samenityId,
+    String? search,
+  });
+
+  Future<GuardBookingFilters> fetchBookingFilters({
+    required String residenceUuid,
   });
 
   Future<GuardBookingRow> fetchBookingDetail({

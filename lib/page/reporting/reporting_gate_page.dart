@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core/auth/guard_pin_verify.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
+import '../../widget/standard_primary_header.dart';
 import 'reporting_models.dart';
 import 'reporting_pin_verifier.dart';
 import 'reporting_strings.dart';
-import '../../widget/guard_pin_dialog.dart';
-import '../../widget/standard_primary_header.dart';
 
 /// Android `ReportingStep1Activity` — header + guard PIN dialog.
 class ReportingGatePage extends ConsumerStatefulWidget {
@@ -28,21 +28,16 @@ class _ReportingGatePageState extends ConsumerState<ReportingGatePage> {
   }
 
   Future<void> _openPin() async {
-    final outcome = await showDialog<GuardPinOutcome>(
+    final snap = await DashboardPrefs.loadSnapshot();
+    if (!mounted) return;
+    final outcome = await showApiGuardPinDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => GuardPinDialog(
-        onVerify: (pin) async {
-          final snap = await DashboardPrefs.loadSnapshot();
-          final r = verifyGuardPin(
-            securityJson: snap.securityJson,
-            residenceUuid: snap.residenceId,
-            pin: pin,
-            fallbackCompanyUuid: snap.securityUuid,
-          );
-          if (r.ok) return GuardPinOutcome.success(r);
-          return const GuardPinOutcome.failure();
-        },
+      ref: ref,
+      resolveAfterVerify: (pin) => resolveReportingGuardAfterPin(
+        pin: pin,
+        securityJson: snap.securityJson,
+        residenceUuid: snap.residenceId,
+        fallbackCompanyUuid: snap.securityUuid,
       ),
     );
     if (!mounted) return;

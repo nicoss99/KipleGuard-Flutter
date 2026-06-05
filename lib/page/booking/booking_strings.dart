@@ -19,6 +19,9 @@ abstract final class BookingStrings {
   static String get searchHint => appL10n.bookingSearchHint;
   static String get searchMinChars => appL10n.bookingSearchMinChars;
   static String get searchAction => appL10n.bookingSearchAction;
+  static String searchNoResults(String query) =>
+      appL10n.bookingSearchNoResults(query);
+  static String get searchScopeHint => appL10n.bookingSearchScopeHint;
   static String get cancel => appL10n.bookingCancel;
   static String get filterPickOne => appL10n.bookingFilterPickOne;
   static String get tabAllBookings => appL10n.bookingTabAllBookings;

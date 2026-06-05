@@ -79,6 +79,15 @@
   "bookingSearchHint": "Guest or unit (min. 3 characters)",
   "bookingSearchMinChars": "Enter at least 3 characters to search.",
   "bookingSearchTitle": "Search bookings",
+  "bookingSearchNoResults": "No bookings found for \"{query}\".",
+  "@bookingSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingSearchScopeHint": "Searching all bookings on this day",
   "bookingStartTime": "Start",
   "bookingSubmitted": "Submitted",
   "bookingSubmittedOn": "Booking submitted on",

@@ -29,6 +29,7 @@ class BookingListState {
     this.totalUpcoming,
     this.filterQuery = BookingFilterQuery.empty,
     this.searchQuery = '',
+    this.searchResultPool = const [],
     this.fromCache = false,
     this.cacheSavedAt,
   });
@@ -43,6 +44,8 @@ class BookingListState {
   final int? totalUpcoming;
   final BookingFilterQuery filterQuery;
   final String searchQuery;
+  /// Full-day results while search is active (API tab = all bookings).
+  final List<BookingListItem> searchResultPool;
   final bool fromCache;
   final DateTime? cacheSavedAt;
 
@@ -67,6 +70,8 @@ class BookingListState {
     int? totalUpcoming,
     BookingFilterQuery? filterQuery,
     String? searchQuery,
+    List<BookingListItem>? searchResultPool,
+    bool clearSearchPool = false,
     bool? fromCache,
     DateTime? cacheSavedAt,
     bool clearCacheMeta = false,
@@ -82,6 +87,9 @@ class BookingListState {
       totalUpcoming: totalUpcoming ?? this.totalUpcoming,
       filterQuery: filterQuery ?? this.filterQuery,
       searchQuery: searchQuery ?? this.searchQuery,
+      searchResultPool: clearSearchPool
+          ? const []
+          : (searchResultPool ?? this.searchResultPool),
       fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
       cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );

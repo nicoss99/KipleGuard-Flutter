@@ -6,6 +6,7 @@ import '../../core/api/client/guard_http_client.dart';
 import '../../core/api/contracts/guard_booking_repository.dart' as contract;
 import '../../core/guard_api_paths.dart';
 import '../../core/guard_time_format.dart';
+import 'booking_filter_models.dart';
 import 'booking_guard_models.dart';
 import 'booking_parsers.dart';
 import 'booking_strings.dart';
@@ -28,16 +29,34 @@ final class GuardBookingRepositoryImpl implements contract.GuardBookingRepositor
     required String residenceUuid,
     required DateTime date,
     required BookingTabApi tab,
+    int? samenityId,
+    String? search,
   }) async {
+    final query = <String, dynamic>{
+      'date': _dateQuery(date),
+      'tab': bookingTabApiValue(tab),
+    };
+    if (samenityId != null) query['samenity_id'] = samenityId;
+    final q = search?.trim();
+    if (q != null && q.length >= 3) query['search'] = q;
+
     final data = await _client.getJson(
       GuardApiPaths.bookings(residenceUuid),
-      query: <String, dynamic>{
-        'date': _dateQuery(date),
-        'tab': bookingTabApiValue(tab),
-      },
+      query: query,
       fallbackMessage: BookingStrings.loadFailed,
     );
     return parseBookingListFromApi(data);
+  }
+
+  @override
+  Future<GuardBookingFilters> fetchBookingFilters({
+    required String residenceUuid,
+  }) async {
+    final data = await _client.getJson(
+      GuardApiPaths.bookingFilters(residenceUuid),
+      fallbackMessage: BookingStrings.loadFailed,
+    );
+    return parseBookingFiltersFromApi(data);
   }
 
   @override
@@ -81,6 +100,5 @@ final class GuardBookingRepositoryImpl implements contract.GuardBookingRepositor
   }
 }
 
-/// Guard check-in/out `current_time` for booking APIs.
 String guardBookingCurrentTime([DateTime? when]) =>
     GuardTimeFormat.shiftTimestamp(when ?? DateTime.now());

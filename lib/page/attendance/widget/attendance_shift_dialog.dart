@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../core/auth/guard_pin_verify.dart';
 import '../../../core/dashboard_prefs.dart';
 import '../../../widget/api_failed_dialog.dart';
-import '../../../widget/guard_pin_dialog.dart';
 import '../../home/home_repository.dart';
-import '../attendance_pin_validation.dart';
 import '../attendance_provider.dart';
 import '../attendance_state.dart';
 import '../attendance_strings.dart';
@@ -38,21 +37,15 @@ abstract final class AttendanceShiftDialog {
       }
       return;
     }
-    final pinOutcome = await showDialog<GuardPinOutcome>(
+    final pinOutcome = await showApiGuardPinDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => GuardPinDialog(
-        defaultFailureText: AttendanceStrings.invalidPin,
-        onVerify: (pin) async {
-          final match = matchGuardForResidence(
-            securityJson: snap.securityJson,
-            residenceUuid: snap.residenceId,
-            pin6: pin,
-            fallbackCompanyUuid: snap.securityUuid,
-          );
-          if (match == null) return const GuardPinOutcome.failure();
-          return GuardPinOutcome.success(match);
-        },
+      ref: ref,
+      defaultFailureText: AttendanceStrings.invalidPin,
+      resolveAfterVerify: (pin) => resolveAttendanceGuardAfterPin(
+        pin: pin,
+        securityJson: snap.securityJson,
+        residenceUuid: snap.residenceId,
+        fallbackCompanyUuid: snap.securityUuid,
       ),
     );
     if (pinOutcome?.ok != true || !pageContext.mounted) return;

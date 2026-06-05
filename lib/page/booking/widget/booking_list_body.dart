@@ -6,11 +6,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../router/app_route.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_spacing.dart';
+import '../booking_list_filters.dart';
 import '../booking_provider.dart';
 import '../../../widget/guard_list_empty_state.dart';
 import '../booking_state.dart';
 import '../booking_tab_colors.dart';
 import 'booking_list_tile.dart';
+import 'booking_search_empty_state.dart';
 
 class BookingListBody extends ConsumerWidget {
   const BookingListBody({super.key, required this.state});
@@ -23,7 +25,9 @@ class BookingListBody extends ConsumerWidget {
       return Center(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 32.h),
-          child: const GuardListEmptyState(),
+          child: bookingSearchActive(state.searchQuery)
+              ? BookingSearchEmptyState(query: state.searchQuery)
+              : const GuardListEmptyState(),
         ),
       );
     }
@@ -32,7 +36,9 @@ class BookingListBody extends ConsumerWidget {
       color: AppColor.primary,
       onRefresh: () => ref.read(bookingListProvider.notifier).refresh(),
       child: ListView.separated(
-        key: ValueKey('list_${state.tab}_${state.selectedDay.toIso8601String()}'),
+        key: ValueKey(
+          'list_${state.tab}_${state.selectedDay.toIso8601String()}_${state.searchQuery}',
+        ),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
         itemCount: state.items.length,

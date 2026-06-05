@@ -12,16 +12,20 @@ Future<void> showApiFailedDialog(
   String? message,
   String title = 'Request failed',
 }) {
+  if (sessionExpiredFlowInProgress || sessionExpiredDialogVisible) {
+    return Future<void>.value();
+  }
   if (error != null && isSessionTerminationApiError(error)) {
     return Future<void>.value();
   }
-  if (message != null &&
-      (message.trim() == sessionSignedOutAnotherDeviceMessage.trim() ||
-          message.toLowerCase().contains('logged in on another device'))) {
+  if (isSessionExpiredUserMessage(message)) {
     return Future<void>.value();
   }
   final text = message ??
       (error != null ? userFacingErrorMessage(error) : 'Something went wrong');
+  if (isSessionExpiredUserMessage(text)) {
+    return Future<void>.value();
+  }
   return showDialog<void>(
     context: context,
     barrierDismissible: false,

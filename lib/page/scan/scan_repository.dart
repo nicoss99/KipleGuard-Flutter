@@ -87,24 +87,6 @@ class ScanRepository {
     return res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : null;
   }
 
-  /// `getGuardianAPI` — GET `data/guardian_parent_listing`.
-  Future<List<Map<String, dynamic>>> fetchGuardianParent({
-    required String filter,
-  }) async {
-    final res = await _dio.get<dynamic>(
-      'data/guardian_parent_listing',
-      queryParameters: <String, dynamic>{
-        'filter': filter,
-        'order': '',
-        'related': '',
-        'include_count': 'true',
-        'offset': '0',
-        'limit': '10000',
-      },
-    );
-    return _resourceList(res.data);
-  }
-
   /// `getGuardianStudentAPI` — GET `data/students`.
   Future<List<Map<String, dynamic>>> fetchGuardianStudent({
     required String filter,

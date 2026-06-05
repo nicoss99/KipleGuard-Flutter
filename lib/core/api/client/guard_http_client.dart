@@ -14,6 +14,13 @@ abstract interface class GuardHttpClient {
     String fallbackMessage = 'Request failed',
   });
 
+  /// Full guard envelope `{ success, message, data }` after success check.
+  Future<({Map<String, dynamic>? data, String? message})> postGuardEnvelope(
+    String path, {
+    Object? data,
+    String fallbackMessage = 'Request failed',
+  });
+
   Future<Map<String, dynamic>?> postMultipart(
     String path, {
     required FormData data,

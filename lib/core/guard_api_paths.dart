@@ -4,6 +4,7 @@ abstract final class GuardApiPaths {
   static const login = 'api/v1/guard/auth/login';
   static const logout = 'api/v1/guard/auth/logout';
   static const changePassword = 'api/v1/guard/auth/change-password';
+  static const verifyPin = 'api/v1/guard/auth/verify-pin';
   static const me = 'api/v1/guard/me';
 
   static String attendanceStart(String residenceUuid) =>
@@ -56,6 +57,9 @@ abstract final class GuardApiPaths {
 
   static String bookings(String residenceUuid) =>
       'api/v1/guard/residences/$residenceUuid/bookings';
+
+  static String bookingFilters(String residenceUuid) =>
+      'api/v1/guard/residences/$residenceUuid/bookings/filters';
 
   static String bookingDetail(String residenceUuid, int bookingId) =>
       'api/v1/guard/residences/$residenceUuid/bookings/$bookingId';

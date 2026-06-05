@@ -1,4 +1,5 @@
 import '../../core/guard_api_message.dart';
+import 'booking_filter_models.dart';
 import 'booking_guard_models.dart';
 
 String bookingTabApiValue(BookingTabApi tab) => switch (tab) {
@@ -40,4 +41,48 @@ GuardBookingRow parseBookingDetailFromApi(Map<String, dynamic>? body) {
     throw StateError('Invalid booking payload');
   }
   return GuardBookingRow.fromJson(raw);
+}
+
+GuardBookingFilters parseBookingFiltersFromApi(Map<String, dynamic>? body) {
+  final data = bookingApiPayload(body);
+  final statusesRaw = data?['statuses'];
+  final facilitiesRaw = data?['facilities'];
+  return GuardBookingFilters(
+    statuses: _parseFilterOptions(statusesRaw),
+    facilities: _parseFacilityFilters(facilitiesRaw),
+  );
+}
+
+List<BookingFilterOption> _parseFilterOptions(dynamic raw) {
+  if (raw is! List) return const [];
+  return raw
+      .whereType<Map>()
+      .map(
+        (e) => BookingFilterOption(
+          label: e['label']?.toString() ?? '',
+          value: e['value']?.toString() ?? '',
+        ),
+      )
+      .where((e) => e.label.isNotEmpty && e.value.isNotEmpty)
+      .toList();
+}
+
+List<BookingFacilityFilter> _parseFacilityFilters(dynamic raw) {
+  if (raw is! List) return const [];
+  return raw
+      .whereType<Map>()
+      .map((e) {
+        final id = _jsonInt(e['value']);
+        final label = e['label']?.toString() ?? '';
+        if (id <= 0 || label.isEmpty) return null;
+        return BookingFacilityFilter(label: label, id: id);
+      })
+      .whereType<BookingFacilityFilter>()
+      .toList();
+}
+
+int _jsonInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse('$value') ?? 0;
 }

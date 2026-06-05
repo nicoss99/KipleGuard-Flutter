@@ -13,6 +13,7 @@ import '../../core/guard_api_paths.dart';
 import '../../core/residence_prefs.dart';
 import '../login/login_repository.dart';
 import 'guard_models.dart';
+import 'guard_pin_verify_result.dart';
 
 final guardRepositoryProvider = Provider<GuardAuthRepository>(
   (ref) => GuardRepository(
@@ -122,6 +123,30 @@ final class GuardRepository implements GuardAuthRepository {
       await ResidencePrefs.applyDefaultFromResidences(list);
     }
     return list;
+  }
+
+  @override
+  Future<GuardPinVerifyResult> verifyPin(String pin) async {
+    try {
+      final envelope = await _client.postGuardEnvelope(
+        GuardApiPaths.verifyPin,
+        data: <String, dynamic>{'pin': pin},
+        fallbackMessage: _messages.requestFailed,
+      );
+      if (envelope.data?['pin_verified'] == true) {
+        return const GuardPinVerifyResult.verified();
+      }
+      final apiMessage = envelope.message?.trim();
+      return GuardPinVerifyResult.failed(
+        apiMessage != null && apiMessage.isNotEmpty
+            ? apiMessage
+            : _messages.requestFailed,
+      );
+    } on DioException catch (e) {
+      return GuardPinVerifyResult.failed(
+        guardApiMessage(e, fallback: _messages.requestFailed),
+      );
+    }
   }
 
   List<GuardResidence> _parseResidences(dynamic raw) {

@@ -75,7 +75,9 @@ final dioProvider = Provider<Dio>((ref) {
       onError: (err, handler) {
         if (isSessionSupersededError(err)) {
           handleSessionSupersededResponse(ref, err.requestOptions, err.response?.data);
-        } else if (err.response?.statusCode == 401) {
+        } else if (err.response?.statusCode == 401 &&
+            requiresGuardAuth(err.requestOptions.uri.path) &&
+            !sessionExpiredFlowInProgress) {
           handleUnauthorizedApiResponse(ref, err.requestOptions);
         }
         handler.next(err);

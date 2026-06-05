@@ -1,8 +1,6 @@
 import 'dart:convert';
 
-import '../../core/guard_pin_bypass.dart';
-
-/// Android `AttendanceActivity.checkGuardPin`: match PIN and residence on `kg_residence_guards_by_guard_uuid`.
+/// Resolves guard identity from cached security JSON after API PIN verification.
 ({String guardUuid, String companyUuid})? matchGuardForResidence({
   required String securityJson,
   required String residenceUuid,
@@ -10,13 +8,6 @@ import '../../core/guard_pin_bypass.dart';
   String fallbackCompanyUuid = '',
 }) {
   if (residenceUuid.trim().isEmpty || pin6.length != 6) return null;
-  if (GuardPinBypass.matches(pin6)) {
-    return GuardPinBypass.matchForResidence(
-      securityJson: securityJson,
-      residenceUuid: residenceUuid,
-      fallbackCompanyUuid: fallbackCompanyUuid,
-    );
-  }
   if (securityJson.trim().isEmpty) return null;
   try {
     final decoded = jsonDecode(securityJson);

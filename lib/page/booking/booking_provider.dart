@@ -9,11 +9,14 @@ import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/dashboard_prefs.dart';
 import '../../core/network/dio_network.dart';
 import 'booking_filter_query.dart';
+import 'booking_guard_models.dart';
 import 'booking_list_filters.dart';
 import 'booking_model.dart';
 import 'booking_parsers.dart';
 import 'booking_repository.dart';
+import 'booking_search_helpers.dart';
 import 'booking_state.dart';
+
 final bookingListProvider =
     NotifierProvider<BookingListNotifier, BookingListState>(
       BookingListNotifier.new,
@@ -42,6 +45,8 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       selectedDay: d,
       items: const [],
+      searchQuery: '',
+      clearSearchPool: true,
       clearError: true,
     );
     await refresh();
@@ -51,6 +56,7 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       filterQuery: query,
       searchQuery: '',
+      clearSearchPool: true,
       clearError: true,
     );
     await refresh();
@@ -60,6 +66,7 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       filterQuery: BookingFilterQuery.empty,
       searchQuery: '',
+      clearSearchPool: true,
       clearError: true,
     );
     await refresh();
@@ -70,6 +77,17 @@ class BookingListNotifier extends Notifier<BookingListState> {
     state = state.copyWith(
       searchQuery: t,
       filterQuery: t.length >= 3 ? BookingFilterQuery.empty : state.filterQuery,
+      clearSearchPool: t.length < 3,
+      clearError: true,
+    );
+    await refresh();
+  }
+
+  Future<void> clearSearch() async {
+    if (state.searchQuery.isEmpty) return;
+    state = state.copyWith(
+      searchQuery: '',
+      clearSearchPool: true,
       clearError: true,
     );
     await refresh();
@@ -77,15 +95,60 @@ class BookingListNotifier extends Notifier<BookingListState> {
 
   Future<void> setTab(BookingTab tab) async {
     if (state.tab == tab) return;
+    if (bookingSearchActive(state.searchQuery) &&
+        state.searchResultPool.isNotEmpty) {
+      state = state.copyWith(
+        tab: tab,
+        items: _displayItems(state.searchResultPool),
+        clearError: true,
+      );
+      return;
+    }
     state = state.copyWith(tab: tab, items: const [], clearError: true);
     await refresh();
   }
 
-  BookingTabApi _tabApi(BookingTab tab) => switch (tab) {
-        BookingTab.allBookings => BookingTabApi.allBookings,
-        BookingTab.checkedIn => BookingTabApi.checkedIn,
-        BookingTab.upcoming => BookingTabApi.upcoming,
-      };
+  BookingTabApi _tabApi(BookingTab tab) {
+    if (bookingSearchActive(state.searchQuery)) {
+      return BookingTabApi.allBookings;
+    }
+    return switch (tab) {
+      BookingTab.allBookings => BookingTabApi.allBookings,
+      BookingTab.checkedIn => BookingTabApi.checkedIn,
+      BookingTab.upcoming => BookingTabApi.upcoming,
+    };
+  }
+
+  List<BookingListItem> _displayItems(List<BookingListItem> source) =>
+      buildBookingDisplayItems(
+        source: source,
+        filter: state.filterQuery,
+        searchQuery: state.searchQuery,
+        tab: state.tab,
+      );
+
+  void _finishWithMapped({
+    required List<BookingListItem> mapped,
+    required GuardBookingListResult result,
+    required bool fromCache,
+    DateTime? cacheSavedAt,
+    List<BookingListItem>? searchPool,
+  }) {
+    final pool = searchPool ??
+        (bookingSearchActive(state.searchQuery) ? mapped : const []);
+    final source = bookingSearchActive(state.searchQuery) ? pool : mapped;
+    state = state.copyWith(
+      items: _displayItems(source),
+      searchResultPool: pool,
+      loading: false,
+      totalAllBookings: result.counts.allBookings,
+      totalCheckedIn: result.counts.checkedIn,
+      totalUpcoming: result.counts.upcoming,
+      fromCache: fromCache,
+      cacheSavedAt: cacheSavedAt,
+      clearCacheMeta: !fromCache,
+    );
+  }
 
   Future<void> refresh() async {
     final snap = await DashboardPrefs.loadSnapshot();
@@ -95,25 +158,21 @@ class BookingListNotifier extends Notifier<BookingListState> {
     }
     state = state.copyWith(loading: true, clearError: true);
 
+    final apiTab = _tabApi(state.tab);
+    final hasSearch = bookingSearchActive(state.searchQuery);
+    final hasFilter = state.filterQuery.active;
+
     if (!await isDeviceOnline(ref)) {
       final cached = await GuardListCache.readBookings(
         residenceUuid: snap.residenceId,
         day: state.selectedDay,
-        tab: bookingTabApiValue(_tabApi(state.tab)),
+        tab: bookingTabApiValue(apiTab),
       );
       if (cached != null) {
         final mapped = cached.result.bookings.map(BookingListItem.fromGuard).toList();
-        final items = applyBookingListFilters(
-          items: mapped,
-          filter: state.filterQuery,
-          searchQuery: state.searchQuery,
-        );
-        state = state.copyWith(
-          items: items,
-          loading: false,
-          totalAllBookings: cached.result.counts.allBookings,
-          totalCheckedIn: cached.result.counts.checkedIn,
-          totalUpcoming: cached.result.counts.upcoming,
+        _finishWithMapped(
+          mapped: mapped,
+          result: cached.result,
           fromCache: true,
           cacheSavedAt: cached.savedAt,
         );
@@ -131,50 +190,34 @@ class BookingListNotifier extends Notifier<BookingListState> {
       final result = await repo.fetchBookings(
         residenceUuid: snap.residenceId,
         date: state.selectedDay,
-        tab: _tabApi(state.tab),
+        tab: apiTab,
+        samenityId: state.filterQuery.facilityId,
+        search: state.searchQuery,
       );
       final mapped = result.bookings.map(BookingListItem.fromGuard).toList();
-      final items = applyBookingListFilters(
-        items: mapped,
-        filter: state.filterQuery,
-        searchQuery: state.searchQuery,
-      );
-      await GuardListCache.saveBookings(
-        residenceUuid: snap.residenceId,
-        day: state.selectedDay,
-        tab: bookingTabApiValue(_tabApi(state.tab)),
-        result: result,
-      );
-      state = state.copyWith(
-        items: items,
-        loading: false,
-        totalAllBookings: result.counts.allBookings,
-        totalCheckedIn: result.counts.checkedIn,
-        totalUpcoming: result.counts.upcoming,
-        clearCacheMeta: true,
-      );
+      if (!hasSearch && !hasFilter) {
+        await GuardListCache.saveBookings(
+          residenceUuid: snap.residenceId,
+          day: state.selectedDay,
+          tab: bookingTabApiValue(apiTab),
+          result: result,
+        );
+      }
+      _finishWithMapped(mapped: mapped, result: result, fromCache: false);
     } on DioException catch (e, st) {
       AppLog.error('Booking list', tag: 'Booking', error: e, stackTrace: st);
       if (isNetworkError(e)) {
         final cached = await GuardListCache.readBookings(
           residenceUuid: snap.residenceId,
           day: state.selectedDay,
-          tab: bookingTabApiValue(_tabApi(state.tab)),
+          tab: bookingTabApiValue(apiTab),
         );
         if (cached != null) {
           final mapped =
               cached.result.bookings.map(BookingListItem.fromGuard).toList();
-          final items = applyBookingListFilters(
-            items: mapped,
-            filter: state.filterQuery,
-            searchQuery: state.searchQuery,
-          );
-          state = state.copyWith(
-            items: items,
-            loading: false,
-            totalAllBookings: cached.result.counts.allBookings,
-            totalCheckedIn: cached.result.counts.checkedIn,
-            totalUpcoming: cached.result.counts.upcoming,
+          _finishWithMapped(
+            mapped: mapped,
+            result: cached.result,
             fromCache: true,
             cacheSavedAt: cached.savedAt,
           );

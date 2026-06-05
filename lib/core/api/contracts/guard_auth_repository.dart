@@ -1,5 +1,6 @@
 import '../../../core/device/login_device_info.dart';
 import '../../../page/auth/guard_models.dart';
+import '../../../page/auth/guard_pin_verify_result.dart';
 
 /// Guard auth & profile API (login, logout, me, residences).
 abstract interface class GuardAuthRepository {
@@ -21,4 +22,7 @@ abstract interface class GuardAuthRepository {
   Future<GuardMeResult> fetchMe();
 
   Future<List<GuardResidence>> fetchResidences();
+
+  /// POST `auth/verify-pin` — verified when `data.pin_verified` is true.
+  Future<GuardPinVerifyResult> verifyPin(String pin);
 }

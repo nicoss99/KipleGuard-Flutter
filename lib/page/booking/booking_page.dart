@@ -14,10 +14,13 @@ import '../../core/connectivity/connectivity_refresh.dart';
 import '../../widget/offline_cache_banner.dart';
 import '../../widget/standard_primary_header.dart';
 import 'booking_provider.dart';
+import 'booking_list_filters.dart';
 import 'booking_strings.dart';
 import 'widget/booking_date_toolbar.dart';
 import 'widget/booking_filter_sheet.dart';
 import 'widget/booking_list_body.dart';
+import 'widget/booking_search_bar.dart';
+import 'widget/booking_search_chip.dart';
 import 'widget/booking_summary_row.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
@@ -28,6 +31,8 @@ class BookingPage extends ConsumerStatefulWidget {
 }
 
 class _BookingPageState extends ConsumerState<BookingPage> {
+  var _searchBarOpen = false;
+
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(bookingListProvider);
@@ -58,8 +63,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 onBack: () => context.pop(),
                 actions: [
                   IconButton(
-                    onPressed: () => _openSearch(s.searchQuery),
-                    icon: Icon(Icons.search_rounded, size: 24.sp, color: AppColor.primary),
+                    onPressed: () => setState(() => _searchBarOpen = !_searchBarOpen),
+                    icon: Icon(
+                      _searchBarOpen ? Icons.search_off_rounded : Icons.search_rounded,
+                      size: 24.sp,
+                      color: AppColor.primary,
+                    ),
                   ),
                   IconButton(
                     onPressed: _openFilter,
@@ -71,6 +80,16 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 state: s,
                 onPickDate: () => _pickDateWithDialog(s.selectedDay),
               ),
+              if (_searchBarOpen)
+                BookingSearchBar(
+                  initialQuery: s.searchQuery,
+                  onClose: () => setState(() => _searchBarOpen = false),
+                )
+              else if (bookingSearchActive(s.searchQuery))
+                BookingSearchChip(
+                  query: s.searchQuery,
+                  onTap: () => setState(() => _searchBarOpen = true),
+                ),
               OfflineCacheBanner(
                 fromCache: s.fromCache,
                 savedAt: s.cacheSavedAt,
@@ -123,40 +142,4 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     );
   }
 
-  Future<void> _openSearch(String initialQuery) async {
-    final controller = TextEditingController(text: initialQuery);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(BookingStrings.searchTitle),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: BookingStrings.searchHint),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(BookingStrings.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(BookingStrings.searchAction),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    if (ok == true) {
-      final t = controller.text.trim();
-      if (t.isEmpty) {
-        await ref.read(bookingListProvider.notifier).setSearchQuery('');
-      } else if (t.length >= 3) {
-        await ref.read(bookingListProvider.notifier).setSearchQuery(t);
-      } else {
-        await showApiFailedDialog(context, message: BookingStrings.searchMinChars);
-      }
-    }
-    controller.dispose();
-  }
 }

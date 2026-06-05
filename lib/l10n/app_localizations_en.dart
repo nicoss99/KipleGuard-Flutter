@@ -255,6 +255,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSearchTitle => 'Search bookings';
 
   @override
+  String bookingSearchNoResults(String query) {
+    return 'No bookings found for \"$query\".';
+  }
+
+  @override
+  String get bookingSearchScopeHint => 'Searching all bookings on this day';
+
+  @override
   String get bookingStartTime => 'Start';
 
   @override

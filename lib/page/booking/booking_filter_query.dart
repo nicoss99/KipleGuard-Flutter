@@ -1,23 +1,16 @@
-/// Values applied to the booking list API filter (Android `ListBookingActivity` / `filterActive`).
+/// Values applied to the booking list API filter.
 class BookingFilterQuery {
   const BookingFilterQuery({
     this.submittedOnDay,
-    this.categoryUuid,
-    this.roomUuid,
-    this.categoryName,
-    this.roomName,
+    this.facilityId,
+    this.facilityLabel,
   });
 
   final DateTime? submittedOnDay;
-  final String? categoryUuid;
-  final String? roomUuid;
-  final String? categoryName;
-  final String? roomName;
+  final int? facilityId;
+  final String? facilityLabel;
 
   static const empty = BookingFilterQuery();
 
-  bool get active =>
-      submittedOnDay != null ||
-      (categoryUuid != null && categoryUuid!.isNotEmpty) ||
-      (roomUuid != null && roomUuid!.isNotEmpty);
+  bool get active => submittedOnDay != null || facilityId != null;
 }

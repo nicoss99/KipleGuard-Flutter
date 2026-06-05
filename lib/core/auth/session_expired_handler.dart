@@ -18,7 +18,14 @@ import '../../page/visitor/visitor_provider.dart';
 import '../../widget/app_confirm_dialog.dart';
 import '../../theme/app_color.dart';
 
+const sessionExpiredTitle = 'Session expired';
+const sessionExpiredMessage = 'Please sign in again.';
+
 bool sessionExpiredFlowInProgress = false;
+bool _sessionExpiredDialogVisible = false;
+
+/// True while the session-expired dialog is on screen.
+bool get sessionExpiredDialogVisible => _sessionExpiredDialogVisible;
 
 const _sessionSupersededCode = 'SESSION_SUPERSEDED';
 
@@ -42,21 +49,31 @@ bool isSessionSupersededPayload(dynamic data) {
   return message.contains(_sessionSupersededCode);
 }
 
-/// True when [error] is a forced session end that already triggers (or should only show)
-/// the session-expired dialog — not a generic [showApiFailedDialog].
+/// True when [error] is a forced session end — only the session-expired dialog should show.
 bool isSessionTerminationApiError(Object? error) {
   if (error is! DioException) return false;
-  final data = error.response?.data;
-  if (isSessionSupersededPayload(data)) return true;
-  final status = error.response?.statusCode;
-  if (status != 401) return false;
+  if (isSessionSupersededPayload(error.response?.data)) return true;
   final path = error.requestOptions.uri.path;
   if (_isPublicGuardAuthPath(path)) return false;
-  if (data is! Map) return false;
-  final map = data is Map<String, dynamic> ? data : Map<String, dynamic>.from(data);
-  final msg = map['message']?.toString().trim() ?? '';
-  if (msg == sessionSignedOutAnotherDeviceMessage.trim()) return true;
-  if (msg.toLowerCase().contains('logged in on another device')) return true;
+  if (error.response?.statusCode == 401) return true;
+  if (error.type == DioExceptionType.cancel &&
+      error.message?.trim().toLowerCase() == sessionExpiredTitle.toLowerCase()) {
+    return true;
+  }
+  return false;
+}
+
+/// True when a user-facing error string is from session expiry (suppress generic dialogs).
+bool isSessionExpiredUserMessage(String? message) {
+  if (message == null) return false;
+  final m = message.trim();
+  if (m.isEmpty) return false;
+  final lower = m.toLowerCase();
+  if (lower == sessionExpiredTitle.toLowerCase()) return true;
+  if (lower == sessionExpiredMessage.toLowerCase()) return true;
+  if (m == sessionSignedOutAnotherDeviceMessage.trim()) return true;
+  if (lower.contains('logged in on another device')) return true;
+  if (lower.contains('session superseded')) return true;
   return false;
 }
 
@@ -120,33 +137,42 @@ Future<void> _runSessionExpiredFlow(Ref ref) async {
   }
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    final rootCtx = rootNavigatorKey.currentContext;
-    if (rootCtx == null || !rootCtx.mounted) {
-      sessionExpiredFlowInProgress = false;
-      return;
-    }
-    unawaited(
-      showDialog<void>(
-        context: rootCtx,
-        barrierDismissible: false,
-        useRootNavigator: true,
-        builder: (dialogCtx) => AppConfirmDialog(
-          icon: Icons.error_outline,
-          iconColor: AppColor.errorStrong,
-          iconBackgroundColor: AppColor.errorLight,
-          title: 'Session expired',
-          message: 'Please sign in again.',
-          showCancel: false,
-          confirmText: 'OK',
-          onConfirm: () {
-            final ctx = rootNavigatorKey.currentContext;
-            if (ctx != null && ctx.mounted) {
-              GoRouter.of(ctx).go(AppRoute.login.path);
-            }
-            sessionExpiredFlowInProgress = false;
-          },
-        ),
+    unawaited(showSessionExpiredDialog());
+  });
+}
+
+/// Single app-wide session-expired dialog (401 / superseded session).
+Future<void> showSessionExpiredDialog() async {
+  if (_sessionExpiredDialogVisible) return;
+  final rootCtx = rootNavigatorKey.currentContext;
+  if (rootCtx == null || !rootCtx.mounted) {
+    sessionExpiredFlowInProgress = false;
+    return;
+  }
+  _sessionExpiredDialogVisible = true;
+  try {
+    await showDialog<void>(
+      context: rootCtx,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogCtx) => AppConfirmDialog(
+        icon: Icons.error_outline,
+        iconColor: AppColor.errorStrong,
+        iconBackgroundColor: AppColor.errorLight,
+        title: sessionExpiredTitle,
+        message: sessionExpiredMessage,
+        showCancel: false,
+        confirmText: 'OK',
+        onConfirm: () {
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            GoRouter.of(ctx).go(AppRoute.login.path);
+          }
+        },
       ),
     );
-  });
+  } finally {
+    _sessionExpiredDialogVisible = false;
+    sessionExpiredFlowInProgress = false;
+  }
 }

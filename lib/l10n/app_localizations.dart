@@ -574,6 +574,18 @@ abstract class AppLocalizations {
   /// **'Search bookings'**
   String get bookingSearchTitle;
 
+  /// No description provided for @bookingSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings found for \"{query}\".'**
+  String bookingSearchNoResults(String query);
+
+  /// No description provided for @bookingSearchScopeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching all bookings on this day'**
+  String get bookingSearchScopeHint;
+
   /// No description provided for @bookingStartTime.
   ///
   /// In en, this message translates to:
