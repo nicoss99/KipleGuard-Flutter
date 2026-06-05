@@ -129,9 +129,9 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
                           .read(attendanceProvider.notifier)
                           .refreshRecords(),
                       onPickDate: () => _pickDate(s.selectedDay),
-                      onShiftMonth: (delta) => ref
+                      onShiftDay: (delta) => ref
                           .read(attendanceProvider.notifier)
-                          .setSelectedDay(_shiftMonth(s.selectedDay, delta)),
+                          .setSelectedDay(_shiftDay(s.selectedDay, delta)),
                       onSelectDay: (d) => ref
                           .read(attendanceProvider.notifier)
                           .setSelectedDay(d),
@@ -146,12 +146,8 @@ class _AttendancePageState extends ConsumerState<AttendancePage>
     );
   }
 
-  DateTime _shiftMonth(DateTime d, int delta) {
-    final shifted = DateTime(d.year, d.month + delta, 1);
-    final last = DateTime(shifted.year, shifted.month + 1, 0).day;
-    final day = d.day.clamp(1, last);
-    return DateTime(shifted.year, shifted.month, day);
-  }
+  DateTime _shiftDay(DateTime d, int delta) =>
+      DateTime(d.year, d.month, d.day).add(Duration(days: delta));
 
   Future<void> _pickDate(DateTime current) async {
     final picked = await AppCalendarPicker.showDay(context: context, initial: current);
@@ -332,7 +328,7 @@ class _RecordsTab extends StatelessWidget {
     required this.error,
     required this.onRefresh,
     required this.onPickDate,
-    required this.onShiftMonth,
+    required this.onShiftDay,
     required this.onSelectDay,
   });
 
@@ -343,7 +339,7 @@ class _RecordsTab extends StatelessWidget {
   final String? error;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onPickDate;
-  final ValueChanged<int> onShiftMonth;
+  final ValueChanged<int> onShiftDay;
   final ValueChanged<DateTime> onSelectDay;
 
   @override
@@ -370,7 +366,7 @@ class _RecordsTab extends StatelessWidget {
               child: AttendanceRecordsDateHeader(
                 selectedDay: selectedDay,
                 onPickDate: () => onPickDate(),
-                onShiftMonth: onShiftMonth,
+                onShiftDay: onShiftDay,
               ),
             ),
             SliverToBoxAdapter(

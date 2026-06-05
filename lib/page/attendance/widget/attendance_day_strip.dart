@@ -50,8 +50,9 @@ class _AttendanceDayStripState extends State<AttendanceDayStrip> {
     if (!sameMonth) return;
     final index = widget.selectedDay.day - 1;
     final cell = _kStripCellLogical.w + _kStripGapLogical.w;
+    final inset = AppSpacing.md;
     final vp = _scroll.position.viewportDimension;
-    final target = (index * cell) - (vp / 2) + (_kStripCellLogical.w / 2);
+    final target = inset + (index * cell) - (vp / 2) + (_kStripCellLogical.w / 2);
     _scroll.animateTo(
       target.clamp(0.0, _scroll.position.maxScrollExtent),
       duration: const Duration(milliseconds: 280),
@@ -75,13 +76,13 @@ class _AttendanceDayStripState extends State<AttendanceDayStrip> {
     return ColoredBox(
       color: AppColor.white,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, 12.h),
+        padding: EdgeInsets.only(bottom: 12.h),
         child: SizedBox(
           height: 70.h,
           child: ListView.separated(
             controller: _scroll,
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
+            padding: EdgeInsets.fromLTRB(AppSpacing.md, 8.h, AppSpacing.md, 8.h),
             itemCount: days,
             separatorBuilder: (_, _) => SizedBox(width: _kStripGapLogical.w),
             itemBuilder: (ctx, i) {

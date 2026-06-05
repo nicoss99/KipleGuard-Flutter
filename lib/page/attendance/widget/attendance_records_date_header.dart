@@ -12,12 +12,12 @@ class AttendanceRecordsDateHeader extends StatelessWidget {
     super.key,
     required this.selectedDay,
     required this.onPickDate,
-    required this.onShiftMonth,
+    required this.onShiftDay,
   });
 
   final DateTime selectedDay;
   final VoidCallback onPickDate;
-  final ValueChanged<int> onShiftMonth;
+  final ValueChanged<int> onShiftDay;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class AttendanceRecordsDateHeader extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => onShiftMonth(-1),
+                  onPressed: () => onShiftDay(-1),
                   icon: Icon(Icons.chevron_left_rounded, size: 28.sp, color: AppColor.primary),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.w),
@@ -71,7 +71,7 @@ class AttendanceRecordsDateHeader extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => onShiftMonth(1),
+                  onPressed: () => onShiftDay(1),
                   icon: Icon(Icons.chevron_right_rounded, size: 28.sp, color: AppColor.primary),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.w),
