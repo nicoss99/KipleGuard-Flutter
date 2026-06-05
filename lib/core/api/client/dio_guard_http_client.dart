@@ -77,6 +77,12 @@ final class DioGuardHttpClient implements GuardHttpClient {
     return res.data;
   }
 
+  @override
+  Future<dynamic> postRaw(String path, {Object? data}) async {
+    final res = await _dio.post<dynamic>(path, data: data);
+    return res.data;
+  }
+
   Map<String, dynamic>? _requireSuccess(
     Response<Map<String, dynamic>> res,
     String fallbackMessage,

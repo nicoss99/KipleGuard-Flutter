@@ -15,7 +15,6 @@ abstract final class AttendanceStrings {
   static String get shiftStartedMessage => appL10n.attendanceShiftStartedMessage;
   static String get shiftEndedMessage => appL10n.attendanceShiftEndedMessage;
   static String get successDone => appL10n.attendanceSuccessDone;
-  static String get invalidPin => appL10n.attendanceInvalidPin;
   static String get noResidenceSelected => appL10n.attendanceNoResidenceSelected;
   static String get missingSecurityProfile => appL10n.attendanceMissingSecurityProfile;
   static String get shiftAlreadyStarted => appL10n.attendanceShiftAlreadyStarted;

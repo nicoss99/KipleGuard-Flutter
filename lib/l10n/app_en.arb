@@ -19,7 +19,6 @@
   "appTitleStaging": "KipleGuard (Staging)",
   "attendanceEndShiftSubtitle": "Tamat",
   "attendanceEndShiftTitle": "End Shift",
-  "attendanceInvalidPin": "That PIN is not valid for this site.",
   "attendanceMissingSecurityProfile": "Site security data is missing. Select a site again or contact support.",
   "attendanceNoResidenceSelected": "No residence selected. Select a site from the dashboard first.",
   "attendanceRecordCheckIn": "Check in",

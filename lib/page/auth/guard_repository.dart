@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -13,6 +15,7 @@ import '../../core/guard_api_paths.dart';
 import '../../core/residence_prefs.dart';
 import '../login/login_repository.dart';
 import 'guard_models.dart';
+import 'guard_pin_verify_identity.dart';
 import 'guard_pin_verify_result.dart';
 
 final guardRepositoryProvider = Provider<GuardAuthRepository>(
@@ -128,25 +131,36 @@ final class GuardRepository implements GuardAuthRepository {
   @override
   Future<GuardPinVerifyResult> verifyPin(String pin) async {
     try {
-      final envelope = await _client.postGuardEnvelope(
+      final raw = await _client.postRaw(
         GuardApiPaths.verifyPin,
         data: <String, dynamic>{'pin': pin},
-        fallbackMessage: _messages.requestFailed,
       );
-      if (envelope.data?['pin_verified'] == true) {
-        return const GuardPinVerifyResult.verified();
-      }
-      final apiMessage = envelope.message?.trim();
-      return GuardPinVerifyResult.failed(
-        apiMessage != null && apiMessage.isNotEmpty
-            ? apiMessage
-            : _messages.requestFailed,
-      );
+      return _parseVerifyPinResponse(raw);
     } on DioException catch (e) {
+      final parsed = _parseVerifyPinResponse(e.response?.data);
+      if (parsed.verified) return parsed;
       return GuardPinVerifyResult.failed(
         guardApiMessage(e, fallback: _messages.requestFailed),
       );
     }
+  }
+
+  GuardPinVerifyResult _parseVerifyPinResponse(dynamic raw) {
+    if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        raw = jsonDecode(raw);
+      } catch (_) {}
+    }
+    final body = asStringKeyedMap(raw);
+    if (body != null && guardPinVerifySuccess(body)) {
+      return GuardPinVerifyResult.verified(
+        identity: parseGuardIdentityFromVerifyPinData(guardApiData(body)),
+      );
+    }
+    final msg = body?['message']?.toString().trim();
+    return GuardPinVerifyResult.failed(
+      msg != null && msg.isNotEmpty ? msg : _messages.requestFailed,
+    );
   }
 
   List<GuardResidence> _parseResidences(dynamic raw) {

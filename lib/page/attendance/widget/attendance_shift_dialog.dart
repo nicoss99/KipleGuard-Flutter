@@ -40,12 +40,12 @@ abstract final class AttendanceShiftDialog {
     final pinOutcome = await showApiGuardPinDialog(
       context: context,
       ref: ref,
-      defaultFailureText: AttendanceStrings.invalidPin,
-      resolveAfterVerify: (pin) => resolveAttendanceGuardAfterPin(
+      resolveAfterVerify: (pin, result) => resolveAttendanceGuardAfterPin(
         pin: pin,
         securityJson: snap.securityJson,
         residenceUuid: snap.residenceId,
         fallbackCompanyUuid: snap.securityUuid,
+        verifyResult: result,
       ),
     );
     if (pinOutcome?.ok != true || !pageContext.mounted) return;

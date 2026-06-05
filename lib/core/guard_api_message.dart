@@ -14,9 +14,38 @@ String guardApiMessage(DioException e, {String fallback = 'Something went wrong'
   return fallback;
 }
 
-bool guardApiSuccess(Map<String, dynamic>? body) => body?['success'] == true;
+bool guardApiSuccess(Map<String, dynamic>? body) =>
+    guardApiTruthy(body?['success']);
+
+bool guardApiTruthy(dynamic value) {
+  if (value == true || value == 1) return true;
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'true' || normalized == '1';
+  }
+  return false;
+}
+
+Map<String, dynamic>? asStringKeyedMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) {
+    return raw.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return null;
+}
+
+/// `verify-pin` succeeds when `success` is true or `data.pin_verified` is true.
+bool guardPinVerifySuccess(Map<String, dynamic>? body) {
+  if (body == null) return false;
+  if (guardApiTruthy(body['success'])) return true;
+  if (guardApiTruthy(body['pin_verified'])) return true;
+  final data = guardApiData(body);
+  if (data == null) return false;
+  return guardApiTruthy(data['pin_verified']) ||
+      guardApiTruthy(data['verified']);
+}
 
 Map<String, dynamic>? guardApiData(Map<String, dynamic>? body) {
-  final data = body?['data'];
-  return data is Map<String, dynamic> ? data : null;
+  if (body == null) return null;
+  return asStringKeyedMap(body['data']);
 }

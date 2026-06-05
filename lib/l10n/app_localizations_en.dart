@@ -70,9 +70,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attendanceEndShiftTitle => 'End Shift';
 
   @override
-  String get attendanceInvalidPin => 'That PIN is not valid for this site.';
-
-  @override
   String get attendanceMissingSecurityProfile =>
       'Site security data is missing. Select a site again or contact support.';
 

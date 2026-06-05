@@ -214,12 +214,6 @@ abstract class AppLocalizations {
   /// **'End Shift'**
   String get attendanceEndShiftTitle;
 
-  /// No description provided for @attendanceInvalidPin.
-  ///
-  /// In en, this message translates to:
-  /// **'That PIN is not valid for this site.'**
-  String get attendanceInvalidPin;
-
   /// No description provided for @attendanceMissingSecurityProfile.
   ///
   /// In en, this message translates to:

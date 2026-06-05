@@ -29,4 +29,7 @@ abstract interface class GuardHttpClient {
 
   /// Legacy `data/*` endpoints that return `{ resource: [...] }` without `success`.
   Future<dynamic> getRaw(String path, {Map<String, dynamic>? query});
+
+  /// POST JSON without guard success check (for flexible envelope parsing).
+  Future<dynamic> postRaw(String path, {Object? data});
 }

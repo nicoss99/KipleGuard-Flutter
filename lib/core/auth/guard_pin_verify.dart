@@ -10,7 +10,8 @@ import '../../widget/guard_pin_dialog.dart';
 Future<GuardPinOutcome> _guardPinOutcomeAfterApi({
   required String pin,
   required Future<GuardPinVerifyResult> Function(String pin) verifyPin,
-  required Future<Object?> Function(String pin) resolve,
+  required Future<Object?> Function(String pin, GuardPinVerifyResult result)
+      resolve,
   String? defaultFailureText,
 }) async {
   if (pin.length != 6) {
@@ -25,10 +26,7 @@ Future<GuardPinOutcome> _guardPinOutcomeAfterApi({
           : defaultFailureText,
     );
   }
-  final value = await resolve(pin);
-  if (value == null) {
-    return GuardPinOutcome.failure(defaultFailureText);
-  }
+  final value = await resolve(pin, result);
   return GuardPinOutcome.success(value);
 }
 
@@ -36,7 +34,8 @@ Future<GuardPinOutcome> _guardPinOutcomeAfterApi({
 Future<GuardPinOutcome?> showApiGuardPinDialog({
   required BuildContext context,
   required WidgetRef ref,
-  required Future<Object?> Function(String pin) resolveAfterVerify,
+  required Future<Object?> Function(String pin, GuardPinVerifyResult result)
+      resolveAfterVerify,
   String? defaultFailureText,
   bool barrierDismissible = false,
 }) {
@@ -65,11 +64,12 @@ Future<({String guardUuid, String companyUuid})?> verifyPinForAttendance({
 }) async {
   final result = await verifyPin(pin6);
   if (!result.verified) return null;
-  return matchGuardForResidence(
+  return resolveGuardAfterApiPin(
     securityJson: securityJson,
     residenceUuid: residenceUuid,
     pin6: pin6,
     fallbackCompanyUuid: fallbackCompanyUuid,
+    apiIdentity: result.identity,
   );
 }
 
@@ -102,13 +102,17 @@ Future<Object?> resolveAttendanceGuardAfterPin({
   required String securityJson,
   required String residenceUuid,
   String fallbackCompanyUuid = '',
-}) async =>
-    matchGuardForResidence(
-      securityJson: securityJson,
-      residenceUuid: residenceUuid,
-      pin6: pin,
-      fallbackCompanyUuid: fallbackCompanyUuid,
-    );
+  GuardPinVerifyResult? verifyResult,
+}) async {
+  final match = resolveGuardAfterApiPin(
+    securityJson: securityJson,
+    residenceUuid: residenceUuid,
+    pin6: pin,
+    fallbackCompanyUuid: fallbackCompanyUuid,
+    apiIdentity: verifyResult?.identity,
+  );
+  return match;
+}
 
 /// Resolves reporting payload after API PIN verification.
 Future<Object?> resolveReportingGuardAfterPin({
@@ -116,14 +120,15 @@ Future<Object?> resolveReportingGuardAfterPin({
   required String securityJson,
   required String residenceUuid,
   String fallbackCompanyUuid = '',
+  GuardPinVerifyResult? verifyResult,
 }) async {
-  final match = matchGuardForResidence(
+  final match = resolveGuardAfterApiPin(
     securityJson: securityJson,
     residenceUuid: residenceUuid,
     pin6: pin,
     fallbackCompanyUuid: fallbackCompanyUuid,
+    apiIdentity: verifyResult?.identity,
   );
-  if (match == null) return null;
   return ReportingPinResult.success(
     guardPin: pin,
     guardUuid: match.guardUuid,

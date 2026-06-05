@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/auth/guard_pin_verify.dart';
 import '../../core/dashboard_prefs.dart';
+import '../../page/home/home_repository.dart';
 import '../../router/app_route.dart';
 import '../../theme/app_color.dart';
 import '../../widget/standard_primary_header.dart';
@@ -28,16 +29,25 @@ class _ReportingGatePageState extends ConsumerState<ReportingGatePage> {
   }
 
   Future<void> _openPin() async {
-    final snap = await DashboardPrefs.loadSnapshot();
+    var snap = await DashboardPrefs.loadSnapshot();
+    if (snap.securityUuid.trim().isNotEmpty && snap.securityJson.trim().isEmpty) {
+      try {
+        final repo = ref.read(homeRepositoryProvider);
+        final raw = await repo.fetchGuardPinJson(snap.securityUuid.trim());
+        await DashboardPrefs.setSecurityJson(repo.trimGuardPinPayload(raw));
+        snap = await DashboardPrefs.loadSnapshot();
+      } catch (_) {}
+    }
     if (!mounted) return;
     final outcome = await showApiGuardPinDialog(
       context: context,
       ref: ref,
-      resolveAfterVerify: (pin) => resolveReportingGuardAfterPin(
+      resolveAfterVerify: (pin, result) => resolveReportingGuardAfterPin(
         pin: pin,
         securityJson: snap.securityJson,
         residenceUuid: snap.residenceId,
         fallbackCompanyUuid: snap.securityUuid,
+        verifyResult: result,
       ),
     );
     if (!mounted) return;
