@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/api_env.dart';
 import '../core/app_flavor.dart';
+import '../core/app_fresh_install.dart';
 import '../core/auth_prefs.dart';
 import '../core/onboarding_prefs.dart';
 import '../l10n/app_l10n.dart';
@@ -16,6 +17,7 @@ import '../widget/offline_sync_host.dart';
 
 Future<void> runKipleGuardApp({required AppFlavor flavor}) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppFreshInstall.ensureCleanFirstLaunch();
   await Future.wait([OnboardingPrefs.load(), AuthPrefs.load()]);
   final effective = resolveEffectiveFlavor(flavor);
   runApp(

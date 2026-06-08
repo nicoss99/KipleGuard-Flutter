@@ -57,4 +57,9 @@ abstract final class AppCacheStore {
       if (test(k)) await prefs.remove(k);
     }
   }
+
+  static Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
