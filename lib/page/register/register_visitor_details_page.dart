@@ -107,6 +107,8 @@ class _RegisterVisitorDetailsPageState extends State<RegisterVisitorDetailsPage>
     );
   }
 
+  bool get _isEditing => widget.args.initial != null;
+
   @override
   Widget build(BuildContext context) {
     return RegisterPageScaffold(
@@ -116,7 +118,10 @@ class _RegisterVisitorDetailsPageState extends State<RegisterVisitorDetailsPage>
         opacity: _canAdd ? 1.0 : 0.4,
         child: IgnorePointer(
           ignoring: !_canAdd,
-          child: RegisterGradientButton(label: RegisterStrings.addVisitorCta, onPressed: _save),
+          child: RegisterGradientButton(
+            label: _isEditing ? RegisterStrings.saveVisitorCta : RegisterStrings.addVisitorCta,
+            onPressed: _save,
+          ),
         ),
       ),
       child: SingleChildScrollView(

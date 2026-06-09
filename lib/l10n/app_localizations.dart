@@ -1198,6 +1198,18 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get registerAddVisitorCta;
 
+  /// No description provided for @registerEditVisitor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get registerEditVisitor;
+
+  /// No description provided for @registerSaveVisitorCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get registerSaveVisitorCta;
+
   /// No description provided for @registerCarHint.
   ///
   /// In en, this message translates to:

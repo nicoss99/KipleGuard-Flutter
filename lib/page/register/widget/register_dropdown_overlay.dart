@@ -18,6 +18,7 @@ class RegisterDropdownOverlay<T> extends StatefulWidget {
     required this.searchHint,
     required this.emptyText,
     this.showSearch = true,
+    this.maxListHeight,
   });
 
   final List<T> options;
@@ -27,6 +28,7 @@ class RegisterDropdownOverlay<T> extends StatefulWidget {
   final String searchHint;
   final String emptyText;
   final bool showSearch;
+  final double? maxListHeight;
 
   @override
   State<RegisterDropdownOverlay<T>> createState() => _RegisterDropdownOverlayState<T>();
@@ -108,11 +110,14 @@ class _RegisterDropdownOverlayState<T> extends State<RegisterDropdownOverlay<T>>
         child: Text(widget.emptyText, style: AppTextStyle.bodyMuted, textAlign: TextAlign.center),
       );
     }
+    final listMax = widget.maxListHeight ?? (widget.showSearch ? 260.h : 220.h);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: widget.showSearch ? 260.h : 220.h),
+      constraints: BoxConstraints(maxHeight: listMax),
       child: Scrollbar(
+        thumbVisibility: filtered.length > 6,
         child: ListView.separated(
           shrinkWrap: true,
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(vertical: widget.showSearch ? 4.h : 8.h),
           itemCount: filtered.length,
           separatorBuilder: (_, _) => Divider(

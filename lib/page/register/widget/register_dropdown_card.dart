@@ -5,7 +5,7 @@ import '../../../theme/app_color.dart';
 import '../../../theme/app_text_style.dart';
 import 'register_dropdown_overlay.dart';
 
-/// Card-style trigger that opens an anchored dropdown below.
+/// Card-style trigger that opens an anchored searchable dropdown.
 class RegisterDropdownCard<T> extends StatefulWidget {
   const RegisterDropdownCard({
     super.key,
@@ -18,6 +18,7 @@ class RegisterDropdownCard<T> extends StatefulWidget {
     this.showSearch = true,
     this.searchHint = 'Search',
     this.emptyText = 'No matches',
+    this.openAbove = false,
   });
 
   final T? value;
@@ -30,6 +31,9 @@ class RegisterDropdownCard<T> extends StatefulWidget {
   final String searchHint;
   final String emptyText;
 
+  /// When true, opens above the trigger (better for fields lower on long forms).
+  final bool openAbove;
+
   @override
   State<RegisterDropdownCard<T>> createState() => _RegisterDropdownCardState<T>();
 }
@@ -39,6 +43,11 @@ class _RegisterDropdownCardState<T> extends State<RegisterDropdownCard<T>> {
   final _link = LayerLink();
   double _triggerWidth = 0;
   bool _open = false;
+  bool _opensAbove = false;
+  double _maxListHeight = 260;
+
+  static const _gap = 8.0;
+  static const _searchBlockHeight = 62.0;
 
   void _toggle() {
     if (_open) {
@@ -49,8 +58,44 @@ class _RegisterDropdownCardState<T> extends State<RegisterDropdownCard<T>> {
   }
 
   void _show() {
+    _resolvePlacement();
     _portal.show();
     setState(() => _open = true);
+  }
+
+  void _resolvePlacement() {
+    final space = _measureSpace();
+    final defaultListMax = widget.showSearch ? 260.h : 220.h;
+    final searchHeight = widget.showSearch ? _searchBlockHeight.h : 0;
+    final minPanel = searchHeight + 120.h;
+
+    if (widget.openAbove) {
+      _opensAbove = space.above >= minPanel || space.above >= space.below;
+    } else {
+      final fitsBelow = space.below >= minPanel;
+      _opensAbove = !fitsBelow && space.above > space.below;
+    }
+
+    final available = _opensAbove ? space.above : space.below;
+    _maxListHeight = (available - searchHeight).clamp(120.h, defaultListMax);
+  }
+
+  ({double above, double below}) _measureSpace() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return (above: 400, below: 400);
+
+    final media = MediaQuery.of(context);
+    final top = box.localToGlobal(Offset.zero).dy;
+    final bottom = top + box.size.height;
+    final gap = _gap.h;
+    final above = (top - media.padding.top - gap).clamp(0.0, double.infinity);
+    final below = (media.size.height -
+            bottom -
+            media.padding.bottom -
+            media.viewInsets.bottom -
+            gap)
+        .clamp(0.0, double.infinity);
+    return (above: above, below: below);
   }
 
   void _close() {
@@ -147,9 +192,9 @@ class _RegisterDropdownCardState<T> extends State<RegisterDropdownCard<T>> {
         CompositedTransformFollower(
           link: _link,
           showWhenUnlinked: false,
-          targetAnchor: Alignment.bottomLeft,
-          followerAnchor: Alignment.topLeft,
-          offset: Offset(0, 8.h),
+          targetAnchor: _opensAbove ? Alignment.topLeft : Alignment.bottomLeft,
+          followerAnchor: _opensAbove ? Alignment.bottomLeft : Alignment.topLeft,
+          offset: Offset(0, _opensAbove ? -_gap.h : _gap.h),
           child: SizedBox(
             width: _triggerWidth,
             child: TweenAnimationBuilder<double>(
@@ -158,13 +203,14 @@ class _RegisterDropdownCardState<T> extends State<RegisterDropdownCard<T>> {
               curve: Curves.easeOutCubic,
               builder: (_, t, child) {
                 final e = Curves.easeOutCubic.transform(t);
+                final slide = 14 * (1 - e);
                 return Opacity(
                   opacity: e,
                   child: Transform.translate(
-                    offset: Offset(0, 14 * (1 - e)),
+                    offset: Offset(0, _opensAbove ? -slide : slide),
                     child: Transform.scale(
                       scale: 0.92 + 0.08 * e,
-                      alignment: Alignment.topCenter,
+                      alignment: _opensAbove ? Alignment.bottomCenter : Alignment.topCenter,
                       child: child,
                     ),
                   ),
@@ -178,6 +224,7 @@ class _RegisterDropdownCardState<T> extends State<RegisterDropdownCard<T>> {
                 searchHint: widget.searchHint,
                 emptyText: widget.emptyText,
                 showSearch: widget.showSearch,
+                maxListHeight: _maxListHeight,
               ),
             ),
           ),

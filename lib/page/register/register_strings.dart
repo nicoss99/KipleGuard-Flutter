@@ -43,6 +43,8 @@ abstract final class RegisterStrings {
   static String get companyField => appL10n.registerCompanyField;
   static String get companyHint => appL10n.registerCompanyHint;
   static String get addVisitorCta => appL10n.registerAddVisitorCta;
+  static String get editVisitor => appL10n.registerEditVisitor;
+  static String get saveVisitorCta => appL10n.registerSaveVisitorCta;
   static String get submit => appL10n.registerSubmit;
   static String get success => appL10n.registerSuccess;
   static String get successMessage => appL10n.registerSuccessMessage;

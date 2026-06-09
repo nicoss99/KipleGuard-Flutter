@@ -205,6 +205,8 @@
   "registerAddPhoto": "Add Photo",
   "registerAddVisitorButton": "+ Add visitor",
   "registerAddVisitorCta": "Add",
+  "registerEditVisitor": "Edit",
+  "registerSaveVisitorCta": "Save",
   "registerCarHint": "Eg : AHH123",
   "registerCarPlateField": "Car plate",
   "registerCarRecurringHint": "Tap the car icon to check car plate for recurring visitors",

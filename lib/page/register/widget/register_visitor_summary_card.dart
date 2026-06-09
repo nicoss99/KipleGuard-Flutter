@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/profile_initials.dart';
 import '../../../theme/app_color.dart';
 import '../../../theme/app_text_style.dart';
+import '../register_strings.dart';
 import '../register_visitor_draft.dart';
 
 /// Android `activity_createvisit.xml` `visitorRelativeLayout` — circle avatar, name, phone, delete.
@@ -11,10 +12,12 @@ class RegisterVisitorSummaryCard extends StatelessWidget {
   const RegisterVisitorSummaryCard({
     super.key,
     required this.visitor,
+    required this.onEdit,
     required this.onClear,
   });
 
   final RegisterVisitorDraft visitor;
+  final VoidCallback onEdit;
   final VoidCallback onClear;
 
   @override
@@ -71,6 +74,13 @@ class RegisterVisitorSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              padding: EdgeInsets.all(5.w),
+              constraints: const BoxConstraints(),
+              icon: Icon(Icons.edit_outlined, color: AppColor.primary, size: 22.sp),
+              tooltip: RegisterStrings.editVisitor,
+              onPressed: onEdit,
             ),
             IconButton(
               padding: EdgeInsets.all(5.w),

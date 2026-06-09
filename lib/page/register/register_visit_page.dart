@@ -320,6 +320,7 @@ class _RegisterVisitPageState extends ConsumerState<RegisterVisitPage> {
         onHostChanged: (v) => setState(() => _host = v),
         visitor: _visitor,
         onAddVisitor: _openVisitorEditor,
+        onEditVisitor: _openVisitorEditor,
         onClearVisitor: () => setState(() => _visitor = null),
         visitPhotos: _photos,
         onPickCamera: () => _pickImage(ImageSource.camera),

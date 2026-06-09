@@ -37,6 +37,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
     required this.onHostChanged,
     required this.visitor,
     required this.onAddVisitor,
+    required this.onEditVisitor,
     required this.onClearVisitor,
     required this.visitPhotos,
     required this.onPickCamera,
@@ -64,6 +65,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
   final ValueChanged<RegisterHostOption?> onHostChanged;
   final RegisterVisitorDraft? visitor;
   final VoidCallback onAddVisitor;
+  final VoidCallback onEditVisitor;
   final VoidCallback onClearVisitor;
   final List<XFile> visitPhotos;
   final VoidCallback onPickCamera;
@@ -124,6 +126,7 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           enabled: units.isNotEmpty,
           searchHint: RegisterStrings.unitSearchHint,
           emptyText: RegisterStrings.unitEmpty,
+          openAbove: true,
         ),
         SizedBox(height: 24.h),
         RegisterSectionLabel(RegisterStrings.hostField),
@@ -137,12 +140,17 @@ class RegisterVisitDetailsBody extends StatelessWidget {
           enabled: selectedUnit != null && hosts.isNotEmpty,
           searchHint: RegisterStrings.hostSearchHint,
           emptyText: RegisterStrings.hostEmpty,
+          openAbove: true,
         ),
         SizedBox(height: 24.h),
         RegisterSectionLabel(RegisterStrings.visitorSection),
         SizedBox(height: 10.h),
         if (visitor case final v? when v.name.isNotEmpty)
-          RegisterVisitorSummaryCard(visitor: v, onClear: onClearVisitor)
+          RegisterVisitorSummaryCard(
+            visitor: v,
+            onEdit: onEditVisitor,
+            onClear: onClearVisitor,
+          )
         else
           RegisterAddVisitorButton(onTap: onAddVisitor),
         SizedBox(height: 24.h),

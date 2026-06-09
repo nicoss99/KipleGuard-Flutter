@@ -591,6 +591,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerAddVisitorCta => 'Add';
 
   @override
+  String get registerEditVisitor => 'Edit';
+
+  @override
+  String get registerSaveVisitorCta => 'Save';
+
+  @override
   String get registerCarHint => 'Eg : AHH123';
 
   @override
