@@ -143,6 +143,7 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
   Future<String?> prepareShift(
     AttendanceShiftFlow flow, {
     required String guardUuid,
+    required String pin,
   }) async {
     final snap = await DashboardPrefs.loadSnapshot();
     if (!_hasResidenceId(snap)) {
@@ -165,7 +166,7 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
       if (flow == AttendanceShiftFlow.endShift && !hasOpen) {
         return AttendanceStrings.shiftAlreadyEnded;
       }
-      state = state.copyWith(shiftFlow: flow);
+      state = state.copyWith(shiftFlow: flow, shiftPin: pin);
       return null;
     } catch (e, st) {
       AppLog.error('Attendance shift check failed', tag: 'Attendance', error: e, stackTrace: st);
@@ -174,7 +175,10 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
   }
 
   void clearShiftFlow() {
-    state = state.copyWith(shiftFlow: AttendanceShiftFlow.none);
+    state = state.copyWith(
+      shiftFlow: AttendanceShiftFlow.none,
+      clearShiftPin: true,
+    );
   }
 
   void clearError() {
@@ -211,14 +215,28 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
     }
     _logResidenceValidation('capturePhotoAndSubmit', snap: snap, flow: flow);
 
+    final pin = state.shiftPin?.trim() ?? '';
+    if (pin.length != 6) {
+      clearShiftFlow();
+      return 'Session expired';
+    }
+
     state = state.copyWith(loading: true, clearError: true);
     try {
       final repo = ref.read(guardAttendanceRepositoryProvider);
       final file = File(x.path);
       if (flow == AttendanceShiftFlow.startShift) {
-        await repo.startShift(residenceUuid: snap.residenceId, selfie: file);
+        await repo.startShift(
+          residenceUuid: snap.residenceId,
+          pin: pin,
+          selfie: file,
+        );
       } else {
-        await repo.endShift(residenceUuid: snap.residenceId, selfie: file);
+        await repo.endShift(
+          residenceUuid: snap.residenceId,
+          pin: pin,
+          selfie: file,
+        );
       }
       clearShiftFlow();
       await refreshRecords(showLoading: false);

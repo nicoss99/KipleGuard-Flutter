@@ -10,6 +10,7 @@ class AttendanceState {
     this.loading = false,
     this.error,
     this.shiftFlow = AttendanceShiftFlow.none,
+    this.shiftPin,
     this.fromCache = false,
     this.cacheSavedAt,
   });
@@ -20,6 +21,7 @@ class AttendanceState {
   final bool loading;
   final String? error;
   final AttendanceShiftFlow shiftFlow;
+  final String? shiftPin;
   final bool fromCache;
   final DateTime? cacheSavedAt;
 
@@ -31,6 +33,8 @@ class AttendanceState {
     String? error,
     bool clearError = false,
     AttendanceShiftFlow? shiftFlow,
+    String? shiftPin,
+    bool clearShiftPin = false,
     bool? fromCache,
     DateTime? cacheSavedAt,
     bool clearCacheMeta = false,
@@ -42,6 +46,7 @@ class AttendanceState {
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       shiftFlow: shiftFlow ?? this.shiftFlow,
+      shiftPin: clearShiftPin ? null : (shiftPin ?? this.shiftPin),
       fromCache: clearCacheMeta ? false : (fromCache ?? this.fromCache),
       cacheSavedAt: clearCacheMeta ? null : (cacheSavedAt ?? this.cacheSavedAt),
     );

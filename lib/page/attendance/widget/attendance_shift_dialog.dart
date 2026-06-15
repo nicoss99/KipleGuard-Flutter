@@ -40,6 +40,7 @@ abstract final class AttendanceShiftDialog {
     final pinOutcome = await showApiGuardPinDialog(
       context: context,
       ref: ref,
+      residenceUuid: snap.residenceId,
       resolveAfterVerify: (pin, result) => resolveAttendanceGuardAfterPin(
         pin: pin,
         securityJson: snap.securityJson,
@@ -50,11 +51,15 @@ abstract final class AttendanceShiftDialog {
     );
     if (pinOutcome?.ok != true || !pageContext.mounted) return;
     final verified = pinOutcome!.value;
-    if (verified is! ({String guardUuid, String companyUuid})) return;
+    if (verified is! ({String guardUuid, String companyUuid, String pin})) return;
 
     final prepErr = await ref
         .read(attendanceProvider.notifier)
-        .prepareShift(flow, guardUuid: verified.guardUuid);
+        .prepareShift(
+          flow,
+          guardUuid: verified.guardUuid,
+          pin: verified.pin,
+        );
     if (!pageContext.mounted) return;
     if (prepErr != null) {
       await showApiFailedDialog(pageContext, message: prepErr);

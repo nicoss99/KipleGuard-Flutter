@@ -7,11 +7,13 @@ import '../../../page/auth/guard_attendance_models.dart';
 abstract interface class GuardAttendanceRepository {
   Future<GuardAttendanceRecord> startShift({
     required String residenceUuid,
+    required String pin,
     required File selfie,
   });
 
   Future<GuardAttendanceRecord> endShift({
     required String residenceUuid,
+    required String pin,
     required File selfie,
   });
 

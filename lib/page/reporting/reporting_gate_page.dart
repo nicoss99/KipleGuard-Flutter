@@ -42,6 +42,7 @@ class _ReportingGatePageState extends ConsumerState<ReportingGatePage> {
     final outcome = await showApiGuardPinDialog(
       context: context,
       ref: ref,
+      residenceUuid: snap.residenceId,
       resolveAfterVerify: (pin, result) => resolveReportingGuardAfterPin(
         pin: pin,
         securityJson: snap.securityJson,

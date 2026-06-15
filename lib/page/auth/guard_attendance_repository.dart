@@ -29,11 +29,13 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
   @override
   Future<GuardAttendanceRecord> startShift({
     required String residenceUuid,
+    required String pin,
     required File selfie,
   }) async {
     final data = await _postShift(
       GuardApiPaths.attendanceStart(residenceUuid),
       selfie,
+      pin,
     );
     return _parseSingleAttendance(data);
   }
@@ -41,11 +43,13 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
   @override
   Future<GuardAttendanceRecord> endShift({
     required String residenceUuid,
+    required String pin,
     required File selfie,
   }) async {
     final data = await _postShift(
       GuardApiPaths.attendanceEnd(residenceUuid),
       selfie,
+      pin,
     );
     return _parseSingleAttendance(data);
   }
@@ -112,9 +116,10 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
     }).toList();
   }
 
-  Future<Map<String, dynamic>> _postShift(String path, File selfie) async {
+  Future<Map<String, dynamic>> _postShift(String path, File selfie, String pin) async {
     final form = FormData.fromMap(<String, dynamic>{
       'current_time': GuardTimeFormat.shiftTimestamp(DateTime.now()),
+      'pin': pin,
       'selfie_photo': await MultipartFile.fromFile(
         selfie.path,
         filename: 'selfie.jpg',

@@ -129,11 +129,20 @@ final class GuardRepository implements GuardAuthRepository {
   }
 
   @override
-  Future<GuardPinVerifyResult> verifyPin(String pin) async {
+  Future<GuardPinVerifyResult> verifyPin(
+    String pin, {
+    required String residenceUuid,
+  }) async {
+    final residence = residenceUuid.trim().isNotEmpty
+        ? residenceUuid.trim()
+        : (await ResidencePrefs.readResidenceUuid())?.trim() ?? '';
     try {
       final raw = await _client.postRaw(
         GuardApiPaths.verifyPin,
-        data: <String, dynamic>{'pin': pin},
+        data: <String, dynamic>{
+          'pin': pin,
+          'residence_uuid': residence,
+        },
       );
       return _parseVerifyPinResponse(raw);
     } on DioException catch (e) {
