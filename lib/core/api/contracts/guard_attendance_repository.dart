@@ -25,8 +25,5 @@ abstract interface class GuardAttendanceRepository {
 
   Future<bool> hasOpenShiftForGuard(String residenceUuid, String guardUuid);
 
-  List<AttendanceRecordRow> toRecordRows(
-    List<GuardAttendanceRecord> list, {
-    required String guardName,
-  });
+  List<AttendanceRecordRow> toRecordRows(List<GuardAttendanceRecord> list);
 }

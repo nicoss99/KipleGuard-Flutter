@@ -6,6 +6,7 @@ abstract interface class GuardReportingRepository {
 
   Future<void> createIncident({
     required String residenceUuid,
+    required String pin,
     required String incidentType,
     required String description,
     required String incidentAt,

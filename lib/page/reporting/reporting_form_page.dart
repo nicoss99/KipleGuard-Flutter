@@ -236,6 +236,7 @@ class _ReportingFormPageState extends ConsumerState<ReportingFormPage> {
     try {
       final outcome = await ref.read(reportingSubmitServiceProvider).submit(
             residenceUuid: snap.residenceId,
+            pin: widget.args.guardPin,
             incidentType: _selectedKey!,
             description: desc,
             incidentAt: _incidentAt,

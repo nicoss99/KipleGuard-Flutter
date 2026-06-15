@@ -164,8 +164,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           profileInitial: state.profileInitial,
                           onGreetingTap: () async {
                             AppLog.track('edit_profile_tap', screen: 'Home');
-                            final updated = await context.push<bool>(AppRoute.editProfile.path);
-                            if (updated == true && mounted) {
+                            await context.push(AppRoute.editProfile.path);
+                            if (mounted) {
                               await ref.read(homeProvider.notifier).reloadUserFromPrefs();
                             }
                           },

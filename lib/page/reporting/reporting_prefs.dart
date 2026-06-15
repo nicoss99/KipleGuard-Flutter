@@ -45,6 +45,7 @@ abstract final class ReportingPrefs {
 
   static Future<void> enqueue({
     required String residenceUuid,
+    required String pin,
     required String incidentType,
     required String description,
     required String incidentAt,
@@ -54,6 +55,7 @@ abstract final class ReportingPrefs {
     q.add(<String, dynamic>{
       'id': _uuid.v4(),
       'residence_uuid': residenceUuid,
+      'pin': pin,
       'incident_type': incidentType,
       'description': description,
       'incident_at': incidentAt,

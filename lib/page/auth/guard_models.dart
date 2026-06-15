@@ -17,9 +17,9 @@ class GuardProfile {
   final String role;
 
   factory GuardProfile.fromJson(Map<String, dynamic> json) => GuardProfile(
-        id: json['id'] as int? ?? 0,
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
+        id: _readInt(json['id']),
+        name: _readGuardName(json),
+        email: json['email']?.toString() ?? '',
         phone: json['phone']?.toString() ??
             json['mobile_number']?.toString() ??
             json['mobile']?.toString() ??
@@ -27,7 +27,7 @@ class GuardProfile {
         profileImageUrl: json['profile_image_url']?.toString() ??
             json['profile_image']?.toString() ??
             json['avatar_url']?.toString(),
-        role: json['role'] as String? ?? '',
+        role: json['role']?.toString() ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -140,4 +140,28 @@ class GuardMeResult {
 
   final GuardProfile guard;
   final List<GuardResidence> residences;
+}
+
+int _readInt(dynamic raw) {
+  if (raw is int) return raw;
+  if (raw is num) return raw.toInt();
+  return int.tryParse(raw?.toString() ?? '') ?? 0;
+}
+
+String _readGuardName(Map<String, dynamic> json) {
+  for (final key in ['name', 'full_name', 'display_name', 'guard_name']) {
+    final value = json[key]?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  final profile = json['user_profile'];
+  if (profile is Map) {
+    final value = profile['name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  final linked = json['user_profiles_by_user_profile_uuid'];
+  if (linked is Map) {
+    final value = linked['name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  return '';
 }

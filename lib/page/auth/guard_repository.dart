@@ -52,7 +52,7 @@ final class GuardRepository implements GuardAuthRepository {
       if (data == null) throw LoginApiException(_messages.invalidLoginPayload);
 
       final token = data['token'] as String?;
-      final guardJson = data['guard'] as Map<String, dynamic>?;
+      final guardJson = asStringKeyedMap(data['guard']);
       if (token == null || token.isEmpty || guardJson == null) {
         throw LoginApiException(_messages.invalidLoginPayload);
       }
@@ -105,7 +105,7 @@ final class GuardRepository implements GuardAuthRepository {
       fallbackMessage: _messages.profileLoadFailed,
     );
     if (data == null) throw StateError(_messages.invalidLoginPayload);
-    final guardJson = data['guard'] as Map<String, dynamic>?;
+    final guardJson = asStringKeyedMap(data['guard']);
     if (guardJson == null) throw StateError(_messages.invalidLoginPayload);
     final guard = GuardProfile.fromJson(guardJson);
     final residences = _parseResidences(data['residences']);

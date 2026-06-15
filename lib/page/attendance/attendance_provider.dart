@@ -11,7 +11,6 @@ import '../../core/app_logger.dart';
 import '../../core/cache/guard_list_cache.dart';
 import '../../core/connectivity/connectivity_refresh.dart';
 import '../../core/network/dio_network.dart';
-import '../../core/auth_prefs.dart';
 import '../../core/dashboard_prefs.dart' show DashboardPrefs, DashboardSnapshot;
 import '../auth/guard_attendance_repository.dart';
 import 'attendance_state.dart';
@@ -99,13 +98,12 @@ class AttendanceNotifier extends Notifier<AttendanceState> {
 
     try {
       final repo = ref.read(guardAttendanceRepositoryProvider);
-      final guardName = (await AuthPrefs.readUserName()) ?? '';
       final list = await repo.fetchAttendance(
         residenceUuid: snap.residenceId,
         fromDay: state.selectedDay,
         toDay: state.selectedDay,
       );
-      final records = repo.toRecordRows(list, guardName: guardName);
+      final records = repo.toRecordRows(list);
       await GuardListCache.saveAttendance(
         residenceUuid: snap.residenceId,
         day: state.selectedDay,

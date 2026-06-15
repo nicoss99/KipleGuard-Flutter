@@ -35,12 +35,14 @@ final class ReportingRepository implements GuardReportingRepository {
   @override
   Future<void> createIncident({
     required String residenceUuid,
+    required String pin,
     required String incidentType,
     required String description,
     required String incidentAt,
     required List<String> photoPaths,
   }) async {
     final form = FormData();
+    form.fields.add(MapEntry('pin', pin));
     form.fields.add(MapEntry('incident_type', incidentType));
     form.fields.add(MapEntry('description', description));
     form.fields.add(MapEntry('incident_at', incidentAt));

@@ -98,15 +98,12 @@ final class GuardAttendanceRepositoryImpl implements GuardAttendanceRepository {
   }
 
   @override
-  List<AttendanceRecordRow> toRecordRows(
-    List<GuardAttendanceRecord> list, {
-    required String guardName,
-  }) {
+  List<AttendanceRecordRow> toRecordRows(List<GuardAttendanceRecord> list) {
     return list.map((r) {
       final hasEnd = r.endedAt != null && r.endedAt!.isNotEmpty;
       return AttendanceRecordRow(
         uuid: r.id.toString(),
-        guardName: guardName,
+        guardName: r.guardName,
         imageUrl: (hasEnd ? r.endPhotoUrl : r.startPhotoUrl) ?? '',
         guardCode: '',
         checkInAt: r.startedAt,

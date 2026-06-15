@@ -24,6 +24,7 @@ class ReportingSyncService {
       try {
         await _repo.createIncident(
           residenceUuid: item['residence_uuid'] as String,
+          pin: item['pin']?.toString() ?? '',
           incidentType: item['incident_type'] as String,
           description: item['description'] as String,
           incidentAt: item['incident_at'] as String,

@@ -9,6 +9,7 @@ class GuardAttendanceRecord {
     this.endPhotoUrl,
     required this.isOpen,
     this.guardUuid,
+    this.guardName = '',
   });
 
   final int id;
@@ -20,6 +21,7 @@ class GuardAttendanceRecord {
   final bool isOpen;
   /// Present when API tags rows — used for Android-style open-shift check per guard.
   final String? guardUuid;
+  final String guardName;
 
   factory GuardAttendanceRecord.fromJson(Map<String, dynamic> json) =>
       GuardAttendanceRecord(
@@ -31,7 +33,19 @@ class GuardAttendanceRecord {
         endPhotoUrl: json['end_photo_url'] as String?,
         isOpen: json['is_open'] == true,
         guardUuid: _readGuardUuid(json),
+        guardName: _readGuardName(json),
       );
+}
+
+String _readGuardName(Map<String, dynamic> json) {
+  final guard = json['guard'];
+  if (guard is Map) {
+    final value = guard['name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  final direct = json['guard_name']?.toString().trim();
+  if (direct != null && direct.isNotEmpty) return direct;
+  return '';
 }
 
 String? _readGuardUuid(Map<String, dynamic> json) {

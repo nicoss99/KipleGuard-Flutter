@@ -18,6 +18,7 @@ class ReportingSubmitService {
 
   Future<ReportingSubmitOutcome> submit({
     required String residenceUuid,
+    required String pin,
     required String incidentType,
     required String description,
     required String incidentAt,
@@ -26,6 +27,7 @@ class ReportingSubmitService {
     try {
       await _repo.createIncident(
         residenceUuid: residenceUuid,
+        pin: pin,
         incidentType: incidentType,
         description: description,
         incidentAt: incidentAt,
@@ -36,6 +38,7 @@ class ReportingSubmitService {
       AppLog.error('Incident submit — queue offline', tag: 'Reporting', error: e, stackTrace: st);
       await ReportingPrefs.enqueue(
         residenceUuid: residenceUuid,
+        pin: pin,
         incidentType: incidentType,
         description: description,
         incidentAt: incidentAt,

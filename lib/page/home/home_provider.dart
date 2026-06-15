@@ -12,6 +12,7 @@ import '../../core/profile_initials.dart';
 import '../../core/residence_prefs.dart';
 import '../../core/site_scope_invalidation.dart';
 import '../auth/guard_repository.dart';
+import '../auth/guard_models.dart';
 import '../reporting/reporting_sync_service.dart';
 import '../select_site/residence_choice.dart';
 import '../../core/api/contracts/legacy_guard_data_repository.dart';
@@ -100,6 +101,7 @@ class HomeNotifier extends Notifier<HomeState> {
     required String previousSecurityUuid,
   }) async {
     try {
+      await _refreshGuardProfile();
       final repo = ref.read(homeRepositoryProvider);
       await _refreshSiteScopedData(
         repo,
@@ -147,8 +149,16 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(triggerNoRoleDialog: false);
   }
 
-  /// After edit profile saves name (Android `updateProfile` → dashboard refresh).
+  /// Reloads dashboard greeting from prefs (after profile `/me` refresh).
   Future<void> reloadUserFromPrefs() => _hydrateFromPrefs();
+
+  void _applyUserFromGuard(GuardProfile guard) {
+    state = state.copyWith(
+      userName: guard.name,
+      userEmail: guard.email,
+      profileInitial: profileInitials(guard.name),
+    );
+  }
 
   Future<void> _refreshGuardProfile() async {
     try {
@@ -157,6 +167,7 @@ class HomeNotifier extends Notifier<HomeState> {
         guard: me.guard,
         residences: me.residences,
       );
+      _applyUserFromGuard(me.guard);
     } catch (e, st) {
       AppLog.error('Guard profile refresh failed', tag: 'Home', error: e, stackTrace: st);
     }
