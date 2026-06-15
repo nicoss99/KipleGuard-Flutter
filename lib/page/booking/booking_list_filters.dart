@@ -14,6 +14,10 @@ List<BookingListItem> applyBookingListFilters({
     final d = DateFormat('yyyy-MM-dd').format(submitted);
     out = out.where((e) => e.submittedDate == d).toList();
   }
+  final facilityId = filter.facilityId;
+  if (facilityId != null) {
+    out = out.where((e) => _matchesFacility(e, facilityId, filter.facilityLabel)).toList();
+  }
   final t = searchQuery.trim();
   if (t.length >= 3) {
     final q = _normalizeSearchToken(t);
@@ -23,6 +27,18 @@ List<BookingListItem> applyBookingListFilters({
 }
 
 bool bookingSearchActive(String searchQuery) => searchQuery.trim().length >= 3;
+
+bool _matchesFacility(BookingListItem item, int facilityId, String? facilityLabel) {
+  final rowId = item.samenityId;
+  if (rowId != null && rowId > 0) return rowId == facilityId;
+  final label = facilityLabel?.trim().toLowerCase();
+  if (label == null || label.isEmpty) return true;
+  final category = item.category.trim().toLowerCase();
+  final bookingName = item.bookingName.trim().toLowerCase();
+  return category == label ||
+      bookingName == label ||
+      bookingName.startsWith('$label ');
+}
 
 bool _bookingMatchesSearch(BookingListItem e, String q) {
   return _containsNormalized(e.name, q) ||

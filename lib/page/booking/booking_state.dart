@@ -44,7 +44,7 @@ class BookingListState {
   final int? totalUpcoming;
   final BookingFilterQuery filterQuery;
   final String searchQuery;
-  /// Full-day results while search is active (API tab = all bookings).
+  /// Full-day results while search or list filters are active (API tab = all bookings).
   final List<BookingListItem> searchResultPool;
   final bool fromCache;
   final DateTime? cacheSavedAt;

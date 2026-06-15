@@ -29,6 +29,7 @@ void main() {
         'eta_arrival_label': '06 May 2026, 08:00 AM',
         'eta_exit_label': '06 May 2026, 09:00 AM',
         'submitted_date': '2026-05-06',
+        'samenity_id': 40,
       },
     ],
   };
@@ -45,6 +46,7 @@ void main() {
     expect(row.id, 1083);
     expect(row.unitLabel, 'New-1-9');
     expect(row.guardStatus, 'checked_out');
+    expect(row.samenityId, 40);
     expect(row.qrCodeData, 'BKG1083');
     expect(row.timeRangeLabel, contains('08:00 AM'));
   });
@@ -69,14 +71,16 @@ void main() {
         ],
         'facilities': <Map<String, dynamic>>[
           <String, dynamic>{'label': 'hot desk 1', 'value': 32},
+          <String, dynamic>{'label': 'pool', 'samenity_id': 9},
         ],
       },
     });
 
     expect(filters.statuses, hasLength(1));
     expect(filters.statuses.first.value, 'all_bookings');
-    expect(filters.facilities, hasLength(1));
+    expect(filters.facilities, hasLength(2));
     expect(filters.facilities.first.id, 32);
     expect(filters.facilities.first.label, 'hot desk 1');
+    expect(filters.facilities.last.id, 9);
   });
 }

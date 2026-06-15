@@ -14,6 +14,7 @@ class BookingListItem {
     required this.timeRangeLabel,
     required this.durationLabel,
     required this.submittedDate,
+    this.samenityId,
   });
 
   final int id;
@@ -27,6 +28,7 @@ class BookingListItem {
   final String timeRangeLabel;
   final String durationLabel;
   final String submittedDate;
+  final int? samenityId;
 
   factory BookingListItem.fromGuard(GuardBookingRow row) => BookingListItem(
         id: row.id,
@@ -40,5 +42,6 @@ class BookingListItem {
         timeRangeLabel: row.timeRangeLabel,
         durationLabel: row.durationLabel,
         submittedDate: row.submittedDate,
+        samenityId: row.samenityId,
       );
 }

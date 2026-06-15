@@ -54,12 +54,8 @@ class BookingDateStrip extends ConsumerWidget {
                 ),
                 if (!isToday)
                   TextButton(
-                    onPressed: () {
-                      final t = DateTime.now();
-                      ref.read(bookingListProvider.notifier).setDay(
-                            DateTime(t.year, t.month, t.day),
-                          );
-                    },
+                    onPressed: () =>
+                        ref.read(bookingListProvider.notifier).jumpToToday(),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 0),
                       minimumSize: Size.zero,

@@ -12,6 +12,7 @@ class GuardBookingRow {
     required this.timeRangeLabel,
     required this.durationLabel,
     required this.submittedDate,
+    this.samenityId,
     this.etaArrivalLabel,
     this.etaExitLabel,
     this.qrCodeData,
@@ -34,6 +35,7 @@ class GuardBookingRow {
   final String timeRangeLabel;
   final String durationLabel;
   final String submittedDate;
+  final int? samenityId;
   final String? etaArrivalLabel;
   final String? etaExitLabel;
   final String? qrCodeData;
@@ -70,6 +72,7 @@ class GuardBookingRow {
       timeRangeLabel: json['time_range_label']?.toString() ?? '',
       durationLabel: json['duration_label']?.toString() ?? '',
       submittedDate: json['submitted_date']?.toString() ?? '',
+      samenityId: _jsonIntOrNull(json['samenity_id']),
       etaArrivalLabel: json['eta_arrival_label']?.toString(),
       etaExitLabel: json['eta_exit_label']?.toString(),
       qrCodeData: json['qr_code_data']?.toString() ?? json['pass_code']?.toString(),

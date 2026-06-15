@@ -40,10 +40,12 @@ class BookingListNotifier extends Notifier<BookingListState> {
 
   Future<void> nextDay() => setDay(state.selectedDay.add(const Duration(days: 1)));
 
-  Future<void> setDay(DateTime day) async {
-    final d = DateTime(day.year, day.month, day.day);
+  Future<void> jumpToToday() async {
+    final t = DateTime.now();
+    final d = DateTime(t.year, t.month, t.day);
     state = state.copyWith(
       selectedDay: d,
+      filterQuery: BookingFilterQuery.empty,
       items: const [],
       searchQuery: '',
       clearSearchPool: true,
@@ -52,9 +54,39 @@ class BookingListNotifier extends Notifier<BookingListState> {
     await refresh();
   }
 
+  Future<void> setDay(DateTime day) async {
+    final d = DateTime(day.year, day.month, day.day);
+    state = state.copyWith(
+      selectedDay: d,
+      filterQuery: _filterForDayChange(state.filterQuery, d),
+      items: const [],
+      searchQuery: '',
+      clearSearchPool: true,
+      clearError: true,
+    );
+    await refresh();
+  }
+
+  /// Drop submitted-on filter when the calendar day no longer matches.
+  BookingFilterQuery _filterForDayChange(BookingFilterQuery filter, DateTime day) {
+    final submitted = filter.submittedOnDay;
+    if (submitted == null || _isSameDay(submitted, day)) return filter;
+    return BookingFilterQuery(
+      facilityId: filter.facilityId,
+      facilityLabel: filter.facilityLabel,
+    );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   Future<void> applyFilters(BookingFilterQuery query) async {
+    final submitted = query.submittedOnDay;
     state = state.copyWith(
       filterQuery: query,
+      selectedDay: submitted != null
+          ? DateTime(submitted.year, submitted.month, submitted.day)
+          : state.selectedDay,
       searchQuery: '',
       clearSearchPool: true,
       clearError: true,
@@ -95,11 +127,14 @@ class BookingListNotifier extends Notifier<BookingListState> {
 
   Future<void> setTab(BookingTab tab) async {
     if (state.tab == tab) return;
-    if (bookingSearchActive(state.searchQuery) &&
+    if (bookingUsesClientTabPool(
+          filter: state.filterQuery,
+          searchQuery: state.searchQuery,
+        ) &&
         state.searchResultPool.isNotEmpty) {
       state = state.copyWith(
         tab: tab,
-        items: _displayItems(state.searchResultPool),
+        items: applyBookingTabFilter(state.searchResultPool, tab),
         clearError: true,
       );
       return;
@@ -109,7 +144,10 @@ class BookingListNotifier extends Notifier<BookingListState> {
   }
 
   BookingTabApi _tabApi(BookingTab tab) {
-    if (bookingSearchActive(state.searchQuery)) {
+    if (bookingUsesClientTabPool(
+      filter: state.filterQuery,
+      searchQuery: state.searchQuery,
+    )) {
       return BookingTabApi.allBookings;
     }
     return switch (tab) {
@@ -119,34 +157,59 @@ class BookingListNotifier extends Notifier<BookingListState> {
     };
   }
 
-  List<BookingListItem> _displayItems(List<BookingListItem> source) =>
-      buildBookingDisplayItems(
-        source: source,
+  List<BookingListItem> _filteredPool(List<BookingListItem> source) =>
+      applyBookingListFilters(
+        items: source,
         filter: state.filterQuery,
         searchQuery: state.searchQuery,
-        tab: state.tab,
       );
+
+  List<BookingListItem> _displayItems(List<BookingListItem> source) {
+    final poolMode = bookingUsesClientTabPool(
+      filter: state.filterQuery,
+      searchQuery: state.searchQuery,
+    );
+    if (poolMode) {
+      return applyBookingTabFilter(_filteredPool(source), state.tab);
+    }
+    return buildBookingDisplayItems(
+      source: source,
+      filter: state.filterQuery,
+      searchQuery: state.searchQuery,
+      tab: state.tab,
+    );
+  }
 
   void _finishWithMapped({
     required List<BookingListItem> mapped,
     required GuardBookingListResult result,
     required bool fromCache,
     DateTime? cacheSavedAt,
-    List<BookingListItem>? searchPool,
   }) {
-    final pool = searchPool ??
-        (bookingSearchActive(state.searchQuery) ? mapped : const []);
-    final source = bookingSearchActive(state.searchQuery) ? pool : mapped;
+    final poolMode = bookingUsesClientTabPool(
+      filter: state.filterQuery,
+      searchQuery: state.searchQuery,
+    );
+    final pool = poolMode ? _filteredPool(mapped) : const <BookingListItem>[];
+    final counts = poolMode
+        ? computeBookingCounts(pool)
+        : (
+            all: result.counts.allBookings,
+            checkedIn: result.counts.checkedIn,
+            upcoming: result.counts.upcoming,
+          );
+
     state = state.copyWith(
-      items: _displayItems(source),
-      searchResultPool: pool,
+      items: poolMode ? applyBookingTabFilter(pool, state.tab) : _displayItems(mapped),
+      searchResultPool: poolMode ? pool : const [],
       loading: false,
-      totalAllBookings: result.counts.allBookings,
-      totalCheckedIn: result.counts.checkedIn,
-      totalUpcoming: result.counts.upcoming,
+      totalAllBookings: counts.all,
+      totalCheckedIn: counts.checkedIn,
+      totalUpcoming: counts.upcoming,
       fromCache: fromCache,
       cacheSavedAt: cacheSavedAt,
       clearCacheMeta: !fromCache,
+      clearSearchPool: !poolMode,
     );
   }
 

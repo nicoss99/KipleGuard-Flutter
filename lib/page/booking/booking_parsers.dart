@@ -72,7 +72,7 @@ List<BookingFacilityFilter> _parseFacilityFilters(dynamic raw) {
   return raw
       .whereType<Map>()
       .map((e) {
-        final id = _jsonInt(e['value']);
+        final id = _jsonInt(e['samenity_id'] ?? e['value']);
         final label = e['label']?.toString() ?? '';
         if (id <= 0 || label.isEmpty) return null;
         return BookingFacilityFilter(label: label, id: id);
