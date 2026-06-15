@@ -17,6 +17,7 @@ class VisitorListTile extends StatelessWidget {
     required this.actionLabel,
     required this.stripeColor,
     required this.isCheckedIn,
+    this.showActionButton = true,
   });
 
   final VisitorListItem item;
@@ -25,6 +26,7 @@ class VisitorListTile extends StatelessWidget {
   final String actionLabel;
   final Color stripeColor;
   final bool isCheckedIn;
+  final bool showActionButton;
 
   @override
   Widget build(BuildContext context) {
@@ -87,38 +89,39 @@ class VisitorListTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 12.h, 12.w, 12.h),
-                  child: Material(
-                    color: actionBg,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: InkWell(
-                      onTap: onActionTap,
+                if (showActionButton)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 12.h, 12.w, 12.h),
+                    child: Material(
+                      color: actionBg,
                       borderRadius: BorderRadius.circular(AppRadius.sm),
-                      child: SizedBox(
-                        width: 72.w,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isCheckedIn ? Icons.logout_rounded : Icons.login_rounded,
-                              color: actionFg,
-                              size: 26.sp,
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              actionLabel,
-                              style: VisitorTextStyle.meta().copyWith(
-                                fontWeight: FontWeight.w700,
+                      child: InkWell(
+                        onTap: onActionTap,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: SizedBox(
+                          width: 72.w,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isCheckedIn ? Icons.logout_rounded : Icons.login_rounded,
                                 color: actionFg,
+                                size: 26.sp,
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 4.h),
+                              Text(
+                                actionLabel,
+                                style: VisitorTextStyle.meta().copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: actionFg,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

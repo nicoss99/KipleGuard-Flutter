@@ -16,6 +16,7 @@ abstract final class GuardListCache {
     required int totalIncoming,
     required int totalOvertime,
     required int totalVisitors,
+    required int totalCheckedOut,
     required List<VisitorListItem> items,
     bool allOvertimeSection = false,
   }) async {
@@ -30,6 +31,7 @@ abstract final class GuardListCache {
         'totalIncoming': totalIncoming,
         'totalOvertime': totalOvertime,
         'totalVisitors': totalVisitors,
+        'totalCheckedOut': totalCheckedOut,
         'items': items.map(_visitorToJson).toList(),
       },
     );
@@ -59,6 +61,7 @@ abstract final class GuardListCache {
       totalIncoming: env.data['totalIncoming'] as int? ?? 0,
       totalOvertime: env.data['totalOvertime'] as int? ?? 0,
       totalVisitors: env.data['totalVisitors'] as int? ?? 0,
+      totalCheckedOut: env.data['totalCheckedOut'] as int? ?? 0,
       items: items,
     );
   }
@@ -216,6 +219,7 @@ class VisitorCacheSnapshot {
     required this.totalIncoming,
     required this.totalOvertime,
     required this.totalVisitors,
+    required this.totalCheckedOut,
     required this.items,
   });
 
@@ -225,6 +229,7 @@ class VisitorCacheSnapshot {
   final int totalIncoming;
   final int totalOvertime;
   final int totalVisitors;
+  final int totalCheckedOut;
   final List<VisitorListItem> items;
 }
 

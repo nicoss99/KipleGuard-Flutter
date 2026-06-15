@@ -12,6 +12,7 @@ class VisitorState {
     this.totalIncoming,
     this.totalOvertime,
     this.totalVisitors,
+    this.totalCheckedOut,
     this.searchActive = false,
     this.searchQuery = '',
     this.allOvertimeSection = false,
@@ -31,6 +32,7 @@ class VisitorState {
   final int? totalIncoming;
   final int? totalOvertime;
   final int? totalVisitors;
+  final int? totalCheckedOut;
   final bool searchActive;
   final String searchQuery;
   final bool allOvertimeSection;
@@ -50,6 +52,7 @@ class VisitorState {
     int? totalIncoming,
     int? totalOvertime,
     int? totalVisitors,
+    int? totalCheckedOut,
     bool? searchActive,
     String? searchQuery,
     bool? allOvertimeSection,
@@ -71,6 +74,7 @@ class VisitorState {
       totalIncoming: totalIncoming ?? this.totalIncoming,
       totalOvertime: totalOvertime ?? this.totalOvertime,
       totalVisitors: totalVisitors ?? this.totalVisitors,
+      totalCheckedOut: totalCheckedOut ?? this.totalCheckedOut,
       searchActive: searchActive ?? this.searchActive,
       searchQuery: searchQuery ?? this.searchQuery,
       allOvertimeSection: allOvertimeSection ?? this.allOvertimeSection,

@@ -12,6 +12,7 @@ List<dynamic>? visitorListFromPayload(
     'visitors',
     'overtime',
     'checked_in',
+    'checked_out',
     'upcoming',
   };
   for (final key in keys) {

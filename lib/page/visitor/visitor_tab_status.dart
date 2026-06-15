@@ -6,12 +6,14 @@ abstract final class VisitorTabStatus {
   static const tabUpcoming = 1;
   static const tabOvertime = 2;
   static const tabAllVisitors = 3;
+  static const tabCheckedOut = 4;
 
   /// `null` = Visitor(s) tab (no status query param).
   static String? apiStatusForTab(int tab) => switch (tab) {
         tabCheckedIn => GuardVisitorApiStatus.checkedIn,
         tabUpcoming => GuardVisitorApiStatus.upcoming,
         tabOvertime => GuardVisitorApiStatus.overtime,
+        tabCheckedOut => GuardVisitorApiStatus.checkedOut,
         tabAllVisitors => null,
         _ => null,
       };
@@ -22,6 +24,7 @@ abstract final class VisitorTabStatus {
         tabCheckedIn => GuardVisitorApiStatus.checkedIn,
         tabUpcoming => GuardVisitorApiStatus.upcoming,
         tabOvertime => GuardVisitorApiStatus.overtime,
+        tabCheckedOut => GuardVisitorApiStatus.checkedOut,
         tabAllVisitors => 'all',
         _ => 'all',
       };

@@ -10,6 +10,7 @@ abstract final class VisitorTabColors {
         1 => AppColor.orange,
         2 => AppColor.red,
         3 => AppColor.black,
+        4 => AppColor.textMuted,
         _ => AppColor.primary,
       };
 

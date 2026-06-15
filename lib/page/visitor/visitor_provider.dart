@@ -156,6 +156,7 @@ class VisitorNotifier extends Notifier<VisitorState> {
         totalIncoming: data.totalIncoming,
         totalOvertime: data.totalOvertime,
         totalVisitors: data.totalVisitors,
+        totalCheckedOut: data.totalCheckedOut,
         loading: false,
         fromCache: false,
         cacheSavedAt: null,
@@ -226,6 +227,7 @@ class VisitorNotifier extends Notifier<VisitorState> {
       totalIncoming: cached.totalIncoming,
       totalOvertime: cached.totalOvertime,
       totalVisitors: cached.totalVisitors,
+      totalCheckedOut: cached.totalCheckedOut,
       loading: false,
       fromCache: true,
       cacheSavedAt: cached.savedAt,
@@ -283,6 +285,7 @@ class VisitorNotifier extends Notifier<VisitorState> {
       totalOvertime: c.overtime,
       totalVisitors: c.allVisitors,
       items: result.items,
+      totalCheckedOut: c.checkedOut,
     );
 
     return _VisitorFetchData(
@@ -292,6 +295,7 @@ class VisitorNotifier extends Notifier<VisitorState> {
       totalIncoming: c.upcoming,
       totalOvertime: c.overtime,
       totalVisitors: c.allVisitors,
+      totalCheckedOut: c.checkedOut,
     );
   }
 }
@@ -304,6 +308,7 @@ class _VisitorFetchData {
     this.totalIncoming,
     this.totalOvertime,
     this.totalVisitors,
+    this.totalCheckedOut,
   });
 
   final List<VisitorListItem> items;
@@ -312,4 +317,5 @@ class _VisitorFetchData {
   final int? totalIncoming;
   final int? totalOvertime;
   final int? totalVisitors;
+  final int? totalCheckedOut;
 }

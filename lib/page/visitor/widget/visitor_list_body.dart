@@ -13,6 +13,7 @@ import '../visitor_provider.dart';
 import '../visitor_state.dart';
 import '../visitor_strings.dart';
 import '../visitor_tab_colors.dart';
+import '../visitor_tab_status.dart';
 import 'visitor_list_footer.dart';
 import 'visitor_list_tile.dart';
 
@@ -60,6 +61,8 @@ class VisitorListBody extends ConsumerWidget {
                 row.visitStatus == GuardVisitorApiStatus.checkedIn ||
                 row.latestScanType.toUpperCase() == 'IN';
 
+            final showAction = state.tabIndex != VisitorTabStatus.tabCheckedOut;
+
             return VisitorListTile(
               item: row,
               stripeColor: VisitorTabColors.stripeForItem(
@@ -77,6 +80,7 @@ class VisitorListBody extends ConsumerWidget {
               },
               actionLabel: isIn ? 'Out' : 'In',
               isCheckedIn: isIn,
+              showActionButton: showAction,
             );
           },
         ),

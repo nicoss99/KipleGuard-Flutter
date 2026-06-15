@@ -23,16 +23,27 @@ void main() {
     expect(c.overtime, 2);
   });
 
+  test('GuardVisitorCounts parses checked_out', () {
+    final c = GuardVisitorCounts.fromJson(<String, dynamic>{
+      'all_visitors': 5,
+      'overtime': 1,
+      'checked_in': 2,
+      'upcoming': 1,
+      'checked_out': 3,
+    });
+    expect(c.checkedOut, 3);
+  });
+
   test('visitorListFromPayload reads status-keyed list', () {
     final list = visitorListFromPayload(sampleData, requestedStatus: 'overtime');
     expect(list, hasLength(1));
   });
 
-  test('visitorListFromPayload reads all_visitors list', () {
+  test('visitorListFromPayload reads checked_out list', () {
     final data = Map<String, dynamic>.from(sampleData)
       ..remove('overtime')
-      ..['all_visitors'] = sampleData['overtime'];
-    final list = visitorListFromPayload(data);
+      ..['checked_out'] = sampleData['overtime'];
+    final list = visitorListFromPayload(data, requestedStatus: 'checked_out');
     expect(list, hasLength(1));
   });
 }

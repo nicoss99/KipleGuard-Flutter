@@ -19,40 +19,56 @@ class VisitorSummaryRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: EdgeInsets.fromLTRB(AppSpacing.md, 2.h, AppSpacing.md, 8.h),
-      child: Row(
-        children: [
-          _StatCard(
-            label: 'Visitor(s)',
-            count: state.totalVisitors,
-            accent: VisitorTabColors.stripeForTab(3),
-            selected: state.tabIndex == 3,
-            onTap: () => ref.read(visitorProvider.notifier).setTab(3),
-          ),
-          SizedBox(width: 8.w),
-          _StatCard(
-            label: 'Overtime',
-            count: state.totalOvertime,
-            accent: VisitorTabColors.stripeForTab(2),
-            selected: state.tabIndex == 2,
-            onTap: () => ref.read(visitorProvider.notifier).setTab(2),
-          ),
-          SizedBox(width: 8.w),
-          _StatCard(
-            label: 'Checked In',
-            count: state.totalCheckIn,
-            accent: VisitorTabColors.stripeForTab(0),
-            selected: state.tabIndex == 0,
-            onTap: () => ref.read(visitorProvider.notifier).setTab(0),
-          ),
-          SizedBox(width: 8.w),
-          _StatCard(
-            label: 'Upcoming',
-            count: state.totalIncoming,
-            accent: VisitorTabColors.stripeForTab(1),
-            selected: state.tabIndex == 1,
-            onTap: () => ref.read(visitorProvider.notifier).setTab(1),
-          ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _StatCard(
+              label: 'Visitor(s)',
+              count: state.totalVisitors,
+              accent: VisitorTabColors.stripeForTab(3),
+              selected: state.tabIndex == 3,
+              onTap: () => ref.read(visitorProvider.notifier).setTab(3),
+              width: 88.w,
+            ),
+            SizedBox(width: 8.w),
+            _StatCard(
+              label: 'Overtime',
+              count: state.totalOvertime,
+              accent: VisitorTabColors.stripeForTab(2),
+              selected: state.tabIndex == 2,
+              onTap: () => ref.read(visitorProvider.notifier).setTab(2),
+              width: 88.w,
+            ),
+            SizedBox(width: 8.w),
+            _StatCard(
+              label: 'Checked In',
+              count: state.totalCheckIn,
+              accent: VisitorTabColors.stripeForTab(0),
+              selected: state.tabIndex == 0,
+              onTap: () => ref.read(visitorProvider.notifier).setTab(0),
+              width: 88.w,
+            ),
+            SizedBox(width: 8.w),
+            _StatCard(
+              label: 'Checked Out',
+              count: state.totalCheckedOut,
+              accent: VisitorTabColors.stripeForTab(4),
+              selected: state.tabIndex == 4,
+              onTap: () => ref.read(visitorProvider.notifier).setTab(4),
+              width: 88.w,
+            ),
+            SizedBox(width: 8.w),
+            _StatCard(
+              label: 'Upcoming',
+              count: state.totalIncoming,
+              accent: VisitorTabColors.stripeForTab(1),
+              selected: state.tabIndex == 1,
+              onTap: () => ref.read(visitorProvider.notifier).setTab(1),
+              width: 88.w,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -65,6 +81,7 @@ class _StatCard extends StatelessWidget {
     required this.accent,
     required this.selected,
     required this.onTap,
+    required this.width,
   });
 
   final String label;
@@ -72,10 +89,12 @@ class _StatCard extends StatelessWidget {
   final Color accent;
   final bool selected;
   final VoidCallback onTap;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return SizedBox(
+      width: width,
       child: Material(
         elevation: selected ? 2 : 1,
         shadowColor: AppColor.textPrimary.withValues(alpha: 0.1),

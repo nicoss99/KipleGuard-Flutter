@@ -5,12 +5,14 @@ class GuardVisitorCounts {
     this.overtime = 0,
     this.checkedIn = 0,
     this.upcoming = 0,
+    this.checkedOut = 0,
   });
 
   final int allVisitors;
   final int overtime;
   final int checkedIn;
   final int upcoming;
+  final int checkedOut;
 
   factory GuardVisitorCounts.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const GuardVisitorCounts();
@@ -21,6 +23,7 @@ class GuardVisitorCounts {
         overtime: n('overtime'),
         checkedIn: n('checked_in'),
         upcoming: n('upcoming'),
+        checkedOut: n('checked_out'),
       );
     }
     return GuardVisitorCounts(
@@ -28,6 +31,7 @@ class GuardVisitorCounts {
       overtime: n('checked_out'),
       checkedIn: n('checked_in'),
       upcoming: n('pending'),
+      checkedOut: n('checked_out'),
     );
   }
 }
