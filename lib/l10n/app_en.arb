@@ -240,6 +240,7 @@
   "registerScanLightOn": "Light on",
   "registerScanPickToken": "Pick a value from the scan",
   "registerScanTitle": "Scan ID",
+  "registerScanWrongDocType": "Identification type is not correct. Please scan the selected document type.",
   "registerSelectUnitFirst": "Select unit first",
   "registerSubmit": "Submit",
   "registerSuccess": "Visitor registered",

@@ -17,6 +17,7 @@ import '../login/login_repository.dart';
 import 'guard_models.dart';
 import 'guard_pin_verify_identity.dart';
 import 'guard_pin_verify_result.dart';
+import 'guard_residences_parser.dart';
 
 final guardRepositoryProvider = Provider<GuardAuthRepository>(
   (ref) => GuardRepository(
@@ -58,7 +59,7 @@ final class GuardRepository implements GuardAuthRepository {
       }
 
       final guard = GuardProfile.fromJson(guardJson);
-      final residences = _parseResidences(data['residences']);
+      final residences = parseGuardResidencesList(data['residences']);
       final switchRaw = data['switch_device'] as Map<String, dynamic>?;
       final switchDevice = GuardSwitchDevice.fromJson(switchRaw);
 
@@ -108,24 +109,32 @@ final class GuardRepository implements GuardAuthRepository {
     final guardJson = asStringKeyedMap(data['guard']);
     if (guardJson == null) throw StateError(_messages.invalidLoginPayload);
     final guard = GuardProfile.fromJson(guardJson);
-    final residences = _parseResidences(data['residences']);
+    final residences = parseGuardResidencesList(data['residences']);
     await AuthPrefs.updateGuardProfile(guard: guard, residences: residences);
     return GuardMeResult(guard: guard, residences: residences);
   }
 
   @override
-  Future<List<GuardResidence>> fetchResidences() async {
+  Future<GuardResidencesResult> fetchResidences({
+    String? currentResidenceUuid,
+  }) async {
+    final query = <String, dynamic>{};
+    final current = currentResidenceUuid?.trim();
+    if (current != null && current.isNotEmpty) {
+      query['current_residence_uuid'] = current;
+    }
     final data = await _client.getJson(
       GuardApiPaths.residences,
+      query: query.isEmpty ? null : query,
       fallbackMessage: _messages.residencesLoadFailed,
     );
-    final list = _parseResidences(data?['residences']);
-    await AuthPrefs.cacheGuardResidences(list);
-    final current = await ResidencePrefs.readResidenceUuid();
-    if (current == null || current.isEmpty) {
-      await ResidencePrefs.applyDefaultFromResidences(list);
+    final result = parseGuardResidencesFromApi(data);
+    await AuthPrefs.cacheGuardResidences(result.residences);
+    final saved = await ResidencePrefs.readResidenceUuid();
+    if (saved == null || saved.isEmpty) {
+      await ResidencePrefs.applyDefaultFromResidences(result.residences);
     }
-    return list;
+    return result;
   }
 
   @override
@@ -170,14 +179,5 @@ final class GuardRepository implements GuardAuthRepository {
     return GuardPinVerifyResult.failed(
       msg != null && msg.isNotEmpty ? msg : _messages.requestFailed,
     );
-  }
-
-  List<GuardResidence> _parseResidences(dynamic raw) {
-    if (raw is! List) return [];
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .map(GuardResidence.fromJson)
-        .where((r) => r.uuid.isNotEmpty)
-        .toList();
   }
 }

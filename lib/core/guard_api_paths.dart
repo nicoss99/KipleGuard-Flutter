@@ -31,8 +31,8 @@ abstract final class GuardApiPaths {
   static String visitorScan(String residenceUuid) =>
       'api/v1/guard/residences/$residenceUuid/visitors/scan';
 
-  static String residenceCheckIn(String residenceUuid) =>
-      'api/v1/guard/residences/$residenceUuid/check-in';
+  static String visitorCheckIn(String residenceUuid, int visitorId) =>
+      'api/v1/guard/residences/$residenceUuid/visitors/$visitorId/check-in';
 
   static String visitorCheckOut(String residenceUuid, int visitorId) =>
       'api/v1/guard/residences/$residenceUuid/visitors/$visitorId/check-out';

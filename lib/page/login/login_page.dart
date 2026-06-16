@@ -180,9 +180,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     hint: LoginStrings.passwordHint,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) {
-                      if (canSubmit) _submit();
-                    },
                     suffixIcon: IconButton(
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       icon: Icon(

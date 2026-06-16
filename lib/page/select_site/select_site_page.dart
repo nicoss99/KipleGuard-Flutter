@@ -21,7 +21,7 @@ import 'widget/select_site_residence_tile.dart';
 import 'widget/select_site_search_bar.dart';
 import 'widget/select_site_status_message.dart';
 
-/// Site picker — `GET api/v1/guard/residences` (cached on login).
+/// Site picker — `GET api/v1/guard/residences?current_residence_uuid=...`.
 class SelectSitePage extends ConsumerStatefulWidget {
   const SelectSitePage({super.key});
 
@@ -63,17 +63,22 @@ class _SelectSitePageState extends ConsumerState<SelectSitePage> {
     });
     try {
       List<ResidenceChoice> list;
+      final snap = await DashboardPrefs.loadSnapshot();
       try {
-        final residences = await ref.read(guardRepositoryProvider).fetchResidences();
-        list = guardResidencesToChoices(residences);
+        final result = await ref.read(guardRepositoryProvider).fetchResidences(
+              currentResidenceUuid: snap.residenceId,
+            );
+        list = guardResidencesToChoices(result.residences);
+        _selectedId = result.currentResidence?.uuid.isNotEmpty == true
+            ? result.currentResidence!.uuid
+            : snap.residenceId;
       } catch (_) {
         list = await loadGuardResidenceChoices();
+        _selectedId = snap.residenceId;
       }
       if (list.isEmpty) {
         throw StateError('No residences available');
       }
-      final snap = await DashboardPrefs.loadSnapshot();
-      _selectedId = snap.residenceId;
       _sortChoices(list, _selectedId);
       if (mounted) {
         setState(() {

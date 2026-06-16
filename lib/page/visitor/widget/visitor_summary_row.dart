@@ -56,7 +56,7 @@ class VisitorSummaryRow extends ConsumerWidget {
               accent: VisitorTabColors.stripeForTab(4),
               selected: state.tabIndex == 4,
               onTap: () => ref.read(visitorProvider.notifier).setTab(4),
-              width: 88.w,
+              width: 102.w,
             ),
             SizedBox(width: 8.w),
             _StatCard(
@@ -119,12 +119,17 @@ class _StatCard extends StatelessWidget {
                   style: VisitorTextStyle.statCount(selected: selected, accent: accent),
                 ),
                 SizedBox(height: 4.h),
-                Text(
-                  label,
-                  style: VisitorTextStyle.statLabel(selected: selected),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                SizedBox(
+                  height: 14.h,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: VisitorTextStyle.statLabel(selected: selected),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                    ),
+                  ),
                 ),
               ],
             ),

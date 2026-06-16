@@ -35,12 +35,15 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(refreshing: true, loadError: null, triggerNoRoleDialog: false);
     try {
       await _refreshGuardProfile();
-      final residences = await ref.read(guardRepositoryProvider).fetchResidences();
+      final savedUuid = await ResidencePrefs.readResidenceUuid();
+      final result = await ref.read(guardRepositoryProvider).fetchResidences(
+            currentResidenceUuid: savedUuid,
+          );
+      final residences = result.residences;
       if (residences.isEmpty) {
         state = state.copyWith(refreshing: false, triggerNoRoleDialog: true);
         return;
       }
-      final savedUuid = await ResidencePrefs.readResidenceUuid();
       if (savedUuid == null || savedUuid.isEmpty) {
         await ResidencePrefs.applyDefaultFromResidences(residences);
       } else {

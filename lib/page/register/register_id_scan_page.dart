@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -8,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../widget/api_failed_dialog.dart';
 import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_color.dart';
 import '../../theme/app_spacing.dart';
@@ -34,6 +36,8 @@ class _RegisterIdScanPageState extends State<RegisterIdScanPage> with SingleTick
   var _busy = false;
   var _torch = false;
   var _othersSheetOpen = false;
+  var _wrongTypeDialogOpen = false;
+  DateTime? _lastWrongTypeDialogAt;
 
   @override
   void initState() {
@@ -96,23 +100,81 @@ class _RegisterIdScanPageState extends State<RegisterIdScanPage> with SingleTick
 
       final idx = _tabs.index;
       if (idx == 0) {
-        final r = registerOcrParseMyKad(raw);
-        if (r != null && r.ic12 != null) {
-          _timer?.cancel();
-          context.pop(RegisterIdScanResult(ic12: r.ic12, name: r.name));
-        }
+        final outcome = registerOcrParseMyKad(raw);
+        _logOcrCapture(tab: 'MyKad', raw: raw, outcome: outcome);
+        await _handleOutcome(outcome);
       } else if (idx == 1) {
-        final r = registerOcrParseLicense(raw);
-        if (r != null && r.ic12 != null) {
-          _timer?.cancel();
-          context.pop(RegisterIdScanResult(ic12: r.ic12, name: r.name));
-        }
+        final outcome = registerOcrParseLicense(raw);
+        _logOcrCapture(tab: 'License', raw: raw, outcome: outcome);
+        await _handleOutcome(outcome);
       } else {
+        _logOcrCapture(tab: 'Others', raw: raw);
         await _maybeShowOthers(raw);
       }
-    } catch (_) {
+    } catch (e, st) {
+      dev.log('RegisterIdScan OCR tick failed', error: e, stackTrace: st, name: 'RegisterIdScan');
     } finally {
       _busy = false;
+    }
+  }
+
+  void _logOcrCapture({
+    required String tab,
+    required String raw,
+    RegisterIdOcrOutcome? outcome,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('--- OCR capture ($tab) ---')
+      ..writeln('RAW:')
+      ..writeln(raw)
+      ..writeln('--- parsed ---');
+
+    if (outcome == null) {
+      buffer.writeln('matched: false');
+    } else {
+      buffer
+        ..writeln('id: ${outcome.result?.ic12}')
+        ..writeln('name: ${outcome.result?.name}')
+        ..writeln('wrongDocumentType: ${outcome.wrongDocumentType}')
+        ..writeln('matched: ${outcome.result != null}');
+    }
+
+    dev.log(buffer.toString(), name: 'RegisterIdScan');
+  }
+
+  Future<void> _handleOutcome(RegisterIdOcrOutcome outcome) async {
+    if (outcome.wrongDocumentType) {
+      await _showWrongDocTypeDialog();
+      return;
+    }
+    final result = outcome.result;
+    final id = result?.ic12;
+    if (result == null || id == null || id.isEmpty || !mounted) return;
+    dev.log(
+      'Scan success -> id=$id name=${result.name}',
+      name: 'RegisterIdScan',
+    );
+    _timer?.cancel();
+    context.pop(result);
+  }
+
+  Future<void> _showWrongDocTypeDialog() async {
+    if (!mounted || _wrongTypeDialogOpen) return;
+    final now = DateTime.now();
+    if (_lastWrongTypeDialogAt != null &&
+        now.difference(_lastWrongTypeDialogAt!) < const Duration(seconds: 3)) {
+      return;
+    }
+    _wrongTypeDialogOpen = true;
+    _lastWrongTypeDialogAt = now;
+    try {
+      await showApiFailedDialog(
+        context,
+        message: RegisterStrings.scanWrongDocType,
+        title: RegisterStrings.scanTitle,
+      );
+    } finally {
+      _wrongTypeDialogOpen = false;
     }
   }
 

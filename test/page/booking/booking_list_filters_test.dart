@@ -65,6 +65,20 @@ void main() {
     expect(out.first.category, 'hot desk 1');
   });
 
+  test('applyBookingListFilters keeps rows when submitted on day differs from row', () {
+    final items = [
+      _item(id: 1, submittedDate: '2026-05-01'),
+      _item(id: 2, submittedDate: '2026-05-20'),
+    ];
+
+    final out = applyBookingListFilters(
+      items: items,
+      filter: BookingFilterQuery(submittedOnDay: DateTime(2026, 6, 15)),
+    );
+
+    expect(out, hasLength(2));
+  });
+
   test('applyBookingTabFilter respects checked-in tab while filters active', () {
     final items = [
       _item(id: 1, guardStatus: 'checked_in'),

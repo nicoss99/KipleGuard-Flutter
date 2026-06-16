@@ -142,6 +142,16 @@ class GuardMeResult {
   final List<GuardResidence> residences;
 }
 
+class GuardResidencesResult {
+  const GuardResidencesResult({
+    this.currentResidence,
+    required this.residences,
+  });
+
+  final GuardResidence? currentResidence;
+  final List<GuardResidence> residences;
+}
+
 int _readInt(dynamic raw) {
   if (raw is int) return raw;
   if (raw is num) return raw.toInt();

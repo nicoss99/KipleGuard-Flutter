@@ -21,7 +21,7 @@ abstract interface class GuardAuthRepository {
 
   Future<GuardMeResult> fetchMe();
 
-  Future<List<GuardResidence>> fetchResidences();
+  Future<GuardResidencesResult> fetchResidences({String? currentResidenceUuid});
 
   /// POST `auth/verify-pin` with `{ pin, residence_uuid }`.
   /// Verified when `success` is true or `data.pin_verified` is true.

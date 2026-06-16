@@ -55,6 +55,7 @@ abstract final class RegisterStrings {
   static String get scanPickToken => appL10n.registerScanPickToken;
   static String get scanLightOn => appL10n.registerScanLightOn;
   static String get scanLightOff => appL10n.registerScanLightOff;
+  static String get scanWrongDocType => appL10n.registerScanWrongDocType;
   static String get unitSearchHint => appL10n.registerUnitSearchHint;
   static String get hostSearchHint => appL10n.registerHostSearchHint;
   static String get unitEmpty => appL10n.registerUnitEmpty;

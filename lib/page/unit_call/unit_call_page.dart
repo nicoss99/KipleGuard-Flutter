@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/app_bar_title_format.dart';
-import '../../router/app_route.dart';
 import '../../widget/api_failed_dialog.dart';
 import '../../widget/app_progress_indicator.dart';
 import '../../theme/app_color.dart';
@@ -142,16 +141,7 @@ class _UnitCallPageState extends ConsumerState<UnitCallPage> {
                           ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => context.push(AppRoute.callRecent.path),
-                        child: Text(
-                          UnitCallStrings.recent,
-                          style: AppTextStyle.body.copyWith(
-                            color: AppColor.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      SizedBox(width: 48.w),
                     ],
                   ),
                 ),

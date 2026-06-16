@@ -1408,6 +1408,12 @@ abstract class AppLocalizations {
   /// **'Scan ID'**
   String get registerScanTitle;
 
+  /// No description provided for @registerScanWrongDocType.
+  ///
+  /// In en, this message translates to:
+  /// **'Identification type is not correct. Please scan the selected document type.'**
+  String get registerScanWrongDocType;
+
   /// No description provided for @registerSelectUnitFirst.
   ///
   /// In en, this message translates to:

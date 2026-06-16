@@ -103,10 +103,8 @@ final class GuardVisitorRepository implements contract.GuardVisitorRepository {
     required String residenceUuid,
     required int visitorId,
   }) async {
-    await _client.postJson(
-      GuardApiPaths.residenceCheckIn(residenceUuid),
-      data: <String, dynamic>{'visitor_id': visitorId},
-      fallbackMessage: _messages.requestFailed,
+    await _postVisitorAction(
+      GuardApiPaths.visitorCheckIn(residenceUuid, visitorId),
     );
   }
 

@@ -54,8 +54,8 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
     });
   }
 
-  /// `true` when the action was check-out; `false` for check-in / scan.
-  Future<bool> _performQr(VisitorDetailFields meta) async {
+  /// `true` when the action was check-out; `false` for check-in.
+  Future<bool> _performCheckAction(VisitorDetailFields meta) async {
     final snap = _dash ?? await DashboardPrefs.loadSnapshot();
     final residenceUuid =
         snap.residenceId.isNotEmpty ? snap.residenceId : meta.residenceUuid;
@@ -78,11 +78,6 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
       await guardRepo.checkOut(
         residenceUuid: residenceUuid,
         visitorId: visitorId,
-      );
-    } else if (meta.hasQr && meta.qrCode.trim().isNotEmpty) {
-      await guardRepo.scanVisitor(
-        residenceUuid: residenceUuid,
-        qrCodeData: meta.qrCode.trim(),
       );
     } else {
       await guardRepo.checkIn(
@@ -107,7 +102,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
   Future<void> _runQr(VisitorDetailFields meta) async {
     setState(() => _busy = true);
     try {
-      final wasCheckOut = await _performQr(meta);
+      final wasCheckOut = await _performCheckAction(meta);
       await _showCheckActionSuccess(wasCheckOut);
     } catch (e, st) {
       AppLog.error(
@@ -127,7 +122,7 @@ class _VisitorDetailsPageState extends ConsumerState<VisitorDetailsPage> {
   Future<void> _checkIn(VisitorDetailFields meta) async {
     setState(() => _busy = true);
     try {
-      final wasCheckOut = await _performQr(meta);
+      final wasCheckOut = await _performCheckAction(meta);
       await _showCheckActionSuccess(wasCheckOut);
     } catch (e, st) {
       AppLog.error(

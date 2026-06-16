@@ -3,6 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../core/app_logger.dart';
 import '../../core/dashboard_prefs.dart';
 import '../auth/guard_visitor_repository.dart';
+import '../booking/booking_parsers.dart';
+import '../booking/guard_booking_repository.dart';
 import 'scan_repository.dart';
 
 final scanDispatcherProvider = Provider<ScanDispatcher>(
@@ -71,15 +73,8 @@ class ScanDispatcher {
       AppLog.error('ScanQR visitor legacy', tag: 'Scan', error: e, stackTrace: st);
     }
 
-    try {
-      final books = await repo.fetchBookingsByQr(residenceUuid: snap.residenceId, qr: raw);
-      if (books.isNotEmpty) {
-        final u = books.first['uuid']?.toString();
-        if (u != null && u.isNotEmpty) return ScanDispatchBooking(u);
-      }
-    } catch (e, st) {
-      AppLog.error('ScanQR booking', tag: 'Scan', error: e, stackTrace: st);
-    }
+    final booking = await _resolveBookingDispatch(snap.residenceId, raw);
+    if (booking != null) return booking;
 
     final parts = splitQrCsv(raw);
     if (parts.isNotEmpty) {
@@ -148,6 +143,47 @@ class ScanDispatcher {
       }
     }
 
+    return null;
+  }
+
+  Future<ScanDispatchBooking?> _resolveBookingDispatch(
+    String residenceUuid,
+    String raw,
+  ) async {
+    if (raw.length >= 3) {
+      try {
+        final result = await _ref.read(bookingRepositoryProvider).fetchBookings(
+              residenceUuid: residenceUuid,
+              date: DateTime.now(),
+              tab: BookingTabApi.allBookings,
+              search: raw,
+            );
+        if (result.bookings.isNotEmpty) {
+          return ScanDispatchBooking(result.bookings.first.id.toString());
+        }
+      } catch (e, st) {
+        AppLog.error('Guard booking scan', tag: 'Scan', error: e, stackTrace: st);
+      }
+    }
+
+    try {
+      final books = await _ref.read(scanRepositoryProvider).fetchBookingsByQr(
+            residenceUuid: residenceUuid,
+            qr: raw,
+          );
+      if (books.isEmpty) return null;
+      final first = books.first;
+      final id = first['id'];
+      if (id != null && '$id'.isNotEmpty) {
+        return ScanDispatchBooking(id.toString());
+      }
+      final uuid = first['uuid']?.toString();
+      if (uuid != null && uuid.isNotEmpty) {
+        return ScanDispatchBooking(uuid);
+      }
+    } catch (e, st) {
+      AppLog.error('ScanQR booking', tag: 'Scan', error: e, stackTrace: st);
+    }
     return null;
   }
 }

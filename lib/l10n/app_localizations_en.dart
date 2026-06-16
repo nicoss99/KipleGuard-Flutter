@@ -699,6 +699,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerScanTitle => 'Scan ID';
 
   @override
+  String get registerScanWrongDocType =>
+      'Identification type is not correct. Please scan the selected document type.';
+
+  @override
   String get registerSelectUnitFirst => 'Select unit first';
 
   @override
