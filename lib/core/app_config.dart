@@ -6,14 +6,14 @@ abstract final class AppConfig {
   // --- XAPPKEY (JNI: `Java_..._BaseConfig_XAPPLICATIONKEY`) ---
   static const _kXApplicationKey =
       '5Syw49JVgmCDrGv5QBDbxtDvpTR2XxkF36Vr4EMVkvDVecJX';
-  static const _kGuardApplicationKey = 'LSsWONolTqkiFRggUZMwyDegoIWgudqL';
+  static const _kGuardApplicationKey = 'MzQaWxSeDcRfVtGbNrPgJiKoLpPmAnBs';
 
   // --- BASEURL (JNI: `DEVBASEURL`, `STAGBASEURLK8S`, `PRODBASEURL*`) ---
   static const _kDevBaseUrl = 'https://api-dev.dhome.io/v1.0/';
   static const _kStgK8sBaseUrl = 'https://kiplehome2-0-staging.kiple.com/';
   static const _kProdInBaseUrl = 'https://api-in.kiplelive.com/';
   static const _kProdVnBaseUrl = 'https://api-vn.kiplelive.com/';
-  static const _kProdK8sBaseUrl = 'https://kiplehome2-0.kiple.com/';
+  static const _kProdK8sBaseUrl = 'https://hub.kiplecity.com/';
 
   // --- PORTAL (JNI: `DEVPORTAL`, `STAGPORTALK8S`, `PRODPORTAL*`) ---
   static const _kDevPortal = 'https://admin-dev.dhome.io/';
